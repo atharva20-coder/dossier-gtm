@@ -397,6 +397,13 @@ export const api = {
     fetch(`/api/outbound/runs/${id}`, { method: "DELETE" }).then(json<{ ok: boolean }>),
 
   /** Which kinds of hook this sender actually acts on, and what was learned. */
+  /** The exact brief a persona hands the writer, learned rules included. */
+  personaPrompt: (id: number) =>
+    fetch(`/api/personas/${id}/prompt`).then(json<{
+      prompt: string; learned_rules: string[]
+      authored_instructions: string; note: string
+    }>),
+
   /** What the app has learned, newest first, for the drawer. */
   learningFeed: (limit = 60) =>
     fetch(`/api/learned/feed?limit=${limit}`).then(json<{ events: LearnEvent[] }>),

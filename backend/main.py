@@ -679,6 +679,34 @@ async def generate_persona(body: PersonaFromDescription):
     return created
 
 
+@app.get("/api/personas/{persona_id}/prompt")
+async def persona_prompt(persona_id: int):
+    """The exact brief this persona hands the writer, assembled as it really is.
+
+    Learning here does not rewrite the instructions someone typed — it appends
+    rules, in a block marked as overriding everything above it. So "did the
+    prompt actually change" is a question about text, and the honest way to
+    answer it is to show the text rather than a summary of it.
+
+    Built by calling the same function the drafting stage calls. A second
+    renderer written for display is a renderer that can disagree with the one
+    that matters, which would make this reassuring and wrong.
+    """
+    persona = await db.get_persona(persona_id)
+    if not persona:
+        raise HTTPException(404, "Persona not found")
+    persona["memories"] = await db.active_memories(persona_id)
+    rules = [m["rule"] for m in persona["memories"]]
+    return {
+        "prompt": draft._persona_block(persona),
+        "learned_rules": rules,
+        "authored_instructions": persona.get("instructions") or "",
+        "note": ("Everything above the LEARNED block is what you wrote. The block "
+                 "itself is what it worked out from your edits, and it overrides "
+                 "anything above that contradicts it."),
+    }
+
+
 @app.get("/api/personas/{persona_id}/history")
 async def persona_history(persona_id: int):
     """What this persona has learned, and how much evidence is still pending."""

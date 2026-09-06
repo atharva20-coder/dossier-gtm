@@ -123,6 +123,11 @@ export function SettingsDialog({
   // One open at a time: these are full sentences, and every row expanded is a
   // wall of near-identical text in a dialog that is already dense.
   const [openTrigger, setOpenTrigger] = useState("")
+  // The assembled brief, fetched on demand: proof that learning changed the
+  // text the writer sees, rather than a claim that it did.
+  const [prompt, setPrompt] = useState<{ prompt: string; note: string } | null>(null)
+  const [promptOpen, setPromptOpen] = useState(false)
+  const [promptBusy, setPromptBusy] = useState(false)
 
   // --- connected services, checked only on request ----------------------
   const [apis, setApis] = useState<any>(null)
@@ -439,6 +444,54 @@ export function SettingsDialog({
             {/* The second axis. The rules above are how you write; this is what
                 you write ABOUT — learned from hooks you sent or picked by hand,
                 never from drafts you simply left alone. */}
+            {/* Where "did the prompt actually change?" gets answered. Learning
+                appends rules rather than rewriting what you typed, so the only
+                honest answer is the assembled text with the block visible. */}
+            <div className="border-t pt-3">
+              <button type="button"
+                onClick={async () => {
+                  const next = !promptOpen
+                  setPromptOpen(next)
+                  if (next && !prompt && editingId) {
+                    setPromptBusy(true)
+                    try { setPrompt(await api.personaPrompt(editingId)) }
+                    catch { /* the button can be pressed again */ }
+                    finally { setPromptBusy(false) }
+                  }
+                }}
+                className="flex w-full items-center gap-1.5 text-left text-[13px]
+                           font-medium hover:opacity-80">
+                <ChevronRight className={`size-3 text-muted-foreground transition
+                                          ${promptOpen ? "rotate-90" : ""}`} />
+                The exact brief the writer receives
+              </button>
+              <p className="ml-[18px] mt-0.5 text-[12px] text-muted-foreground">
+                Assembled by the same code that drafts, so this is the real thing.
+              </p>
+
+              {promptOpen && (
+                <div className="ml-[18px] mt-2">
+                  {promptBusy && !prompt ? (
+                    <p className="py-4 text-[12px] text-muted-foreground">Loading…</p>
+                  ) : !prompt ? (
+                    <p className="py-4 text-[12px] text-muted-foreground">
+                      Save this persona first, then it can be shown.
+                    </p>
+                  ) : (
+                    <>
+                      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-[8px]
+                                      border bg-muted/40 p-2.5 text-[11.5px] leading-relaxed">
+                        {prompt.prompt}
+                      </pre>
+                      <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+                        {prompt.note}
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="border-t pt-3">
               <p className="text-[13px] font-medium">What it has learned from you</p>
               <p className="mt-0.5 text-[12px] text-muted-foreground">
