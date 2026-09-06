@@ -293,18 +293,16 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
    * lead every time you wanted the other voice.
    */
   async function selectPersona(p: Persona) {
-    const wasOther = persona?.id !== p.id
     setPersonas((prev) => prev.map((x) => ({ ...x, is_selected: x.id === p.id })))
     try { await api.selectPersona(p.id) } catch { await reloadPersonas() }
-
-    // Only for the lead on screen, and only if someone else wrote its message.
-    // Redrafting every lead in the list on a persona switch would spend a model
-    // call per lead and silently replace work the user may have edited.
-    const open = prospectsRef.current.find((x) => x.runId === selectedId)
-    if (!wasOther || !open?.draft?.body || open.personaId === p.id) return
-    if (!confirm(`Rewrite the message for ${open.name} as ${p.name}? `
-                 + `Same facts, no new research — the current draft is replaced.`)) return
-    await regenerate()
+    // Switching identity is a selection, not an instruction. It used to ask
+    // "rewrite this message as X?" on every switch, which put a decision about
+    // one lead in the way of choosing who writes the next twenty — and made
+    // browsing between voices feel like something you might break.
+    //
+    // Nothing is rewritten here. The open lead marks itself as written by
+    // someone else and offers Redraft, which is the same action asked for at
+    // the moment it is actually wanted.
   }
 
   const unresearched = prospects.filter((p) => p.status === "idle").length
