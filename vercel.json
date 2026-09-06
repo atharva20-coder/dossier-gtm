@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ui && npm ci && npm run build",
+  "functions": {
+    "backend/main.py": {
+      "maxDuration": 300,
+      "excludeFiles": "{tests/**,docs/**,fixtures/**,ui/node_modules/**,ui/src/**,**/*.db}"
+    }
+  },
+  "regions": [
+    "bom1"
+  ]
+}

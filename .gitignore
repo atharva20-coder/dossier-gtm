@@ -1,0 +1,30 @@
+# Secrets. The one file that must never leave this machine: it holds the
+# Gmail app password, the database URL and every provider key.
+.env
+.env.local
+*.env.local
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Build output. `cd ui && npm run build` regenerates it, and vercel.json runs
+# that on every deploy — committing it means the repo carries a stale copy.
+frontend/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Local database and scratch
+*.db
+*.sqlite3
+*.tsbuildinfo
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/

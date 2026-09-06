@@ -1,0 +1,195 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.65rem;
+  --background: oklch(0.99 0.002 260);
+  --foreground: oklch(0.21 0.012 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.012 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.012 265);
+  --primary: oklch(0.52 0.20 274);
+  --primary-foreground: oklch(0.99 0.002 260);
+  --secondary: oklch(0.968 0.005 265);
+  --secondary-foreground: oklch(0.28 0.015 265);
+  --muted: oklch(0.968 0.005 265);
+  --muted-foreground: oklch(0.556 0.014 265);
+  --accent: oklch(0.955 0.012 274);
+  --accent-foreground: oklch(0.32 0.05 274);
+  --destructive: oklch(0.577 0.208 27);
+  --destructive-foreground: oklch(0.99 0.002 260);
+  --border: oklch(0.923 0.006 265);
+  --input: oklch(0.923 0.006 265);
+  --ring: oklch(0.52 0.20 274);
+  --success: oklch(0.60 0.13 162);
+  --warning: oklch(0.68 0.14 70);
+
+  /* ------------------------------------------------------------------ *
+   * The workspace palette.
+   *
+   * These are the exact greys the four-pane layout was built from, lifted
+   * out of the components so a dark theme can swap them. Named by role, not
+   * by shade, and kept one-to-one with what was there before: light mode
+   * renders byte-identical to the design it was matched against.
+   * ------------------------------------------------------------------ */
+  --surface: #FFFFFF;      /* panes */
+  --surface-2: #FAFAFA;    /* the message column behind its card */
+  --surface-3: #F4F4F5;    /* chips, hover fills */
+  --surface-4: #F7F7F8;    /* inputs, assistant bubbles */
+  --surface-5: #F0F0F1;    /* the selected lead */
+  --surface-6: #EAEAEB;    /* pressed chip */
+
+  --line: #EFEFEF;
+  --line-2: #F2F2F2;
+  --line-3: #F0F0F0;
+  --line-4: #EAEAEA;
+  --line-5: #E9E9E9;
+  --line-6: #E0E0E0;
+
+  --ink: #1A1A1A;          /* headings, and the fill of solid buttons */
+  --on-ink: #FFFFFF;        /* whatever sits on that fill */
+  --ink-hover: #333333;
+  --ink-2: #2E2E2E;
+  --ink-3: #3D3D3D;
+  --ink-4: #4A4A4A;
+  --ink-5: #6B6B6B;
+  --ink-6: #8A8A8A;
+  --ink-7: #9A9A9A;
+  --ink-8: #A3A3A3;
+  --ink-9: #C4C4C4;
+  --ink-10: #D8D8D8;
+
+  --link: #2563EB;
+  --violet-bg: #F5F3FF;    /* the hook banner */
+  --violet-fg: #7C3AED;
+  --violet-fg-2: #9B7FD4;
+  --violet-icon: #8B5CF6;
+  --amber-bg: #FFFBEB;     /* disambiguation */
+  --amber-fg: #B45309;
+  --green-bg: #F0FDF4;     /* the sent record */
+  --green-line: #BBF7D0;
+  --green-fg: #166534;
+
+  /* ------------------------------------------------------------------ *
+   * Chart colours.
+   *
+   * Validated, not chosen by eye: the ordinal ramp is one hue, monotone in
+   * lightness, with the pale end still clearing the surface (2.11:1 light,
+   * 2.25:1 dark), and the single-series hue clears 3:1 against both surfaces.
+   * Dark is re-stepped for the dark surface rather than flipped — on a dark
+   * ground the STRONGEST step is the lightest one.
+   * ------------------------------------------------------------------ */
+  --series-1: #2a78d6;     /* one measure over time */
+  --ord-3: #1c5cab;        /* strongest: a fact about the person */
+  --ord-2: #3987e5;        /* a fact about their company */
+  --ord-1: #86b6ef;        /* weakest: nothing found */
+}
+
+.dark {
+  --background: oklch(0.16 0.011 266);
+  --foreground: oklch(0.97 0.003 260);
+  --card: oklch(0.20 0.013 266);
+  --card-foreground: oklch(0.97 0.003 260);
+  --popover: oklch(0.20 0.013 266);
+  --popover-foreground: oklch(0.97 0.003 260);
+  --primary: oklch(0.65 0.18 274);
+  --primary-foreground: oklch(0.16 0.011 266);
+  --secondary: oklch(0.26 0.014 266);
+  --secondary-foreground: oklch(0.97 0.003 260);
+  --muted: oklch(0.26 0.014 266);
+  --muted-foreground: oklch(0.68 0.012 266);
+  --accent: oklch(0.29 0.03 274);
+  --accent-foreground: oklch(0.94 0.01 274);
+  --destructive: oklch(0.65 0.19 25);
+  --destructive-foreground: oklch(0.97 0.003 260);
+  --border: oklch(0.28 0.014 266);
+  --input: oklch(0.30 0.014 266);
+  --ring: oklch(0.65 0.18 274);
+  --success: oklch(0.70 0.13 162);
+  --warning: oklch(0.75 0.14 70);
+
+  /* Dark is not the light palette inverted — the greys are recomputed so the
+     same three jobs stay separated: pane, card, and the line between them.
+     A straight inversion collapses #FAFAFA and #FFFFFF into one flat black
+     and the message card stops reading as a card. */
+  --surface: #141517;
+  --surface-2: #0F1011;
+  --surface-3: #1E2023;
+  --surface-4: #1A1C1F;
+  --surface-5: #26282C;
+  --surface-6: #2C2E33;
+
+  --line: #262A2E;
+  --line-2: #232629;
+  --line-3: #242729;
+  --line-4: #2A2D31;
+  --line-5: #2B2E32;
+  --line-6: #33373C;
+
+  --ink: #F2F3F5;
+  --on-ink: #141517;
+  --ink-hover: #DCDEE2;
+  --ink-2: #E6E8EB;
+  --ink-3: #DDE0E4;
+  --ink-4: #CBCFD5;
+  --ink-5: #A8AEB6;
+  --ink-6: #8D949D;
+  --ink-7: #858C95;
+  --ink-8: #7B828B;
+  --ink-9: #5C636C;
+  --ink-10: #4A5058;
+
+  --link: #7AA5FF;
+  --violet-bg: #211C3A;
+  --violet-fg: #C4B5FD;
+  --violet-fg-2: #9E8FD0;
+  --violet-icon: #A78BFA;
+  --amber-bg: #2B2210;
+  --amber-fg: #FCD34D;
+  --green-bg: #0F2A1A;
+  --green-line: #1E4D33;
+  --green-fg: #86EFAC;
+
+  --series-1: #3987e5;
+  --ord-3: #b7d3f6;
+  --ord-2: #5598e7;
+  --ord-1: #184f95;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+  body { @apply bg-background text-foreground antialiased; }
+}

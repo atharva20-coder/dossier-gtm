@@ -1,0 +1,12 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.26
+aiohttp>=3.9          # the outbound provider clients
+google-genai>=1.0
+pydantic>=2.6
+asyncpg>=0.29
+python-dotenv>=1.0
+python-multipart>=0.0.9
+pandas>=2.0
+openpyxl>=3.1
+pytest>=8.0
