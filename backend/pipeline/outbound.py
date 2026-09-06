@@ -10,7 +10,7 @@ import re
 import time
 from typing import Any
 
-from .. import outbound_db
+from .. import config, outbound_db
 from . import competitors, contacts, runner, waterfall
 from . import draft as draft_pipeline
 from ..models import ProspectInput, WriterConfig, StakeholderProfile
@@ -18,12 +18,11 @@ from .. import db
 
 log = logging.getLogger(__name__)
 
-# Researching a contact properly is a full pipeline run: minutes of wall clock
-# and a handful of search credits each. Capped so a wide campaign cannot spend
-# the month's allowance in one click, and defaulted low so the common case is
-# cheap. Raise it per run with `config.deep`.
-DEEP_DEFAULT = 3
-DEEP_MAX = 10
+# Every contact gets researched. The ceiling is the month's search budget
+# rather than a count, because a count is a guess about cost and the budget is
+# the actual constraint.
+DEEP_CONCURRENCY = 3   # runs at once; the searches inside each are already parallel
+RESEARCH_COST = 12     # searches one full run typically spends, used to reserve budget
 
 
 async def run_outbound_pipeline(run_id: int):
@@ -158,31 +157,35 @@ async def run_outbound_pipeline(run_id: int):
         drafted_count = 0
         db_contacts = await outbound_db.get_outbound_contacts(run_id)
         
-        # How many contacts get the full leads-page treatment: identity,
-        # search, extraction, grounding and the judge. That is a real research
-        # run each — minutes and search credits — so it is capped and the rest
-        # fall back to the shallow opener rather than being left blank.
-        deep_budget = int(config_dict.get("deep", DEEP_DEFAULT))
-        deep_budget = max(0, min(deep_budget, DEEP_MAX))
+        # Everyone is researched. The limit is the month's search budget, and
+        # it is checked before each one starts so a campaign stops cleanly with
+        # a reason rather than dying halfway through with a provider error.
+        budget = await db.provider_month("tavily")
+        remaining = config.TAVILY_MONTHLY_BUDGET - budget["month"]
         deep_done = 0
+        skipped_for_budget = 0
+        stopped_reason = ""
 
+        # Researched concurrently. Each contact is minutes of waiting on someone
+        # else's API, so doing them in series made a four-contact campaign four
+        # times slower for no reason. Bounded, because an unbounded fan-out on
+        # top of already-parallel searches is a self-inflicted rate limit.
+        gate = asyncio.Semaphore(DEEP_CONCURRENCY)
+
+        async def deepen(contact: dict, lead_id: int) -> str:
+            """Research one contact. Returns its opener, or "" if it found none."""
+            async with gate:
+                await runner.run(lead_id, ProspectInput(
+                    name=contact["name"], company=contact["company"],
+                    role=contact["role"], url=contact["linkedin_url"]))
+            lead = await db.get_run(lead_id)
+            return _first_sentence((lead or {}).get("draft_body") or "")
+
+        # Every contact gets its lead row first, so the leads screen is populated
+        # before any research starts and stays useful if this stops early.
+        pool = await db.pool()
+        pending: list[tuple[dict, int]] = []
         for contact in db_contacts:
-            # --- the deep path: research this person properly ---------------
-            #
-            # Delegated to the same runner the leads screen uses, so a contact
-            # gets sources, the traversal graph and a grounded hook rather than
-            # "works at a competitor" — and the lead it produces opens on the
-            # leads screen unchanged. Reused wholesale because a second, lighter
-            # research path would drift from the one that is actually tested.
-            # EVERY contact becomes a lead, not only the researched ones.
-            #
-            # A person found through a campaign is the same kind of thing as one
-            # typed in by hand: they belong in the same list, with the same
-            # actions and the same send path. Creating the row is free — it is
-            # researching that costs — so the rest arrive unresearched and can
-            # be run individually from the leads screen whenever they are worth
-            # it, instead of existing only inside a campaign.
-            pool = await db.pool()
             lead_id = contact.get("lead_run_id")
             if not lead_id:
                 lead_id = await db.create_run(f"outbound-{run_id}", {
@@ -193,32 +196,37 @@ async def run_outbound_pipeline(run_id: int):
                 await pool.execute(
                     "UPDATE outbound_contacts SET lead_run_id=$1 WHERE id=$2",
                     lead_id, contact["id"])
+            contact["lead_run_id"] = lead_id
 
-            if deep_done < deep_budget:
-                try:
-                    await runner.run(lead_id, ProspectInput(
-                        name=contact["name"], company=contact["company"],
-                        role=contact["role"], url=contact["linkedin_url"]))
-                    lead = await db.get_run(lead_id)
+            if remaining - RESEARCH_COST < config.TAVILY_RESERVE:
+                skipped_for_budget += 1
+                stopped_reason = f"{max(remaining, 0)} searches left this month"
+                continue
+            remaining -= RESEARCH_COST
+            pending.append((contact, lead_id))
+
+        if pending:
+            results = await asyncio.gather(
+                *[deepen(c, lid) for c, lid in pending], return_exceptions=True)
+            for (contact, _lid), opener in zip(pending, results):
+                if isinstance(opener, BaseException):
+                    log.warning("deep research failed for %s: %s",
+                                contact["name"], opener)
+                    continue
+                if opener:
+                    await pool.execute(
+                        "UPDATE outbound_contacts SET opener_line=$1 WHERE id=$2",
+                        opener, contact["id"])
                     deep_done += 1
+                    drafted_count += 1
+                    contact["_done"] = True
 
-                    body = (lead or {}).get("draft_body") or ""
-                    opener = _first_sentence(body)
-                    if opener:
-                        await pool.execute(
-                            "UPDATE outbound_contacts SET opener_line=$1 WHERE id=$2",
-                            opener, contact["id"])
-                        drafted_count += 1
-                        continue
-                    # Researched but nothing worth saying: fall through to the
-                    # shallow opener rather than sending an empty one.
-                except Exception as e:                # noqa: BLE001
-                    log.warning("deep research failed for %s: %s", contact["name"], e)
-
-            # --- the shallow path ------------------------------------------
-            # Written for everyone found, address or not: an opener is what
-            # makes the contact worth anything, and a missing email is a
-            # separate problem with its own fix.
+        # Anything research could not carry — over budget, failed, or nothing
+        # worth saying — falls back to the competitor angle rather than being
+        # left with an empty opener.
+        for contact in db_contacts:
+            if contact.get("_done"):
+                continue
 
             # Create a simple ProspectInput and mock hook
             p_input = ProspectInput(
@@ -262,12 +270,15 @@ async def run_outbound_pipeline(run_id: int):
         elapsed = int((time.time() - start_time) * 1000)
         await _stage_done(
             run_id, "drafting",
-            f"{len(db_contacts)} added to Leads · {drafted_count} openers written"
-            + (f" — {deep_done} from full research, the rest from the "
-               f"competitor angle; research any of them from the lead"
-               if deep_done else " from the competitor angle"),
+            f"{len(db_contacts)} added to Leads · {deep_done} researched in full"
+            + (f", {len(db_contacts) - deep_done} from the competitor angle"
+               if len(db_contacts) - deep_done else "")
+            + (f" — stopped researching, {stopped_reason}"
+               if skipped_for_budget else ""),
             {"drafted_count": drafted_count, "deep": deep_done,
-             "leads_created": len(db_contacts)}, elapsed)
+             "leads_created": len(db_contacts),
+             "skipped_for_budget": skipped_for_budget,
+             "searches_left": max(remaining, 0)}, elapsed)
         
         # 5. Create Campaign Groupings
         # Group by Persona/Role

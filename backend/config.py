@@ -10,6 +10,13 @@ load_dotenv(ROOT / ".env")
 
 # --- API keys -------------------------------------------------------------
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "").strip()
+# The free plan is 1,000 searches a month and Tavily exposes no endpoint to
+# ask what is left, so the app counts its own and warns before a campaign
+# dies halfway through. Raise it if the plan changes.
+TAVILY_MONTHLY_BUDGET = int(os.getenv("TAVILY_MONTHLY_BUDGET", "1000"))
+# Stop starting new research below this much headroom, so a run that has
+# begun can always finish.
+TAVILY_RESERVE = int(os.getenv("TAVILY_RESERVE", "40"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 # Optional person-level signal provider. Absent = web search only, which still

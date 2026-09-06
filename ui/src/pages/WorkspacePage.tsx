@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { AddProspectDialog, type NewProspect } from "@/components/AddProspectDialog"
 import { FindContactsDialog } from "@/components/FindContactsDialog"
+import { BudgetBanner } from "@/components/BudgetBanner"
 import { SettingsDialog } from "@/components/workspace/SettingsDialog"
 import { Rail } from "@/components/workspace/Rail"
 import { Sidebar } from "@/components/workspace/Sidebar"
@@ -385,8 +386,9 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
   // h-dvh, not h-screen: mobile browsers count their collapsing address bar in
   // vh, so h-screen puts the pinned chat box under the toolbar.
   return (
-    <div className="h-dvh w-screen overflow-hidden bg-[var(--surface)]">
-      <div className="group/panels flex h-full">
+    <div className="flex h-dvh w-screen flex-col overflow-hidden bg-[var(--surface)]">
+      <BudgetBanner />
+      <div className="group/panels flex min-h-0 flex-1">
         {/* The rail is a fixed strip of icons — there is nothing in it that
             benefits from more room, so it is the one column that does not
             resize. Everything to its right does. It survives on a phone

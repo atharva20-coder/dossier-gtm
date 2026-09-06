@@ -572,6 +572,36 @@ attributing a message to someone who did not write it.
 
 ## Research inside a campaign
 
+**Every contact is researched; the limit is the budget, not a count.** — A count
+is a guess about cost. The month's search allowance is the actual constraint, so
+that is what governs.
+
+**The app counts its own Tavily searches.** — Tavily meters monthly and exposes
+no endpoint to ask what is left, so the only way to warn before a campaign dies
+part-way is to count what is spent. Counting is an under-estimate — a search
+made outside this app is invisible — which is the right direction to be wrong in
+for a budget.
+
+**The budget is checked before each contact, not once at the start.** — A run
+that begins with room can still run out, and stopping cleanly with a reason
+beats failing halfway with a provider error.
+
+**A reserve is held back.** — New research stops below 40 remaining, so
+discovery and contact search on a campaign already under way can still finish.
+
+**Contacts are researched concurrently, bounded at three.** — Each one is
+minutes of waiting on someone else's API; in series a four-contact campaign was
+four times slower for nothing. Bounded because the searches inside each run are
+already parallel, and an unbounded fan-out on top of that is a self-inflicted
+rate limit.
+
+**Running out degrades, it does not fail.** — Contacts are still found,
+addresses still looked up, leads still created, openers still written from the
+competitor angle. Only the deep research stops, and the receipt says so.
+
+**The warning is read from a local count, on the free health path.** — A warning
+that itself spends credit is the joke version of this feature.
+
 **Every campaign contact becomes a lead, researched or not.** — A person found
 through a campaign is the same kind of thing as one typed in by hand: same list,
 same actions, same send path. Creating the row is free; researching is what

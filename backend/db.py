@@ -915,6 +915,22 @@ async def provider_usage(provider: str) -> dict:
             "last_call": r["last_call"].isoformat(timespec="seconds") if r["last_call"] else None}
 
 
+async def provider_month(provider: str) -> dict:
+    """Calls made in the current calendar month, and today.
+
+    Tavily and Hunter both meter monthly and neither exposes a cheap "how much
+    is left" for search, so the app counts its own calls. Counting is only ever
+    an under-estimate — a call made outside this app is invisible — which is the
+    right direction to be wrong in for a budget.
+    """
+    p = await pool()
+    r = await p.fetchrow(
+        "SELECT count(*) FILTER (WHERE created_at >= date_trunc('month', now())) AS month, "
+        "       count(*) FILTER (WHERE created_at >= date_trunc('day', now()))   AS today "
+        "FROM provider_calls WHERE provider=$1 AND ok", provider)
+    return {"month": int(r["month"]), "today": int(r["today"])}
+
+
 async def latest_leads(limit: int = 200) -> list[dict]:
     """One row per lead — the run worth showing — across every batch.
 

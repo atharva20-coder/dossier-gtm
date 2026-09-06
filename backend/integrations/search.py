@@ -89,6 +89,23 @@ async def _one_query(
     return query, hits, None
 
 
+async def _count(n: int) -> None:
+    """Record searches against the monthly allowance.
+
+    Tavily bills one credit per query and offers no endpoint to ask what is
+    left, so the only way the app can warn before a campaign dies mid-run is to
+    count what it spends. Failures are logged as failures — a query that never
+    reached them is not a credit.
+    """
+    from .. import db
+    try:
+        for _ in range(max(0, n)):
+            await db.record_provider_call("tavily", "search")
+    except Exception as e:                       # noqa: BLE001
+        # Bookkeeping must never take a run down with it.
+        log.warning("could not record tavily usage: %s", e)
+
+
 async def search_many(queries: list[tuple[str, str]]) -> tuple[list[SearchHit], list[str]]:
     """Run queries concurrently (bounded).
 
@@ -111,6 +128,9 @@ async def search_many(queries: list[tuple[str, str]]) -> tuple[list[SearchHit], 
         if err:
             errors.append(f"{query}: {err}")
         hits.extend(qhits)
+
+    # One credit per query that actually reached them.
+    await _count(len(results) - len(errors))
 
     # Deduplicate by URL, keeping the highest-scoring copy.
     best: dict[str, SearchHit] = {}

@@ -9,6 +9,7 @@ import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Rail } from "@/components/workspace/Rail"
+import { BudgetBanner } from "@/components/BudgetBanner"
 import { SettingsDialog } from "@/components/workspace/SettingsDialog"
 import { Avatar } from "@/components/Avatar"
 import {
@@ -700,8 +701,9 @@ export function OutboundPage() {
   )
 
   return (
-    <div className="h-dvh w-screen overflow-hidden bg-[var(--surface)]">
-      <div className="group/panels flex h-full">
+    <div className="flex h-dvh w-screen flex-col overflow-hidden bg-[var(--surface)]">
+      <BudgetBanner />
+      <div className="group/panels flex min-h-0 flex-1">
         <Rail personas={personas}
           onSelect={async (p) => {
             setPersonas((prev) => prev.map((x) => ({ ...x, is_selected: x.id === p.id })))

@@ -153,12 +153,26 @@ async def health(force: bool = False):
     now = time.time()
 
     if not force:
-        # Configuration only. No network, no credits, no cache needed.
+        # Configuration only — plus the search budget, which is a local count
+        # and costs a query against our own table rather than an allowance.
+        # This is the one number worth having on every page load: a campaign
+        # that dies halfway through is worse than one that never started.
+        tav = await db.provider_month("tavily")
+        tav_used = tav["month"]
+        tav_left = max(config.TAVILY_MONTHLY_BUDGET - tav_used, 0)
         return {
             "ok": bool(config.TAVILY_API_KEY and config.GEMINI_API_KEY),
             "probed": False,
-            "tavily": {"ok": bool(config.TAVILY_API_KEY),
-                       "detail": "configured" if config.TAVILY_API_KEY else "no key"},
+            "tavily": {"ok": bool(config.TAVILY_API_KEY) and tav_left > 0,
+                       "enabled": bool(config.TAVILY_API_KEY),
+                       "detail": (f"{tav_left} of {config.TAVILY_MONTHLY_BUDGET} "
+                                  f"searches left this month"
+                                  if config.TAVILY_API_KEY else "no key"),
+                       "used": tav_used, "left": tav_left,
+                       "budget": config.TAVILY_MONTHLY_BUDGET,
+                       "exhausted": bool(config.TAVILY_API_KEY) and tav_left <= 0,
+                       "low": bool(config.TAVILY_API_KEY)
+                              and 0 < tav_left <= config.TAVILY_RESERVE},
             "gemini": {"ok": bool(config.GEMINI_API_KEY),
                        "detail": "configured" if config.GEMINI_API_KEY else "no key",
                        "models": [config.MODEL_FAST, config.MODEL_SMART]},
@@ -180,6 +194,10 @@ async def health(force: bool = False):
         return {**_health_cache[1], "cached": True}
 
     tav_ok, tav_msg = await search_client.health()
+    _probe = await db.provider_month("tavily")
+    probe_used = _probe["month"]
+    probe_left = max(config.TAVILY_MONTHLY_BUDGET - probe_used, 0)
+    tav_msg = f"{tav_msg} · {probe_left} of {config.TAVILY_MONTHLY_BUDGET} left this month"
     llm_ok, llm_msg = await llm_client.health()
     ps_ok, ps_msg = await person_client.health(probe=True)
     # Hunter's /account reports the remaining budget without spending from it.
@@ -193,7 +211,11 @@ async def health(force: bool = False):
         # never marks the whole system unhealthy.
         "ok": tav_ok and llm_ok,
         "probed": True,
-        "tavily": {"ok": tav_ok, "detail": tav_msg},
+        "tavily": {"ok": tav_ok, "detail": tav_msg, "enabled": bool(config.TAVILY_API_KEY),
+                   "used": probe_used, "left": probe_left,
+                   "budget": config.TAVILY_MONTHLY_BUDGET,
+                   "exhausted": probe_left <= 0,
+                   "low": 0 < probe_left <= config.TAVILY_RESERVE},
         "gemini": {"ok": llm_ok, "detail": llm_msg,
                    "models": [config.MODEL_FAST, config.MODEL_SMART]},
         "person_signal": {"ok": ps_ok, "detail": ps_msg, "optional": True,
