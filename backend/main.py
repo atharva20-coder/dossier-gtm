@@ -1131,6 +1131,9 @@ async def learned_triggers():
             "excluded": fb.get("excluded", 0),
             "restored": fb.get("included", 0),
             "dropped_examples": fb.get("dropped_examples") or [],
+            # Their own words. A weight nobody can explain is a weight nobody
+            # can argue with, which is the opposite of the point.
+            "reasons": fb.get("reasons") or [],
             "weight": learned.get(category, 1.0),
             "learned": category in learned,
             "examples": o.get("examples") or [],
@@ -1141,7 +1144,8 @@ async def learned_triggers():
             "min_evidence": config.LEARN_MIN_EVIDENCE,
             "note": ("A send counts double a hand-pick, and dropping a fact by hand "
                      "counts against its category. Leaving a draft alone teaches "
-                     "nothing — not acting is not a preference.")}
+                     "nothing — not acting is not a preference. Where you said why, "
+                     "that reason is kept with it.")}
 
 
 # ------------------------------------------------------- outbound campaigns ---

@@ -55,6 +55,20 @@ WHEN TO ACT AND WHEN TO ASK
 - Never ask more than one question at a time, and never ask when the answer is
   obvious from the thread.
 
+FINDING OUT WHY, WHICH IS THE PART THAT LASTS
+Dropping or choosing a fact changes how every future prospect is ranked, and
+the act alone does not say what to change. "Awards say nothing about whether
+someone needs this" is a rule about awards. "That one is four years old" is a
+rule about age. Same click, opposite lessons.
+
+So after you exclude or choose a fact — ACT FIRST, then ask, in the same reply:
+- One short question, offering the two likeliest reasons so it can be answered
+  in a word. "Dropped it. Was that awards generally, or just this one being old?"
+- The moment they answer, call `explain_choice` with what they actually said.
+- Ask at most once per fact, and skip it entirely if they already told you why
+  while asking, or if they are clearly working fast and giving one-word orders.
+- Never withhold the action until they explain, and never ask twice.
+
 HARD RULES
 - Never invent facts about the prospect. You may only use what `list_facts`
   returns. If asked to include something not there, say plainly that the
@@ -105,6 +119,23 @@ TOOLS = [
             "type": "object",
             "properties": {"fact_id": {"type": "string"}},
             "required": ["fact_id"],
+        },
+    },
+    {
+        "name": "explain_choice",
+        "description": (
+            "Record WHY the user included, excluded or chose a fact, in their own "
+            "words. Call this as soon as they tell you — a sentence like 'awards "
+            "don't tell you anything about need' or 'that one is years old'. Do not "
+            "paraphrase it into something more general than they said."),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "fact_id": {"type": "string", "description": "id from list_facts"},
+                "reason": {"type": "string",
+                           "description": "their reason, in their words, one sentence"},
+            },
+            "required": ["fact_id", "reason"],
         },
     },
     {
@@ -245,6 +276,15 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                     row, "assistant")
             await rebuild()
             return {"ok": True, "hook_now": run.get("chosen_hook")}
+
+        if name == "explain_choice":
+            fid = str(args.get("fact_id") or "")
+            reason = str(args.get("reason") or "").strip()
+            if not reason:
+                return {"error": "no reason given"}
+            ok = await db.attach_fact_reason(run_id, fid, reason)
+            return {"ok": ok} if ok else {
+                "error": "nothing was done to that fact to attach a reason to"}
 
         if name == "rewrite_message":
             writer = WriterConfig(**(await db.get_config("writer") or {}))

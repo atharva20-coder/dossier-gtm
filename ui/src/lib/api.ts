@@ -77,6 +77,11 @@ export interface LearnEvent {
   run_id?: number | null
   via?: string
   category?: string
+  fact_id?: string
+  /** Their stated motivation. The act says what changed; this says whether it
+   *  generalises — "awards mean nothing" and "that one is old" are not the
+   *  same lesson from the same click. */
+  reason?: string
 }
 
 export interface ChatTurn {
@@ -419,6 +424,8 @@ export const api = {
         /** Put back after being dropped, which cancels the drop. */
         restored: number
         dropped_examples: string[]
+        /** Why they did it, in their words, where they said. */
+        reasons: string[]
       }[]
       min_evidence: number
       note: string

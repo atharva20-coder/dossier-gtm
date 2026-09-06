@@ -137,6 +137,12 @@ CREATE TABLE IF NOT EXISTS fact_feedback (
     level      TEXT NOT NULL DEFAULT '',
     fact_text  TEXT NOT NULL DEFAULT '',
     via        TEXT NOT NULL DEFAULT '',   -- findings | assistant
+    -- Why the user did it, in their words, when they said. The act tells you
+    -- what happened; only the reason tells you whether it generalises. "Awards
+    -- say nothing about need" is a rule about awards. "That one is four years
+    -- old" is a rule about age, and treating the second as the first teaches
+    -- the wrong thing.
+    reason     TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS fact_feedback_cat_idx ON fact_feedback (category, action);
@@ -623,7 +629,7 @@ async def draft_revisions(run_id: int, limit: int = 30) -> list[dict]:
 
 
 async def record_fact_feedback(run_id: int, action: str, fact: dict,
-                               via: str = "") -> None:
+                               via: str = "", reason: str = "") -> int | None:
     """Remember that the user deliberately chose, dropped or restored a fact.
 
     Every one of these costs the user something — they read the evidence and
@@ -636,15 +642,39 @@ async def record_fact_feedback(run_id: int, action: str, fact: dict,
     """
     try:
         p = await pool()
-        await p.execute(
+        return await p.fetchval(
             """INSERT INTO fact_feedback
-                   (run_id, fact_id, action, category, level, fact_text, via)
-               VALUES ($1,$2,$3,$4,$5,$6,$7)""",
+                   (run_id, fact_id, action, category, level, fact_text, via, reason)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id""",
             run_id, str(fact.get("fact_id") or ""), action,
             str(fact.get("category") or ""), str(fact.get("level") or ""),
-            str(fact.get("text") or "")[:500], via)
+            str(fact.get("text") or "")[:500], via, (reason or "")[:400])
     except Exception:
         log.exception("could not record fact feedback")
+        return None
+
+
+async def attach_fact_reason(run_id: int, fact_id: str, reason: str) -> bool:
+    """Record why, against the most recent thing the user did to that fact.
+
+    Written separately because the reason usually arrives after the act: the
+    user drops something, is asked why, and answers a turn later. Requiring the
+    two together would mean either not asking, or holding the action back until
+    they explain — and an app that will not act until you justify yourself is
+    worse than one that never asks.
+    """
+    try:
+        p = await pool()
+        r = await p.execute(
+            """UPDATE fact_feedback SET reason = $1
+               WHERE id = (SELECT id FROM fact_feedback
+                           WHERE run_id = $2 AND fact_id = $3
+                           ORDER BY id DESC LIMIT 1)""",
+            (reason or "")[:400], run_id, fact_id)
+        return r.split()[-1] != "0"
+    except Exception:
+        log.exception("could not attach reason")
+        return False
 
 
 async def fact_feedback_counts() -> dict[str, dict]:
@@ -662,7 +692,9 @@ async def fact_feedback_counts() -> dict[str, dict]:
                count(*) FILTER (WHERE action = 'excluded') AS excluded,
                count(*) FILTER (WHERE action = 'included') AS included,
                (array_agg(fact_text ORDER BY id DESC)
-                  FILTER (WHERE action = 'excluded'))[1:3] AS dropped_examples
+                  FILTER (WHERE action = 'excluded'))[1:3] AS dropped_examples,
+               (array_agg(reason ORDER BY id DESC)
+                  FILTER (WHERE coalesce(reason,'') <> ''))[1:3] AS reasons
         FROM fact_feedback
         WHERE coalesce(category,'') <> ''
         GROUP BY category""")
@@ -670,6 +702,7 @@ async def fact_feedback_counts() -> dict[str, dict]:
         "chose": int(r["chose"]), "excluded": int(r["excluded"]),
         "included": int(r["included"]),
         "dropped_examples": [x for x in (r["dropped_examples"] or []) if x],
+        "reasons": [x for x in (r["reasons"] or []) if x],
     } for r in rows}
 
 
@@ -713,7 +746,7 @@ async def learning_feed(limit: int = 60) -> list[dict]:
 
     facts = await p.fetch(
         """SELECT f.action, f.category, f.fact_text, f.via, f.created_at,
-                  f.run_id, r.name
+                  f.run_id, f.reason, f.fact_id, r.name
            FROM fact_feedback f LEFT JOIN runs r ON r.id = f.run_id
            ORDER BY f.id DESC LIMIT $1""", limit)
     WORDING = {
@@ -729,6 +762,7 @@ async def learning_feed(limit: int = 60) -> list[dict]:
             "why": why.format(cat=(r["category"] or "this category").replace("_", " ")),
             "who": r["name"] or "", "run_id": r["run_id"],
             "via": r["via"], "category": r["category"],
+            "fact_id": r["fact_id"], "reason": r["reason"] or "",
         })
 
     edits = await p.fetch(

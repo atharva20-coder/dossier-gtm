@@ -100,6 +100,12 @@ CREATE TABLE IF NOT EXISTS fact_feedback (
     level      TEXT NOT NULL DEFAULT '',
     fact_text  TEXT NOT NULL DEFAULT '',
     via        TEXT NOT NULL DEFAULT '',   -- findings | assistant
+    -- Why the user did it, in their words, when they said. The act tells you
+    -- what happened; only the reason tells you whether it generalises. "Awards
+    -- say nothing about need" is a rule about awards. "That one is four years
+    -- old" is a rule about age, and treating the second as the first teaches
+    -- the wrong thing.
+    reason     TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS fact_feedback_cat_idx ON fact_feedback (category, action);

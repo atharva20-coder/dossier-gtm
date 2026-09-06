@@ -162,6 +162,22 @@ export function LearningDrawer({
                       {e.via === "findings" && " · from the findings column"}
                     </p>
 
+                    {/* The motivation, where it was given. This is the half
+                        that decides whether the lesson generalises, so it is
+                        shown differently from the mechanical description. */}
+                    {e.reason && (
+                      <p className="mt-1.5 border-l-2 border-[var(--violet-fg)] pl-2
+                                    text-[11.5px] italic leading-snug text-[var(--ink-5)]">
+                        “{e.reason}”
+                      </p>
+                    )}
+                    {!e.reason && e.kind === "fact" && e.action !== "included" && (
+                      <p className="mt-1 text-[11px] text-[var(--ink-8)]">
+                        No reason recorded — tell the assistant why and it applies
+                        the lesson more precisely.
+                      </p>
+                    )}
+
                     {e.run_id != null && (
                       <button onClick={() => onOpenLead(e.run_id!)}
                         className="mt-1.5 flex items-center gap-0.5 text-[11.5px]

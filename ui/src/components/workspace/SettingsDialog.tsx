@@ -117,6 +117,7 @@ export function SettingsDialog({
   const [triggers, setTriggers] = useState<
     { category: string; drafted: number; sent: number; hand_picked: number
       excluded: number; restored: number; dropped_examples: string[]
+      reasons: string[]
       weight: number; learned: boolean; examples: string[] }[]>([])
   const [triggerNote, setTriggerNote] = useState("")
   const [minEvidence, setMinEvidence] = useState(2)
@@ -555,6 +556,19 @@ export function SettingsDialog({
                                 Put back {t.restored} time(s) — a restore cancels a drop,
                                 because changing your mind is not a rejection.
                               </p>
+                            )}
+                            {t.reasons.length > 0 && (
+                              <div className="mb-2 rounded-[6px] border-l-2 border-primary
+                                              bg-background/60 py-1 pl-2">
+                                <p className="text-[11px] font-medium text-muted-foreground">
+                                  Why you said
+                                </p>
+                                {t.reasons.map((r, i) => (
+                                  <p key={i} className="text-[12px] italic leading-snug">
+                                    &ldquo;{r}&rdquo;
+                                  </p>
+                                ))}
+                              </div>
                             )}
                             {t.dropped_examples.length > 0 && (
                               <>
