@@ -363,6 +363,35 @@ def fact_sources(fact: ExtractedFact) -> list[str]:
     return urls
 
 
+def priority_band(fact: ExtractedFact, target_company: str) -> int:
+    """Which band a fact sits in. Lower is better, and bands beat scores.
+
+    Weights were the wrong instrument for this. Four rounds of tuning kept
+    producing a different weak hook, because a multiplier lets a well-evidenced
+    trivial fact climb past a plainly better one. An explicit ordering says the
+    thing directly:
+
+      0  what they themselves said or did — posts, reposts, talks
+      1  their current job, and what that company is doing now
+      2  anything else about them
+      3  a role at a company that is not their current one
+
+    Within a band, the score still decides. Across bands, it does not get a
+    vote — which is the point.
+    """
+    same_company = (not fact.subject_company or not target_company
+                    or _same_company(fact.subject_company, target_company))
+
+    if fact.level == "person" and fact.category in ACTIVITY_CATEGORIES:
+        return 0
+    if same_company:
+        return 1
+    if fact.level == "person" and fact.category in CAREER_CATEGORIES:
+        # A former employer. Real, and never the opening line.
+        return 3
+    return 2
+
+
 def score_fact(
     fact: ExtractedFact,
     age: int | None,
@@ -559,7 +588,11 @@ def judge(
     # Oldest first, so a trajectory reads as one.
     background.sort(key=lambda f: f.date or "")
 
-    eligible = sorted([v for v in verdicts if v.eligible], key=lambda v: v.score, reverse=True)
+    # Band first, score second. What they said outranks what happened to them,
+    # and their current company outranks a former one however well evidenced.
+    eligible = sorted(
+        [v for v in verdicts if v.eligible],
+        key=lambda v: (priority_band(v.fact, target_company), -v.score))
 
     if not eligible:
         # Last resort. Nothing cleared the bar, and the alternative is a message
@@ -586,7 +619,13 @@ def judge(
     best = eligible[0]
     runners = eligible[1:]
     best_tier = best.fact.level if best.fact.level in ("person", "company") else tier_of(best.fact.category)
-    reason = f"highest score ({best.score}) — {best_tier}-level {best.fact.category}"
+    band = priority_band(best.fact, target_company)
+    band_txt = {0: "something they posted or said themselves",
+                1: "about them or their current company",
+                2: "about them",
+                3: "a former employer — nothing more current was found"}[band]
+    reason = (f"{band_txt}; best of that group at {best.score} — "
+              f"{best_tier}-level {best.fact.category}")
     if best_tier == "person":
         reason += ", preferred because it is about them rather than their employer"
     if (boost := (learned or {}).get(best.fact.category)):
