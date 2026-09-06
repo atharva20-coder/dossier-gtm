@@ -31,6 +31,11 @@ from .pipeline import agent, contacts, draft, judge, normalize, outbound, runner
 from .pipeline import persona as persona_stage
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+# One INFO line per outbound HTTP request. A single campaign makes hundreds, so
+# at INFO these are the entire log and nothing this app says can be found in it.
+# Warnings and errors from them still come through.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 log = logging.getLogger("dossier")
 
 ROOT = Path(__file__).resolve().parent.parent

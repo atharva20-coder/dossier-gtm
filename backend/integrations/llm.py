@@ -35,6 +35,32 @@ class LLMFailure(Exception):
         self.reason = reason
 
 
+class _DropThoughtSignature(logging.Filter):
+    """Silence one specific SDK warning, and only that one.
+
+    Gemini returns its reasoning trace as a `thought_signature` part beside the
+    text part, and the SDK warns that `.text` concatenated only the text. That
+    is exactly what this app wants — the trace is not the answer — so the
+    warning fires on essentially every call and buries the ones that matter.
+
+    Filtered by message rather than by silencing the logger, so a genuinely new
+    warning from the same module still comes through.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "non-text parts in the response" not in record.getMessage()
+
+
+logging.getLogger("google_genai.types").addFilter(_DropThoughtSignature())
+
+# The SDK announces "AFC is enabled with max remote calls: 10" on every call
+# that does not say otherwise. This app never hands the SDK Python callables to
+# invoke — the tool loop in `with_tools` runs the calls itself — so automatic
+# function calling is off everywhere, which removes the behaviour and the line
+# announcing it.
+_NO_AFC = types.AutomaticFunctionCallingConfig(disable=True)
+
+
 def client() -> genai.Client:
     global _client
     if _client is None:
@@ -140,6 +166,7 @@ async def structured(
         temperature=temperature,
         system_instruction=system or None,
         thinking_config=_thinking(model),
+        automatic_function_calling=_NO_AFC,
     )
 
     last_err = ""
@@ -179,7 +206,7 @@ async def with_tools(
         tools=[types.Tool(function_declarations=tools)],
         system_instruction=system or None,
         temperature=0.3,
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        automatic_function_calling=_NO_AFC,
     )
     contents: list[types.Content] = [
         types.Content(role="user", parts=[types.Part(text=prompt)])]
@@ -231,6 +258,7 @@ async def text(
     cfg = types.GenerateContentConfig(
         temperature=temperature,
         system_instruction=system or None,
+        automatic_function_calling=_NO_AFC,
     )
     return (await _generate(model or config.MODEL_SMART, prompt, cfg)).strip()
 
