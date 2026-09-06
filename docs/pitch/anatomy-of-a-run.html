@@ -345,6 +345,12 @@
     color: var(--ink);
   }
 
+  ul { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  li { margin-bottom: 0.45rem; }
+  li::marker { color: var(--accent); }
+  h3 { font-size: 1.02rem; color: var(--ink); margin: 1.9rem 0 0.6rem; }
+  .note ul { margin-bottom: 0; }
+
   .foot {
     margin-top: 3.5rem;
     padding-top: 1.25rem;
@@ -360,46 +366,48 @@
 
   <p class="eyebrow">Dossier · run #198 · 6 September 2026</p>
   <h1>Anatomy of a Run</h1>
-  <p class="standfirst">One prospect, start to finish: fifty-eight sources read, eighteen facts weighed, sixteen thrown away, and the reasoning for every one of them.</p>
+  <p class="standfirst">One prospect, start to finish. 58 pages read, 18 facts weighed, 16 thrown away — and the reason for every single one.</p>
+
+  <p class="sub"><strong>Why this page exists:</strong> anyone can show you the email a tool produced. This shows you everything it <em>considered</em> and rejected, which is the only way to tell whether it was thinking or guessing.</p>
 
   <!-- ---------------------------------------------------------- verdict -->
   <div class="verdict">
     <div class="who">
       <b>Maheedhar Maram</b>
       <span>Founder's Office · Zamp</span>
-      <span class="pill">ICP 100</span>
-      <span class="pill">identity confirmed</span>
+      <span class="pill">fits ideal customer 100/100</span>
+      <span class="pill">right person confirmed</span>
     </div>
     <div class="hook">
       <p>Maheedhar Maram joined Zamp as part of the Founder's Office.</p>
-      <cite>in.linkedin.com/in/maheedhar167 — first-party</cite>
+      <cite>in.linkedin.com/in/maheedhar167 — from his own profile</cite>
     </div>
   </div>
 
   <div class="stats">
-    <div class="stat"><b>42s</b><span>start to drafted email</span></div>
-    <div class="stat"><b>58</b><span>sources read</span></div>
-    <div class="stat"><b>39</b><span>about him, not Zamp</span></div>
-    <div class="stat"><b>18/18</b><span>facts verified against source text</span></div>
+    <div class="stat"><b>42s</b><span>start to finished email</span></div>
+    <div class="stat"><b>58</b><span>pages read</span></div>
+    <div class="stat"><b>39</b><span>about him, not about Zamp</span></div>
+    <div class="stat"><b>18/18</b><span>facts checked against their source</span></div>
   </div>
 
   <!-- ----------------------------------------------------------- stages -->
-  <h2>What it did, and how long each part took</h2>
-  <p class="sub">Every stage writes itself to the database as it finishes, so this is the record, not a reconstruction.</p>
+  <h2>What it did, step by step</h2>
+  <p class="sub">Each step saves itself to the database the moment it finishes. So this is the actual record — not something written up afterwards.</p>
 
   <div class="stages">
-    <div class="stage"><b>Profile</b><em>0.0s</em><span>Seniority and ICP fit from the title — 100/100</span></div>
-    <div class="stage"><b>Identity</b><em>0.0s</em><span>Company supplied, so no disambiguation was needed — confidence 100/100</span></div>
-    <div class="stage"><b>Research</b><em>19.0s</em><span>58 sources. His own profile and posts matched by LinkedIn URL — 411 words. Identity confirmed, so it followed 6 further threads about him, via JPMorgan Chase, Stellaris Venture Partners and McKinsey</span></div>
-    <div class="stage"><b>Extract</b><em>11.7s</em><span>18 candidate facts. One about a <strong>different person at Zamp</strong> discarded; one about a <strong>namesake</strong> discarded — the source never tied them to Zamp</span></div>
-    <div class="stage"><b>Ground</b><em>0.2s</em><span>18 of 18 verified word-for-word against the text they came from</span></div>
-    <div class="stage"><b>Judge</b><em>0.0s</em><span>Highest score 0.5232 — person-level, preferred because it is about him rather than his employer</span></div>
-    <div class="stage"><b>Draft</b><em>10.6s</em><span>Checked that the message carries the hook's specific detail. Matched to the sender's voice from 3 edited drafts</span></div>
+    <div class="stage"><b>1 · Score the lead</b><em>0.0s</em><span>Worked out seniority and how well he fits your ideal customer, from his job title — 100/100</span></div>
+    <div class="stage"><b>2 · Confirm who he is</b><em>0.0s</em><span>Company was supplied, so there was nobody to confuse him with — 100% certain</span></div>
+    <div class="stage"><b>3 · Read</b><em>19.0s</em><span>58 pages. His own profile and posts matched by LinkedIn URL — 411 words. Once he was confirmed, it followed 6 more threads about him, through JPMorgan Chase, Stellaris Venture Partners and McKinsey</span></div>
+    <div class="stage"><b>4 · Pull out claims</b><em>11.7s</em><span>18 possible facts. One about a <strong>different person at Zamp</strong> thrown out; one about <strong>someone with the same name</strong> thrown out — that source never linked them to Zamp</span></div>
+    <div class="stage"><b>5 · Check them</b><em>0.2s</em><span>18 of 18 found word-for-word in the page they came from</span></div>
+    <div class="stage"><b>6 · Pick the hook</b><em>0.0s</em><span>Top score 0.5232 — chosen because it's about <em>him</em>, not about his employer</span></div>
+    <div class="stage"><b>7 · Write it</b><em>10.6s</em><span>Checked the email still carried the specific detail. Matched to your voice using 3 drafts you'd previously edited</span></div>
   </div>
 
   <!-- --------------------------------------------------------- evidence -->
-  <h2>The eighteen facts, and why sixteen lost</h2>
-  <p class="sub">This is the part worth reading. A tool that only shows you its answer is asking to be trusted; this one shows the reasoning and lets you disagree with it.</p>
+  <h2>The 18 facts, and why 16 lost</h2>
+  <p class="sub">This is the part worth reading slowly. A tool that only shows you its answer is asking to be trusted. This one shows the working and lets you disagree.</p>
 
   <div class="scroll">
     <table>
@@ -411,37 +419,37 @@
           <td class="score">0.5232</td>
           <td class="mark">chosen</td>
           <td>Maheedhar Maram joined Zamp as part of the Founder's Office.
-            <div class="why">person-level role change, specific and safe, first-party LinkedIn</div></td>
+            <div class="why">about him personally, specific, safe, and straight from his own LinkedIn</div></td>
         </tr>
         <tr>
-          <td class="score">0.3003</td><td class="mark in">eligible</td>
+          <td class="score">0.3003</td><td class="mark in">in the running</td>
           <td>Zamp transitioned completely towards AI agents.
-            <div class="why">company-level — outranked by a fact about him</div></td>
+            <div class="why">about the company — beaten by a fact about him</div></td>
         </tr>
         <tr>
-          <td class="score">0.2618</td><td class="mark in">eligible</td>
+          <td class="score">0.2618</td><td class="mark in">in the running</td>
           <td>Zamp's AI employee product is already live at several F500 banks and healthcare firms.
-            <div class="why">company-level expansion</div></td>
+            <div class="why">about the company — growth news</div></td>
         </tr>
         <tr>
-          <td class="score">0.2310</td><td class="mark in">eligible</td>
+          <td class="score">0.2310</td><td class="mark in">in the running</td>
           <td>Zamp is opening early access to its AI employee product for select companies.
-            <div class="why">company-level product launch</div></td>
+            <div class="why">about the company — product launch</div></td>
         </tr>
         <tr>
-          <td class="score">0.2310</td><td class="mark in">eligible</td>
+          <td class="score">0.2310</td><td class="mark in">in the running</td>
           <td>Zamp enables finance teams to delegate complex processes reliably.
-            <div class="why">company-level, positioning rather than an event</div></td>
+            <div class="why">about the company — marketing copy, not an event</div></td>
         </tr>
         <tr>
-          <td class="score">0.1347</td><td class="mark in">eligible</td>
+          <td class="score">0.1347</td><td class="mark in">in the running</td>
           <td>Zamp is headquartered in San Francisco.
-            <div class="why">true, specific, and no reason to write to anyone</div></td>
+            <div class="why">true, specific, and no reason to email anybody</div></td>
         </tr>
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
           <td>Maheedhar Maram has been in the Founder's Office at Zamp since January 2023.
-            <div class="why">stale — roughly 45 months old</div></td>
+            <div class="why">too old — about 45 months</div></td>
         </tr>
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
@@ -451,39 +459,42 @@
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
           <td>Published “Cuff-less PPG based continuous blood pressure monitoring”
-            <div class="why">stale — roughly 120 months old</div></td>
+            <div class="why">too old — about 10 years</div></td>
         </tr>
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
           <td>Published “StayFit: A wearable application for gym-based power training”
-            <div class="why">stale — roughly 120 months old</div></td>
+            <div class="why">too old — about 10 years</div></td>
         </tr>
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
-          <td>Four further IEEE papers on biristors and impact-ionisation MOS devices
-            <div class="why">stale — 132 to 143 months old</div></td>
+          <td>Four more IEEE papers on biristors and impact-ionisation MOS devices
+            <div class="why">too old — 11 to 12 years</div></td>
         </tr>
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
           <td>A fact about a different person at Zamp
-            <div class="why">the subject was not him — third-party gate</div></td>
+            <div class="why">not about him — colleague filter</div></td>
         </tr>
         <tr>
           <td class="score">—</td><td class="mark out">dropped</td>
-          <td>A fact about a namesake
-            <div class="why">the source never tied that person to Zamp — wrong-person gate</div></td>
+          <td>A fact about someone with the same name
+            <div class="why">the source never linked that person to Zamp — same-name filter</div></td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <p>The six research papers are the clearest illustration. They are real, correctly attributed, and genuinely his — and every one is a decade old. A tool optimising for <em>interesting</em> would have opened with a paper on blood-pressure monitoring. This one dropped all six on age and wrote about the job he actually has.</p>
-
-  <p>Two more never reached the table at all. One fact belonged to a different person at Zamp; one belonged to a namesake the source never connected to the company. Both gates exist because both mistakes happened in testing, and an email built on either would have been confidently, unrecoverably wrong.</p>
+  <h3>Three things to notice in that table</h3>
+  <ul>
+    <li><strong>The six research papers.</strong> All real, all genuinely his, all about a decade old. A tool chasing the most <em>interesting</em> fact would have opened with blood-pressure monitoring. This one dropped all six on age and wrote about the job he actually has.</li>
+    <li><strong>Two facts never even reached the table.</strong> One belonged to a colleague, one to a stranger with the same name. Both filters exist because both mistakes happened during testing — and an email built on either would have been confidently, unfixably wrong.</li>
+    <li><strong>Nothing was deleted for being old.</strong> Old facts still appear, with their reason. They lose; they don't disappear.</li>
+  </ul>
 
   <!-- ------------------------------------------------------------ email -->
   <h2>What it wrote</h2>
-  <p class="sub">Three sentences, in a persona defined on day one and adjusted from three edited drafts since.</p>
+  <p class="sub">Three sentences, in a voice defined on day one and adjusted from three drafts edited since.</p>
 
   <div class="email">
     <header>
@@ -499,18 +510,24 @@ Founder, Dossier</div>
   </div>
 
   <!-- ------------------------------------------------------------ flaw -->
-  <h2>Where this run is wrong</h2>
+  <h2>Where this run got it wrong</h2>
+  <p class="sub">Kept on the page deliberately. A walkthrough that only shows the good parts isn't a walkthrough.</p>
 
   <div class="note">
-    <p><b>The winning fact has no date, and that is why it won.</b></p>
-    <p>“Has been in the Founder's Office since January 2023” was dropped as stale at 45 months. “Joined Zamp as part of the Founder's Office” — the same event, without a date attached — scored highest. The ranking penalised the honest version for being specific about time.</p>
+    <p><b>The winning fact has no date — and that's <em>why</em> it won.</b></p>
+    <p>“Has been in the Founder's Office since January 2023” was dropped for being 45 months old. “Joined Zamp as part of the Founder's Office” — the same event, just without a date attached — came top.</p>
+    <p>So the ranking punished the more honest version for being specific about time.</p>
   </div>
 
-  <p>The deeper version of the same problem: ranking still optimises for the most <strong>interesting</strong> fact rather than the one most <strong>connected to what the sender sells</strong>. On this run, <em>“Zamp transitioned completely towards AI agents”</em> and <em>“already live at several F500 banks”</em> are better reasons to start a conversation about research tooling than a role change from 2023 — but they are company-level, and the ranking prefers person-level on principle.</p>
+  <h3>The deeper version of the same problem</h3>
+  <ul>
+    <li>Ranking still chases the most <strong>interesting</strong> fact rather than the one most <strong>connected to what you're selling</strong>.</li>
+    <li>On this run, <em>“Zamp transitioned completely towards AI agents”</em> and <em>“already live at several F500 banks”</em> are better openers for a conversation about research tooling than a role change from 2023.</li>
+    <li>But those are about the company, and the ranking prefers facts about the person as a matter of principle.</li>
+    <li><strong>The fix is small.</strong> What you sell already reaches the writing step. It needs to reach the ranking step too.</li>
+  </ul>
 
-  <p>That is the next change, and it is a small one: the seller's own product already reaches the drafting stage, and it needs to reach the ranking stage too.</p>
-
-  <p class="foot">Run #198 · every figure on this page read from the database after the fact, not typed by hand. Sources retrieved through site-scoped search across LinkedIn and X plus a person-profile provider; every claim string-checked against the retrieved text before it was allowed into the message.</p>
+  <p class="foot">Run #198 · every number on this page was read back out of the database afterwards, not typed by hand. Sources found by searching LinkedIn and X directly plus a profile provider; every claim matched word-for-word against the page it came from before it was allowed into the email.</p>
 
 </div>
 </body>

@@ -243,6 +243,11 @@
   li { margin-bottom: 0.4rem; }
   li::marker { color: var(--faint); }
 
+  .stage ul { margin: 0 0 0.6rem; padding-left: 1.15rem; }
+  .stage li { margin-bottom: 0.32rem; }
+  .stage li::marker { color: var(--accent); }
+  .stage-name + ul { margin-top: 0.55rem; }
+
   .foot {
     margin-top: 3.5rem;
     padding-top: 1.25rem;
@@ -257,23 +262,55 @@
 <body>
 <div class="wrap">
 
-  <p class="eyebrow">Dossier · architecture &amp; reasoning</p>
+  <p class="eyebrow">Dossier · how the whole thing works</p>
   <h1>How Dossier Works</h1>
-  <p class="standfirst">The whole system in plain language, the shape of it in two pictures, and why each part is built the way it is.</p>
+  <p class="standfirst">The whole system in ordinary words, the shape of it in two pictures, and the thing that broke first behind every design choice.</p>
 
   <!-- =========================================================== plain -->
-  <h2>Explain it without a single technical word</h2>
+  <h2>The one-paragraph version</h2>
 
   <div class="plain">
-    <p><b>Give it a name and a company. It goes and does the reading you don't have time for, then writes the email.</b></p>
-    <p>A salesperson researching one prospect properly spends about forty minutes: LinkedIn, X, the company site, a news article, notes into a document — then later they open that document again and try to write something from it. Two separate costs, which is why most people skip it and send the generic version.</p>
-    <p>This does the reading in about a minute, and hands back one specific reason to get in touch — with a link to the page it came from, so you can check it.</p>
+    <p><b>Give it a name and a company. It does the reading you don't have time for, then writes the email.</b></p>
+    <p>Doing this properly by hand takes about forty minutes per prospect — LinkedIn, X, the company site, a news article, notes into a doc. Then later you open that doc again and try to write something from it.</p>
+    <p>That's two separate chores, and the second one is why people give up on the first and send the generic version instead.</p>
+    <p>This does the reading in about a minute and hands back <em>one specific reason</em> to get in touch, plus a link to the page it came from so you can check it yourself.</p>
   </div>
 
-  <p class="lead">The one rule underneath everything: <strong>it is not allowed to make anything up.</strong> If it cannot point at a page for a claim, the claim does not survive. That constraint is what most of the machinery below exists to enforce.</p>
+  <p class="lead">One rule sits under everything: <strong>it is not allowed to make anything up.</strong> If it can't point at a page, the claim doesn't survive. Almost all the machinery below exists to enforce that single sentence.</p>
+
+  <!-- ======================================================== glossary -->
+  <h2>Five words worth knowing first</h2>
+  <p>These come up constantly. Learn these and the rest of the page reads easily.</p>
+
+  <div class="stage">
+    <div class="stage-name"><b>Hook</b><span>the reason to write</span></div>
+    <p>The one fact the email opens with. “You just joined X.” “Your company just launched Y.” Everything the app does is really about picking a good one.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-name"><b>Fact</b><span>a single claim</span></div>
+    <p>One statement pulled out of one page, carrying who it's about, which company, and where it came from. A run produces about 30 of these. Exactly one becomes the hook.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-name"><b>Checking a claim</b><span>“grounding”, if you meet the word</span></div>
+    <p>Before a fact is allowed anywhere near the email, the specific things it names — a company, a number, a job title — must appear <em>word for word</em> on the page it supposedly came from. If they don't, it's thrown out.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-name"><b>Band</b><span>a tier, ranked above scoring</span></div>
+    <p>Facts get sorted into four groups by <em>what kind of thing</em> they are — their own post, their current job, other, former employer. A higher band always beats a lower one, no matter what the scores say.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-name"><b>Persona</b><span>the voice it writes in</span></div>
+    <p>You describe yourself once on day one — who you are, what you sell, how you write. Then it learns the rest by watching which drafts you edit.</p>
+  </div>
 
   <!-- ======================================================= diagram 1 -->
   <h2>The shape of it</h2>
+
+  <p>Read this picture left to right, then down. Facts only ever get <em>fewer</em> — never more.</p>
 
   <figure>
     <svg viewBox="0 0 820 470" role="img"
@@ -377,67 +414,106 @@
     <figcaption>Facts only ever narrow. Four kinds of source produce roughly thirty candidate claims; four filters remove the ones about the wrong person, the wrong company, or unsupported by the page they came from. Nothing is deleted for being old — old facts stay in the list and lose.</figcaption>
   </figure>
 
+  <h3>The same picture in five lines</h3>
+  <ul>
+    <li><strong>Read.</strong> Four kinds of source — their LinkedIn, their posts on X, news and podcasts, and a profile provider.</li>
+    <li><strong>Pull out claims.</strong> Roughly 30 individual facts.</li>
+    <li><strong>Throw out the bad ones.</strong> Four filters: wrong person with the same name, a colleague rather than them, a rival mentioned in the same article, and anything the page doesn't actually say.</li>
+    <li><strong>Rank what's left.</strong> Nothing is deleted for being old — old facts stay in the list and simply lose.</li>
+    <li><strong>Pick one, write, then check the email still contains it.</strong></li>
+  </ul>
+
   <!-- ========================================================== stages -->
-  <h2>Each part, and the failure that shaped it</h2>
+  <h2>Each part, and the thing that broke first</h2>
+  <p>Every one of these exists because something went wrong. None of it was designed up front.</p>
 
   <div class="stage">
-    <div class="stage-name"><b>Work out who they are</b><span>identity</span></div>
-    <p>Two people can share a name. Before spending anything, it confirms which one this is — and if two are genuinely plausible, it stops and asks rather than guessing.</p>
+    <div class="stage-name"><b>1 · Work out who they are</b><span>identity</span></div>
+    <ul>
+      <li>Two people can share a name. Before spending anything, it confirms which one you mean.</li>
+      <li>If two are genuinely believable, it <strong>stops and asks</strong> instead of guessing.</li>
+    </ul>
     <div class="why">
-      <p><b>Why:</b> a namesake's podcast appearance was picked as the reason to write to someone who had never been on a podcast. Guessing here means researching a stranger and emailing a real person about them.</p>
+      <p><b>What broke:</b> a different person with the same name had been on a podcast. That podcast became the reason to write to someone who had never been on one. Guess wrong here and you research a stranger, then email a real person about them.</p>
     </div>
   </div>
 
   <div class="stage">
-    <div class="stage-name"><b>Go and read</b><span>research</span></div>
-    <p>Searches scoped to their LinkedIn and X specifically, plus the open web, plus a profile provider. Every query keeps their name in it, so it cannot wander onto their employer's competitors.</p>
+    <div class="stage-name"><b>2 · Go and read</b><span>research</span></div>
+    <ul>
+      <li>Searches aimed specifically at their LinkedIn and their X, plus the open web, plus a profile provider.</li>
+      <li>Every single search keeps their name in it. That's the trick — it can't wander off.</li>
+    </ul>
     <div class="why">
-      <p><b>Why:</b> unanchored searching drifted onto Accenture, AWS and a university that merely appeared nearby. The anchor is the whole point.</p>
+      <p><b>What broke:</b> without that anchor, searching drifted onto Accenture, AWS and a university that just happened to be mentioned nearby. Keeping the name in every query is the whole fix.</p>
     </div>
   </div>
 
   <div class="stage">
-    <div class="stage-name"><b>Pull out claims</b><span>extract</span></div>
-    <p>Turns pages into individual factual statements, each carrying who it is about, which company, and the page it came from.</p>
+    <div class="stage-name"><b>3 · Pull out claims</b><span>extract</span></div>
+    <ul>
+      <li>Turns pages into separate factual statements.</li>
+      <li>Each one records three things: <strong>who it's about</strong>, <strong>which company</strong>, and <strong>which page</strong> it came from.</li>
+    </ul>
     <div class="why">
-      <p><b>Why “who it is about” is a field:</b> an intern's award at the same company was nearly used as the reason to write to an executive. Without recording the subject of a fact, there is no way to notice.</p>
+      <p><b>Why “who it's about” is stored:</b> an intern's award at the same company nearly became the reason to write to an executive. If you don't record whose fact it is, there's no way to spot that.</p>
     </div>
   </div>
 
   <div class="stage">
-    <div class="stage-name"><b>Check every claim against the page</b><span>grounding</span></div>
-    <p>The specific things a claim names — a company, a number, a title — must appear word for word in the retrieved text. If they don't, the claim is dropped.</p>
+    <div class="stage-name"><b>4 · Check every claim against the page</b><span>grounding</span></div>
+    <ul>
+      <li>The specific things a claim names must appear <em>word for word</em> in the text that was fetched.</li>
+      <li>If they don't, the claim is dropped. No appeal.</li>
+    </ul>
     <div class="why">
-      <p><b>Why:</b> a model will produce “raised $18M led by Accel” in perfect, confident English about a company that raised nothing. It is deliberately a dumb string match, because a model cannot talk its way past one.</p>
+      <p><b>What broke:</b> an AI will write “raised $18M led by Accel” in perfect, confident English about a company that raised nothing. This check is deliberately dumb — it's a plain text match, and an AI can't talk its way past one.</p>
     </div>
   </div>
 
   <div class="stage">
-    <div class="stage-name"><b>Rank what is left</b><span>judgment</span></div>
-    <p>Nothing is thrown away for being old. Everything stays in the list, and ranking decides — by how recent it is, whether it is about them or their employer, how many independent sources carry it, and whether it connects to what you sell.</p>
+    <div class="stage-name"><b>5 · Rank what's left</b><span>judgment</span></div>
+    <ul>
+      <li>Nothing is thrown away for being old. Everything stays in the list and ranking decides.</li>
+      <li>Four things move a fact up: how recent it is · whether it's about them or their employer · how many separate sources say it · whether it connects to what you sell.</li>
+    </ul>
     <div class="why">
-      <p><b>Why nothing is excluded:</b> an old fact is often the only thing that says who someone is. A ten-year-old VP role at a different company is a poor reason to write today and exactly what tells you the new SVP has done the job before.</p>
+      <p><b>Why nothing is excluded:</b> an old fact is often the only thing that tells you who someone <em>is</em>. A VP role ten years ago at a different company is a terrible reason to write today — and exactly what tells you the new SVP has done this job before.</p>
     </div>
   </div>
 
   <div class="stage">
-    <div class="stage-name"><b>Decide, once, over everything</b><span>the collective call</span></div>
-    <p>The rules narrow the field to a shortlist. One judgment then looks at all of them together — with their dates, their sources, and what you sell — and picks the one to open with, or declines.</p>
+    <div class="stage-name"><b>6 · Decide once, over all of them</b><span>the collective call</span></div>
+    <ul>
+      <li>The rules narrow ~30 facts down to a shortlist of 8.</li>
+      <li>Then <strong>one</strong> AI call looks at all 8 together — dates, sources, what you sell — and picks the opener. Or declines.</li>
+    </ul>
     <div class="why">
-      <p><b>Why:</b> scoring each fact alone and taking the highest kept producing a different weak answer — a work anniversary, then a decade-old exam result, then a role at a former employer. Four rounds of adjusting the arithmetic was the evidence that arithmetic was the wrong tool: the comparison is <em>between</em> facts, not within them.</p>
+      <p><b>What broke:</b> scoring each fact on its own and taking the winner kept producing a different weak answer — a work anniversary, then a decade-old exam result, then a job at a company he'd left. Four rounds of tweaking the maths was the evidence that maths was the wrong tool. The comparison is <em>between</em> facts, not within one.</p>
     </div>
   </div>
 
   <div class="stage">
-    <div class="stage-name"><b>Write it in your voice</b><span>drafting</span></div>
-    <p>Your persona — described once on day one — writes the message, then it is checked that the message actually used the specific detail rather than drifting into something generic.</p>
+    <div class="stage-name"><b>7 · Write it in your voice</b><span>drafting</span></div>
+    <ul>
+      <li>Your persona writes the message.</li>
+      <li>Then it checks the finished email actually still contains the specific detail, rather than drifting into something vague.</li>
+    </ul>
     <div class="why">
-      <p><b>Why the check:</b> a rewrite can quietly lose the one specific thing and still read well. Then it is a generic email wearing a researched one's clothes.</p>
+      <p><b>Why that last check:</b> a rewrite can quietly lose the one specific thing and still read beautifully. At that point it's a generic email wearing a researched one's clothes.</p>
     </div>
   </div>
 
   <!-- ======================================================= diagram 2 -->
   <h2>The one idea worth drawing twice</h2>
+
+  <p>This is the bit most worth understanding, because it's where the biggest reversal happened.</p>
+
+  <ul>
+    <li><strong>Old way:</strong> give every fact a score, take the highest. Sounds sensible. Kept picking rubbish.</li>
+    <li><strong>Why it failed:</strong> a well-documented trivial fact could out-score a plainly better one, because you were comparing things that aren't comparable.</li>
+    <li><strong>New way:</strong> sort facts into four tiers first. The tier decides. The score only breaks ties <em>inside</em> a tier.</li>
+  </ul>
 
   <figure>
     <svg viewBox="0 0 820 300" role="img"
@@ -490,26 +566,34 @@
     <figcaption>A band beats a score. Within a band the score decides everything; across bands it gets no vote — so no amount of corroboration lets a former employer outrank what someone posted last week.</figcaption>
   </figure>
 
+  <p>In plain terms: <strong>no amount of evidence lets a former employer beat something the person posted last week.</strong></p>
+
   <!-- ========================================================== numbers -->
   <h2>What it costs to run</h2>
 
   <div class="stats">
-    <div class="stat"><b>~60s</b><span>one prospect, start to drafted email</span></div>
+    <div class="stat"><b>~60s</b><span>one prospect, start to finished email</span></div>
     <div class="stat"><b>~15</b><span>searches per prospect</span></div>
     <div class="stat"><b>58</b><span>sources read on a typical run</span></div>
-    <div class="stat"><b>£0</b><span>everything on free tiers</span></div>
+    <div class="stat"><b>£0</b><span>everything on free plans</span></div>
   </div>
 
-  <p>Every provider is optional. No key, a wrong key and an exhausted quota all produce the same outcome — the run completes on whatever is still available — and the only difference is the reason shown. Nothing spends an allowance to draw a status badge; a check happens when a person asks for one.</p>
-
-  <h3>If they ask what you'd need money for</h3>
+  <h3>Why it never breaks when a key expires</h3>
   <ul>
-    <li><strong>Verified contact data.</strong> Addresses are currently found where possible and otherwise calculated from a company's naming convention — and labelled as calculated everywhere they appear.</li>
-    <li><strong>Job-posting and executive-hire feeds.</strong> The two highest-intent triggers, and the two that public search is worst at surfacing.</li>
-    <li><strong>Writing back into the CRM.</strong> Reps live in Outreach and HubSpot; a tool that needs copy-paste is abandoned by week three.</li>
+    <li>Every outside service is optional. None of them is required.</li>
+    <li><strong>No key</strong>, <strong>wrong key</strong> and <strong>out of credit</strong> all produce the same outcome: the run finishes on whatever's still working.</li>
+    <li>The only difference is the reason it shows you.</li>
+    <li>And nothing spends credit just to draw a status light. It only checks when a person clicks the button.</li>
   </ul>
 
-  <p class="foot">Every decision above was made because something broke first. That is the honest version of an architecture diagram — not a plan that survived contact, but the shape left behind after it didn't.</p>
+  <h3>What money would buy</h3>
+  <ul>
+    <li><strong>Verified email addresses.</strong> Right now it looks one up where it can and otherwise works it out from the company's naming pattern — and labels it as worked-out, everywhere it appears.</li>
+    <li><strong>Job-posting and new-executive feeds.</strong> The two strongest buying signals there are, and the two that public search is worst at finding.</li>
+    <li><strong>Writing straight into the CRM.</strong> Reps live in Outreach and HubSpot. A tool that needs copy-paste gets abandoned by week three.</li>
+  </ul>
+
+  <p class="foot">Every decision above happened because something broke first. That's the honest version of an architecture diagram — not the plan that survived, but the shape left behind after it didn't.</p>
 
 </div>
 </body>

@@ -269,6 +269,43 @@
     margin-bottom: 0.3rem;
     font-weight: 500;
   }
+
+  .lvl {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border-radius: 3px;
+    padding: 0.22em 0.5em;
+    vertical-align: 0.32em;
+    margin-right: 0.6rem;
+  }
+
+  .why {
+    border-left: 3px solid var(--accent);
+    padding: 0.15rem 0 0.15rem 0.9rem;
+    margin: 0.9rem 0 0;
+    font-size: 0.92rem;
+  }
+
+  .why > b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+  }
+
+  .why p { margin: 0; color: var(--ink-2); }
+
+  .qa > ul + .why, .qa > ul + .backing { margin-top: 0.9rem; }
 </style>
 
 </head>
@@ -277,21 +314,104 @@
 
   <p class="eyebrow">Dossier · the debrief</p>
   <h1>Questions About Your Thinking</h1>
-  <p class="standfirst">They are not testing the app. They are testing whether you know <em>why</em> you built it that way. Here is every likely question, with a plain-English answer, the proof to point at, and what they'll ask next.</p>
+  <p class="standfirst">Everything they could reasonably ask, from “so what is it?” to the ones designed to make you squirm. Each answer has a line you can say out loud, the reasoning in points, the proof to point at, and the questions that come next.</p>
 
   <div class="frame">
     <p><strong>Read this bit first — it explains the whole page.</strong></p>
     <ul>
-      <li>The brief says they grade three things: does it work, <em>why did you make those choices</em>, and can you explain it to someone non-technical.</li>
-      <li>They also said: “the ones who do well aren't the ones who build the most — they're the ones who make the best choices about what to build.”</li>
-      <li>So nearly every question is really the same question: <strong>why that, and not something else?</strong></li>
-      <li>A good answer always has two halves — what you did, <em>and</em> the option you said no to. If your answer has no rejected option in it, it sounds like you only ever thought of one thing.</li>
+      <li>They grade three things: does it work, <em>why did you make those choices</em>, and can you explain it to someone non-technical.</li>
+      <li>Their words: “the ones who do well aren't the ones who build the most — they're the ones who make the best choices about what to build.”</li>
+      <li>So nearly every question is secretly the same question: <strong>why that, and not something else?</strong></li>
+      <li>A good answer has two halves — what you did, <em>and</em> the option you rejected. No rejected option in the answer makes it sound like you only thought of one thing.</li>
     </ul>
+    <p><strong>The page is organised two ways at once.</strong> Sections run roughly easy → hard. And it deliberately covers all six angles an interviewer can come from: the <em>facts</em>, the <em>risks</em>, the <em>upside</em>, the <em>alternatives</em>, the <em>gut feel</em>, and <em>how you worked</em>. If a question isn't here, it's probably a reworded version of one that is.</p>
+  </div>
+
+  <!-- ==================================================== warm-up -->
+  <h2><span class="lvl">level 1</span>The warm-up</h2>
+  <p class="section-note">First five minutes. Low stakes, but they set the tone — and a rambling answer here costs you the room before you've started.</p>
+
+  <div class="qa">
+    <span class="tests">tests · can you be brief</span>
+    <p class="q">So, what did you build?</p>
+    <div class="say"><b>Say this</b>“You give it a name and a company. It reads about forty pages, picks the single best reason to contact that person, and writes the email — showing you the source for every claim.”</div>
+    <ul>
+      <li>Two sentences. Then <strong>stop</strong>.</li>
+      <li>The silence after is theirs to fill, and what they ask next tells you what they actually care about.</li>
+      <li>Do not list features here. There will be twenty minutes for that if they want it.</li>
+    </ul>
+    <div class="trap"><b>Most common failure:</b> answering this question for four minutes. They asked for a description, not a tour.</div>
+    <div class="why"><b>Why answer in two sentences</b>
+      <p>Because the first answer sets the level for everything after it. A long one signals you can't tell what matters, and it hands them no thread to pull on. A short one makes them choose the next question — and what they choose tells you whether this room cares about the mechanism, the commercial case, or the judgment.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · do you know your own scope</span>
+    <p class="q">Which problem statement did you take?</p>
+    <div class="say"><b>Say this</b>“PS-3 — personalised outreach, prospect to draft.”</div>
+    <ul>
+      <li>Then one sentence on why, because they'll want it anyway: <em>“because the hard part isn't the writing, it's finding something worth writing about.”</em></li>
+      <li>Don't apologise for not doing the others.</li>
+    </ul>
+    <div class="why"><b>Why not hedge or apologise</b>
+      <p>Because choosing is the graded act. The brief explicitly rewards people who make good choices about what to build, so treating your own choice as something to justify defensively undercuts the thing being measured. State it, give the one-line reason, move on.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · basic orientation</span>
+    <p class="q">Who is it for?</p>
+    <div class="say"><b>Say this</b>“Anyone who sends cold outreach and cares whether it lands. Sales reps at volume, and founders doing their own selling.”</div>
+    <ul>
+      <li>Those two get <em>opposite</em> value from it, and saying so shows you've thought about it.</li>
+      <li><strong>A rep with 200 prospects:</strong> value is speed. They weren't going to research at all.</li>
+      <li><strong>A founder with 20:</strong> value is quality. They'll edit every word — and those edits are exactly what it learns from.</li>
+    </ul>
+    <div class="why"><b>Why name two users who want opposite things</b>
+      <p>Because one persona is easy to design for and proves nothing. Naming a high-volume rep and a founder — where one wants speed and the other wants care — shows you've thought about who the product <em>isn't</em> optimal for, and it sets up the honest answer later about adoption and CRM integration.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · can you sequence a demo</span>
+    <p class="q">Show me.</p>
+    <div class="say"><b>Say this</b>“Let me show you a finished one first, then run a live one.”</div>
+    <ul>
+      <li><strong>Never</strong> let them watch a loading spinner in the first thirty seconds. Have a completed lead open before you start talking.</li>
+      <li>Point at things in this order: <strong>the hook → its source link (click it) → the findings column → the research map</strong>.</li>
+      <li>Then untick a fact and hit Rewrite. That single action explains the whole design better than any sentence.</li>
+      <li>Only then run something live.</li>
+    </ul>
+    <div class="backing"><b>Proof — the four runs worth rehearsing</b>
+      <ul>
+        <li>A finished lead (Maheedhar Maram · Zamp) — 58 pages, 42 seconds.</li>
+        <li><code>Michael Chen</code>, no company → it stops and asks.</li>
+        <li><code>Harshad Vaidya · Kelphi Systems</code> → nothing real found, and it says so.</li>
+        <li>Three API keys deliberately broken → the run still finishes.</li>
+      </ul></div>
+    <div class="why"><b>Why show a finished run before a live one</b>
+      <p>Because the first thirty seconds decide whether they're watching the tool or watching a progress bar. A finished run puts the reasoning on screen immediately; the live run then proves it wasn't staged. Doing it the other way round spends your best minute on a loading state.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · honesty about scale</span>
+    <p class="q">How long did this take you?</p>
+    <div class="say"><b>Say this</b>“A week. Most of it went on one problem — deciding which fact to open with.”</div>
+    <ul>
+      <li>Don't inflate it and don't undersell it.</li>
+      <li>The interesting part isn't the duration, it's the <em>distribution</em>: searching was solved in a day, writing is a prompt, and the remaining days all went on judgment.</li>
+      <li>That split <em>is</em> the answer to “did you spend your time on the right thing”.</li>
+    </ul>
+    <div class="why"><b>Why the split matters more than the total</b>
+      <p>Because a week is a week — the number carries no information. Where the week <em>went</em> does: one day on retrieval, an afternoon on drafting, and the rest on choosing. That distribution is a direct answer to “did you spend your time on the right thing”, which is the question actually being asked.</p>
+    </div>
   </div>
 
   <!-- ==================================================== framing -->
-  <h2>How you framed the problem</h2>
-  <p class="section-note">First questions, and the most revealing. They want to know if you solved the brief as written, or the real problem hiding behind it.</p>
+  <h2><span class="lvl">level 2</span>How you framed the problem</h2>
+  <p class="section-note">The first genuinely revealing questions. They're checking whether you solved the brief as written, or the real problem hiding behind it.</p>
 
   <div class="qa">
     <span class="tests">tests · did you read past the brief</span>
@@ -300,13 +420,13 @@
     <ul>
       <li>The brief describes a salesperson who can't spend 20 minutes per prospect.</li>
       <li>Obvious reading: <em>make the writing faster.</em> That's the cheap half.</li>
-      <li>The expensive half is the research — hunting for one real, current reason to contact this person, then turning your scattered notes into a sentence.</li>
+      <li>The expensive half is the research — hunting for one real, current reason to contact this person, then turning scattered notes into a sentence.</li>
       <li>I picked it because the obvious answer and the right answer are different. That's where there's something to prove.</li>
     </ul>
     <div class="backing"><b>Proof — what to point at on screen</b>
       <ul>
         <li>A finished run: <strong>58 sources read in about 50 seconds</strong>, 39 of them about the <em>person</em>, not the company.</li>
-        <li>The findings column: <strong>29 facts considered</strong>, one picked, and every rejection showing its reason.</li>
+        <li>The findings column: <strong>29 facts considered</strong>, one picked, every rejection showing its reason.</li>
         <li>Writing is the last and shortest step — roughly <strong>10 of those 50 seconds</strong>. The other 40 is the part a rep skips when they're busy.</li>
       </ul></div>
     <div class="chain"><b>Then they'll ask</b>
@@ -316,6 +436,9 @@
         <dt>“How do you know research is the slow part?”</dt>
         <dd>I timed myself doing it by hand. Finding one real, current, relevant signal took about 40 minutes across LinkedIn, X and news. Writing from those notes took 4.</dd>
       </dl></div>
+    <div class="why"><b>Why the harder problem was the right choice</b>
+      <p>Because PS-1 and PS-2 have checkable answers — an invoice either reconciles or it doesn't — so a working build proves the build works and nothing more. PS-3 has no ground truth, which means every design decision is an argument you have to be able to defend. That's the only one of the three where the reasoning is visible in the output.</p>
+    </div>
   </div>
 
   <div class="qa">
@@ -325,7 +448,7 @@
     <ul>
       <li>A <strong>hook</strong> = the one fact the email opens with. The reason you're writing today.</li>
       <li>I started with just two rules: recent and specific. It gave me hooks that were true and useless — a 10-year-old research paper, a head-office address.</li>
-      <li>What was missing was <em>the sender</em>. It was picking the most interesting fact about the person, not the fact that gives you a reason to write.</li>
+      <li>What was missing was <em>the sender</em>. It was picking the most interesting fact about the person, not the one that gives you a reason to write.</li>
       <li>Once what I sell feeds into the ranking, the exact same set of facts produces a different, better answer.</li>
     </ul>
     <div class="backing"><b>Proof — real numbers from this build</b>
@@ -342,6 +465,9 @@
         <dt>“What if someone sells something unusual?”</dt>
         <dd>Then it adapts without touching code — the product and the problem you solve are settings that feed the ranking. A recruiter and an investor want opposite things from the same facts.</dd>
       </dl></div>
+    <div class="why"><b>Why the sender belongs in the ranking at all</b>
+      <p>Because “most interesting fact about this person” and “best reason for <em>me</em> to contact them” are different questions, and only the second one produces a reply. A ten-year-old research paper wins the first and loses the second. Feeding what you sell into the ranking is what turns a research tool into an outreach tool.</p>
+    </div>
   </div>
 
   <div class="qa">
@@ -366,10 +492,139 @@
         <dt>“What else got cut?”</dt>
         <dd>Follow-up sequences and a per-lead to-do queue. Both real, both needed data I hadn't designed, and neither would have shown anything new about judgment.</dd>
       </dl></div>
+    <div class="why"><b>Why bulk send was refused rather than deferred</b>
+      <p>Because the other two cuts were about time and would be built next week unchanged. Bulk send is a decision, not a backlog item: the moment one click can reach forty strangers, every other guard in the system becomes advisory. Saying “I ran out of time” would have been the easier answer and the false one.</p>
+    </div>
   </div>
 
-  <!-- ================================================== edge cases -->
-  <h2>Why those edge cases</h2>
+  <div class="qa">
+    <span class="tests">tests · problem decomposition</span>
+    <p class="q">How did you break the problem down?</p>
+    <div class="say"><b>Say this</b>“Into seven steps, where each one can fail on its own and say why.”</div>
+    <ul>
+      <li><strong>1 · Who are they?</strong> Confirm the right person before spending anything.</li>
+      <li><strong>2 · Read.</strong> Search their LinkedIn and X specifically, plus news, plus a profile service.</li>
+      <li><strong>3 · Pull out claims.</strong> Turn pages into ~30 separate facts.</li>
+      <li><strong>4 · Check each one.</strong> The claim must appear word-for-word on the page.</li>
+      <li><strong>5 · Rank.</strong> Sort by tier, then score inside the tier.</li>
+      <li><strong>6 · Decide.</strong> One AI call over the final 8.</li>
+      <li><strong>7 · Write, then verify the email still contains the fact.</strong></li>
+    </ul>
+    <div class="backing"><b>Proof</b>
+      <ul>
+        <li>Each step writes itself to the database the moment it finishes — so a half-failed run leaves a readable record instead of a spinner.</li>
+        <li>That's why the walkthrough page can show real timings per step: <strong>research 19.0s, extract 11.7s, check 0.2s, write 10.6s.</strong></li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Why seven and not one big AI call?”</dt>
+        <dd>Because one big call can't tell you <em>where</em> it went wrong. Seven steps means a failure has an address. It also means six of the seven are cheap and predictable.</dd>
+      </dl></div>
+    <div class="why"><b>Why seven steps rather than three</b>
+      <p>Because each of the seven is a place where the run can fail for a <em>different reason the user needs to hear</em> — wrong person, nothing found, found but unverifiable. Collapsing them would produce the same output with a vaguer explanation, and the explanation is the product.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================== numbers -->
+  <h2><span class="lvl">level 2</span>The facts and figures</h2>
+  <p class="section-note">The data questions. Know these cold — hesitating on your own numbers reads as not having looked.</p>
+
+  <div class="qa">
+    <span class="tests">tests · do you know your own system</span>
+    <p class="q">How long does one prospect take, and what does it cost?</p>
+    <div class="say"><b>Say this</b>“About 50 to 60 seconds, roughly 15 searches, and zero pounds — everything's on free plans.”</div>
+    <ul>
+      <li><strong>Time:</strong> ~42s on the run I'd demo, ~60s typical.</li>
+      <li><strong>Searches:</strong> ~15 per prospect. That's the real constraint, not compute.</li>
+      <li><strong>Money:</strong> £0. Every service used has a free tier and none is required.</li>
+      <li>By hand, the same work is about <strong>40 minutes</strong>.</li>
+    </ul>
+    <div class="backing"><b>Proof</b>
+      <ul>
+        <li>One campaign used <strong>59 searches</strong> — the app counts them itself, because the search provider offers no way to ask what's left.</li>
+        <li>Four contacts researched at once in <strong>98 seconds</strong>, versus about four minutes one after another.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would it cost at real scale?”</dt>
+        <dd>Search is the line item. At 15 searches a prospect, a team doing 1,000 a month needs a paid search plan — that's the first bill, and it's small next to a rep's hour.</dd>
+        <dt>“Why is search the bottleneck and not the AI?”</dt>
+        <dd>Because one run makes a handful of AI calls but fifteen searches. The reading is the expensive part, the thinking isn't.</dd>
+      </dl></div>
+    <div class="why"><b>Why searches are the number to quote, not seconds</b>
+      <p>Because seconds are cheap and get cheaper, while searches are a hard external allowance that someone eventually pays for. Quoting the constraint that actually binds — rather than the one that sounds impressive — is what makes the cost answer credible at scale.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · white-hat rigour</span>
+    <p class="q">What data do you actually have to back any of this up?</p>
+    <div class="say"><b>Say this</b>“Everything a run does is written to a database, so all my numbers are read back out — none of them are estimates.”</div>
+    <ul>
+      <li><strong>1,114</strong> sources read across all runs. <strong>307</strong> from LinkedIn or X.</li>
+      <li><strong>58%</strong> of chosen hooks came from LinkedIn or X.</li>
+      <li><strong>12 of 24</strong> hooks were about the person rather than their employer.</li>
+      <li><strong>214</strong> design decisions recorded with their reasons.</li>
+      <li>What I <em>don't</em> have: reply rates. Nobody replied, because this is a case study and I sent one email.</li>
+    </ul>
+    <div class="trap"><b>Say the missing number out loud.</b> Volunteering “I have no reply data” before they ask is worth more than any figure you do have. It tells them you know which numbers matter.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“So how would you know if it worked?”</dt>
+        <dd>Reply rate against a templated control group, split by whether the hook was person-level. That's the experiment I'd run first with real traffic.</dd>
+        <dt>“And before you have that?”</dt>
+        <dd>Watch the share of runs producing a person-level hook, and how often a rep edits the opening sentence. Both are available today.</dd>
+      </dl></div>
+    <div class="why"><b>Why volunteer the missing number</b>
+      <p>Because they'll work out you have no reply data within one follow-up, and finding it themselves is much worse than hearing it from you. Naming the gap first proves you know which metric would settle the argument — which is more valuable than any figure you do have.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · does the accuracy claim hold up</span>
+    <p class="q">How accurate is it?</p>
+    <div class="say"><b>Say this</b>“I can tell you precisely how often it makes something up: never, by construction. I can't tell you how often it misreads something — and that's a different problem.”</div>
+    <ul>
+      <li><strong>Inventing facts:</strong> blocked. A claim must appear word-for-word on the source page or it's dropped. On the demo run, <strong>18 of 18</strong> passed that check.</li>
+      <li><strong>Misreading facts:</strong> still possible. A real sentence can be understood wrongly, and no string match catches that.</li>
+      <li><strong>Wrong person:</strong> caught by two filters, both added after it happened.</li>
+      <li>So the honest claim is narrow and provable, not broad and vague.</li>
+    </ul>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What's your error rate?”</dt>
+        <dd>I don't have one, and I'd distrust anyone who quoted a single number for this. The failures are different kinds, and they need different fixes.</dd>
+      </dl></div>
+    <div class="why"><b>Why refuse to give a single accuracy number</b>
+      <p>Because “accuracy” bundles three unrelated failures: inventing a fact, misreading a real one, and matching the wrong person. They have different frequencies, different fixes, and different costs. One number would average them into something that sounds precise and means nothing.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · technical literacy</span>
+    <p class="q">What's it built with, and why those?</p>
+    <div class="say"><b>Say this</b>“Boring choices everywhere except the ranking, which is where the interesting problem was.”</div>
+    <ul>
+      <li><strong>Backend:</strong> Python and FastAPI. Postgres for storage.</li>
+      <li><strong>Frontend:</strong> React and TypeScript.</li>
+      <li><strong>AI:</strong> Gemini, asked to return structured data rather than prose so the output can be checked.</li>
+      <li><strong>Search:</strong> Tavily. <strong>Profiles:</strong> a person-data provider. <strong>Emails:</strong> Hunter plus a verifier. <strong>Sending:</strong> plain Gmail.</li>
+      <li>Nothing exotic. The judgment went into <em>what</em> to build, not into picking unusual tools.</li>
+    </ul>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Why not an agent framework?”</dt>
+        <dd>Because I wanted every step to be inspectable and to fail with a specific reason. Frameworks hide the loop, and the loop is the thing I needed to reason about.</dd>
+        <dt>“Why not a vector database?”</dt>
+        <dd>There's nothing to search over. Every run fetches fresh pages about one person and throws them away. A search index solves a problem I don't have.</dd>
+      </dl></div>
+    <div class="why"><b>Why boring tools everywhere else</b>
+      <p>Because every hour spent on an unusual stack is an hour not spent on the ranking problem, which is the only part where the output would differ from anyone else's build. Familiar tools also fail in familiar ways, which matters when you're debugging under a deadline.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================== edge cases -->
+  <h2><span class="lvl">level 3</span>Why those edge cases</h2>
   <p class="section-note">The brief says the edge cases you pick reveal how well you understand the problem. Expect them to dig here.</p>
 
   <div class="qa">
@@ -397,6 +652,9 @@
         <dt>“What if two of these happen at once?”</dt>
         <dd>They're separate checks, so they stack. The Harshad run <em>is</em> two at once — the wrong-person filter and the nothing-found path firing together.</dd>
       </dl></div>
+    <div class="why"><b>Why failures that look like success are the ones worth building for</b>
+      <p>Because visible failures get fixed by whoever hits them — a crash reports itself. A fluent, confident, wrong email reports nothing; it just quietly costs you a relationship and never appears in a bug tracker. Choosing the silent failures means choosing the ones that would otherwise survive indefinitely.</p>
+    </div>
   </div>
 
   <div class="qa">
@@ -422,6 +680,9 @@
         <dt>“Where's the threshold, and why there?”</dt>
         <dd>Deliberately cautious, and I'd tune it once I had real data. Today I'd rather ask too often than send one wrong email.</dd>
       </dl></div>
+    <div class="why"><b>Why a rule instead of a confidence threshold</b>
+      <p>Because a threshold assumes the cost of being wrong is roughly constant, and here it isn't — one outcome saves four seconds and the other burns a relationship permanently. No probability number encodes that asymmetry, so the decision has to live outside the score. This is the one place where I deliberately overrode a model's own judgment with a flat rule.</p>
+    </div>
   </div>
 
   <div class="qa">
@@ -447,10 +708,157 @@
         <dt>“Has it actually been wrong?”</dt>
         <dd>Yes, three times, and I can name them: a namesake's podcast, an intern's award, and a hook about a company he'd already left. Each one became a check.</dd>
       </dl></div>
+    <div class="why"><b>Why design for correction instead of chasing accuracy</b>
+      <p>Because the remaining failure — misreading a real sentence — has no technical fix I could build in a week, and probably none at all. Given a limit you can't remove, the honest response is to make it cheap to catch and cheap to undo: sources on every fact, a rebuild that costs nothing, and a human between the draft and the send.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · edge cases you haven't hit yet</span>
+    <p class="q">What edge case are you sure exists that you haven't found?</p>
+    <div class="say"><b>Say this</b>“Two real people with the same name <em>at the same company</em>. Every filter I have would let that through.”</div>
+    <ul>
+      <li>The wrong-person filter works by checking the source ties the person to the company. Two people at one company both pass.</li>
+      <li>Rare, but a large company makes it likely — and it would produce a perfectly confident wrong email.</li>
+      <li>Second one I'd expect: a person who <em>just</em> changed jobs, where LinkedIn is updated and news isn't. Half the facts describe a job they no longer hold.</li>
+      <li>Third: someone whose name is also a common word or a company name. Search noise would swamp them.</li>
+    </ul>
+    <div class="trap"><b>This question is a gift.</b> Naming a hole you haven't fixed is a stronger signal than listing the ones you have. It proves you're still looking.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“So why haven't you fixed it?”</dt>
+        <dd>I only found it by thinking about it, not by hitting it, and the fix needs a signal I don't have — a job title or a profile URL to separate them. I'd rather name it than paper over it.</dd>
+      </dl></div>
+    <div class="why"><b>Why name an unfixed hole out loud</b>
+      <p>Because a list of solved problems only proves you stopped looking. Naming one you can't yet fix — and saying precisely what signal the fix would need — shows the search is still running, which is the behaviour that predicts what happens after you're hired.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================== risk -->
+  <h2><span class="lvl">level 3</span>Risk, legal, and what could go badly wrong</h2>
+  <p class="section-note">The cautious angle. Somebody in that room is paid to worry, and these are their questions.</p>
+
+  <div class="qa">
+    <span class="tests">tests · do you know the legal edges</span>
+    <p class="q">Are you scraping LinkedIn? Is that allowed?</p>
+    <div class="say"><b>Say this</b>“No. I search LinkedIn and X the same way a search engine does, and read what comes back publicly. I never log in and I never get past a login wall.”</div>
+    <ul>
+      <li><strong>Be precise here</strong> — “I scrape LinkedIn” is both wrong and the answer that gets you caught out.</li>
+      <li>What actually happens: a search restricted to those sites, plus a profile data provider that supplies its own data.</li>
+      <li>The hard part was never fetching pages. It was <em>validating</em> what came back.</li>
+      <li>If they push on the provider: it's their data and their terms, which is a commercial question rather than a technical one.</li>
+    </ul>
+    <div class="trap"><b>Never claim capability you don't have.</b> Claiming access past a login is exactly the kind of overreach the rest of the tool exists to prevent — and it's easy to disprove in the room.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What about GDPR?”</dt>
+        <dd>Business contact details for B2B outreach generally sit under legitimate interest, but it needs a lawful-basis record, an opt-out, and a deletion path. I have the deletion path — a lead can be removed with its research. I don't have the rest, and I wouldn't ship to an EU customer without it.</dd>
+        <dt>“Could someone ask you to delete their data?”</dt>
+        <dd>Yes, and it works today, because everything about a person hangs off one lead record.</dd>
+      </dl></div>
+    <div class="why"><b>Why the precise wording matters so much</b>
+      <p>Because “I scrape LinkedIn” is both untrue and instantly checkable, and one overclaim contaminates everything else you've said about not making things up. Describing exactly what happens — a site-scoped search plus a data provider — is also the stronger answer, since validating what comes back was the hard part, not fetching it.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · do you understand the real-world blast radius</span>
+    <p class="q">What's the worst thing this could do?</p>
+    <div class="say"><b>Say this</b>“Send a fluent, confident, well-researched email about entirely the wrong person, under a real name, to someone who spots it immediately.”</div>
+    <ul>
+      <li>Note what's <em>not</em> on that list: crashing, being slow, writing an awkward sentence. None of those reach anybody.</li>
+      <li>The damage isn't technical. It's a burnt relationship and a rep who looks careless.</li>
+      <li>Every guard in the app points at that one outcome: same-name filter, colleague filter, source check, human review, no bulk send.</li>
+      <li>Second worst: quietly using a fact about a company the person left, and being <em>slightly</em> wrong in a way nobody notices.</li>
+    </ul>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Has that happened?”</dt>
+        <dd>Not to a real recipient. It happened three times in testing, before send, which is why the filters exist.</dd>
+        <dt>“What stops it now?”</dt>
+        <dd>Nothing sends automatically. That single constraint does more than every filter combined, and I'd keep it even at the cost of throughput.</dd>
+      </dl></div>
+    <div class="why"><b>Why the worst case isn't technical</b>
+      <p>Because crashes and slow runs never reach a person, and everything that does reach a person is a relationship. Ranking the failures by who they touch rather than by how loud they are is what puts human review above every clever filter.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · security instinct</span>
+    <p class="q">Where do the credentials live?</p>
+    <div class="say"><b>Say this</b>“In the environment, never in the database and never behind a form in the app.”</div>
+    <ul>
+      <li>The Gmail app password is <strong>send access to a real mailbox</strong>. Putting it behind a settings form puts it one bug away from being read back out.</li>
+      <li>The app shows you <em>whether</em> something is configured, never the value.</li>
+      <li>Signing in uses the sending account's own credential — so whoever is signed in is demonstrably the person the emails come from.</li>
+      <li>The comparison is constant-time on both halves, so the address can't be guessed by timing it.</li>
+    </ul>
+    <div class="backing"><b>Proof — a real catch before the first push</b>
+      <ul>
+        <li>A secrets scan found an access key hardcoded in a test file. It never reached the repository.</li>
+        <li>The repository is private, and the environment file is excluded from it.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would you change for production?”</dt>
+        <dd>A proper secret manager rather than environment variables, OAuth instead of an app password, and per-user credentials rather than one shared mailbox.</dd>
+      </dl></div>
+    <div class="why"><b>Why a settings form would be the wrong place</b>
+      <p>Because anything the app can write into a database, some future bug can read back out. An app password is send access to a real mailbox — the blast radius of leaking it is someone else emailing as you. Keeping it in the environment means the app can prove it's configured without ever being able to reveal it.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · do you think about the recipient</span>
+    <p class="q">Isn't this just a better spam machine?</p>
+    <div class="say"><b>Say this</b>“It's the opposite bet. Spam is cheap volume. This makes each message expensive enough that you'd rather send twenty good ones than two hundred bad ones.”</div>
+    <ul>
+      <li>It <strong>refuses</strong> to write something personal when it can't find anything real, and labels the generic version as generic.</li>
+      <li>There's no bulk send. One person per request, with a confirmation.</li>
+      <li>~15 searches per prospect is a real cost, which naturally pushes toward fewer, better targets.</li>
+      <li>The volume play is the thing this is competing against, not the thing it enables.</li>
+    </ul>
+    <div class="trap"><b>Don't get defensive.</b> The honest version is stronger: any tool like this <em>could</em> be used for volume. The design decisions push the other way, and you should be able to name them.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What if a customer used it for volume anyway?”</dt>
+        <dd>They'd hit the search budget fast, and the app would tell them. But ultimately a determined user can misuse any tool — what I can control is the default, and the default is careful.</dd>
+        <dt>“What about deliverability?”</dt>
+        <dd>Not solved, and I'd flag it as a real gap. Sending volume, domain warm-up and bounce handling are their own discipline, and pretending otherwise would be the same overreach I've avoided elsewhere.</dd>
+      </dl></div>
+    <div class="why"><b>Why the cost per message is the defence</b>
+      <p>Because spam economics depend on marginal cost being near zero. Fifteen searches and a human read per message is a real cost, and it pushes a user toward fewer, better targets whether they intended that or not. Design that makes the bad use expensive works better than a policy asking people not to.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · dependency risk</span>
+    <p class="q">What happens if one of your providers disappears tomorrow?</p>
+    <div class="say"><b>Say this</b>“The run still finishes. I tested that deliberately with three keys set to garbage.”</div>
+    <ul>
+      <li>Every outside service is <strong>optional</strong>. None is required for a run to complete.</li>
+      <li>Missing key, wrong key and out-of-credit all behave identically — only the reason shown differs.</li>
+      <li>Search is the one real dependency. Lose that and quality drops sharply, though the app still runs on the profile provider alone.</li>
+      <li>Nothing spends credit on a page load. Only a deliberate click costs anything.</li>
+    </ul>
+    <div class="backing"><b>Proof — measured, not claimed</b>
+      <ul>
+        <li>Three broken keys → run completed, receipt read “Hunter rejected the key — check it has not expired”.</li>
+        <li>Four page loads → <strong>zero</strong> provider calls.</li>
+        <li>Forced to zero search budget → the run still found contacts and worked out addresses, and said “stopped researching, 0 searches left this month”.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Why did you bother with that?”</dt>
+        <dd>Because free tiers run out on the day you need them, and because an expired key that reports itself as “no match” is the one message that stops someone fixing it. I hit exactly that bug.</dd>
+      </dl></div>
+    <div class="why"><b>Why treat every provider as optional</b>
+      <p>Because free tiers run out on the day of the demo, and a hard dependency turns a small outage into a dead product. It also forced a better failure message: an expired key that reports itself as “no match” is the one wording that stops a user fixing it, and I only found that by deliberately breaking the keys.</p>
+    </div>
   </div>
 
   <!-- ================================================== changed mind -->
-  <h2>Where you changed your mind</h2>
+  <h2><span class="lvl">level 4</span>Where you changed your mind</h2>
   <p class="section-note">The highest-value question in the whole interview — and the one most candidates have no real answer to.</p>
 
   <div class="qa">
@@ -464,6 +872,9 @@
       <li>Replaced it with a plain ordering: <strong>1)</strong> things they said themselves, <strong>2)</strong> their current job, <strong>3)</strong> everything else, <strong>4)</strong> a former employer. The tier beats the score outright.</li>
       <li>Then <strong>one</strong> AI call over the final 8. “Which of these is worth opening with?” isn't a maths question.</li>
     </ul>
+    <div class="why"><b>Why an ordering beats a score</b>
+      <p>A score assumes every fact sits on one shared scale. They don't. “He posted about X last week” and “his old employer won an award” aren't two points on the same line — they're different <em>kinds</em> of thing, and forcing them onto one number is what let the award win. Tiers say the quiet part out loud: some kinds of fact are simply better openers than others, regardless of how well evidenced they are.</p>
+    </div>
     <div class="backing"><b>Proof — the four failed attempts, in order</b>
       <ul>
         <li>Facts with no date scored <code>0.35</code> and beat dated ones — so the version of an event that told you <em>less</em> kept winning.</li>
@@ -477,9 +888,9 @@
         <dt>“How did you know the approach was wrong, not just the numbers?”</dt>
         <dd>Because each fix gave a <em>different</em> wrong answer, not a closer one. Getting closer would have meant I was tuning. Jumping around meant the whole model was wrong.</dd>
         <dt>“Then why keep any scoring at all?”</dt>
-        <dd>It's cheap, predictable and explainable, and it narrows 30 facts to 8. Only the last comparison needed real judgment — so only that part gets an AI call.</dd>
+        <dd>Because it's cheap, predictable and explainable, and it narrows 30 facts to 8. Only the last comparison needed real judgment — so only that part gets an AI call, and the other 29 comparisons stay free and auditable.</dd>
         <dt>“And if that AI call is wrong?”</dt>
-        <dd>It's allowed to say “none of these”, and any failure falls back to the ranked order. Switch it off entirely and the app still produces an answer.</dd>
+        <dd>It's allowed to say “none of these”, and any failure falls back to the ranked order. Switch it off entirely and the app still produces an answer — which is why it's an improvement rather than a dependency.</dd>
       </dl></div>
   </div>
 
@@ -493,6 +904,9 @@
       <li>And “today” scores maximum freshness. So the facts it <em>couldn't</em> date were beating the ones it could.</li>
       <li>Fix: distrust any date that's today or later, and rank undated facts by how well-evidenced they are instead.</li>
     </ul>
+    <div class="why"><b>Why not just drop undated facts?</b>
+      <p>Because that would throw away roughly a third of everything found, including good material — LinkedIn rarely dates a role change in the text, and press coverage often doesn't either. Deleting them optimises for tidiness at the cost of coverage. Ranking them lower keeps them available when nothing better exists, which is exactly the situation where you need them.</p>
+    </div>
     <div class="backing"><b>Proof — measured, not guessed</b>
       <ul>
         <li><strong>4 of 13</strong> dated hooks in the database carry the date of the run that created them.</li>
@@ -504,7 +918,7 @@
         <dt>“What's the proper fix?”</dt>
         <dd>Have the extractor return <em>how sure</em> it is about the date, instead of just a date or nothing. That's a bigger data change than I had the week for. What's there now is a workaround, and I'd replace it.</dd>
         <dt>“Doesn't distrusting today's date lose genuine same-day news?”</dt>
-        <dd>Yes, and I made that trade knowingly. One genuinely fresh fact gets demoted, versus a third of all dates being wrong the other way.</dd>
+        <dd>Yes, and I made that trade knowingly. One genuinely fresh fact gets demoted, versus a third of all dates being wrong the other way. The asymmetry decides it.</dd>
       </dl></div>
   </div>
 
@@ -518,6 +932,9 @@
       <li>Right now the ordering is absolute — a company fact can never jump the queue.</li>
       <li>A more honest design would let a strong enough company signal cross the line. I don't yet know where that line sits.</li>
     </ul>
+    <div class="why"><b>Why I shipped it as an absolute anyway</b>
+      <p>Because the alternative — a threshold I'd have picked from intuition — is a made-up number wearing a lab coat. A hard rule is at least honest about being a rule, and it's visibly wrong in a way I can point at. A soft threshold would be wrong in ways nobody could see, and I'd have no evidence to defend the value I chose.</p>
+    </div>
     <div class="backing"><b>Proof — the counter-example is in the app</b>
       <ul>
         <li>On the Zamp run, four company facts scored within <strong>0.01 of each other</strong> — a product launch, an expansion, and the move to AI agents. Maths can't separate those. A human obviously can.</li>
@@ -532,34 +949,118 @@
       </dl></div>
   </div>
 
-  <!-- ================================================== explaining -->
-  <h2>Explaining it to someone non-technical</h2>
-  <p class="section-note">Graded explicitly. They may ask you to do it right there in the room.</p>
+  <div class="qa">
+    <span class="tests">tests · can you separate signal from noise in feedback</span>
+    <p class="q">What feedback did you get, and what did you ignore?</p>
+    <div class="say"><b>Say this</b>“The most useful correction I got was ‘don't exclude anything — learn to prioritise'. It changed the whole ranking model.”</div>
+    <ul>
+      <li>My instinct was to <em>delete</em> weak facts: too old, wrong company, gone.</li>
+      <li>The correction was that deleting throws away context. An old role at a different company is a bad opener and excellent background — it's what tells you the new SVP has done this before.</li>
+      <li>So age became a penalty that keeps shrinking but never reaches zero, and career history is kept and passed to the writer as background, clearly fenced off.</li>
+      <li>What I didn't act on: suggestions to add more sources. Coverage wasn't the problem — <em>choosing</em> was.</li>
+    </ul>
+    <div class="why"><b>Why a penalty rather than a cutoff</b>
+      <p>A cutoff has to pick a day where a fact stops mattering, and no such day exists — a two-year-old funding round matters less than a two-week-old one, but not zero. A decaying penalty encodes “less useful over time” without ever claiming “worthless after date X”, and it means an old fact can still win when nothing newer exists, which is the only time you'd want it to.</p>
+    </div>
+  </div>
+
+  <!-- ================================================== alternatives -->
+  <h2><span class="lvl">level 4</span>The roads you didn't take</h2>
+  <p class="section-note">The creative angle. They want to know whether you considered other designs, or just built the first one you thought of.</p>
 
   <div class="qa">
-    <span class="tests">tests · can you drop the jargon</span>
-    <p class="q">Explain what this does to a salesperson who's never used an AI tool.</p>
-    <div class="say"><b>Say this</b>“Give it a name and a company. It does the reading you don't have time for, writes the email, and shows you the page every single claim came from.”</div>
+    <span class="tests">tests · did you consider alternatives</span>
+    <p class="q">Why not just hand the whole thing to one big AI call?</p>
+    <div class="say"><b>Say this</b>“Because when it's wrong, you get one wrong answer and no idea which part failed.”</div>
     <ul>
-      <li>Then add the one rule: <strong>it's not allowed to make anything up.</strong></li>
-      <li>If it can't point at a page, the claim doesn't survive.</li>
-      <li>Everything else in the build is machinery to enforce that one sentence.</li>
-      <li>Stop there. Don't keep going — the shortness <em>is</em> the answer.</li>
+      <li>One call means one failure mode: it produced something. Good or bad, you can't tell where it went astray.</li>
+      <li>Seven steps means every failure has an address: it couldn't confirm the person, it found nothing, it found things but none survived the source check.</li>
+      <li>Those three produce <em>different</em> outputs and <em>different</em> messages to the user. One call can't do that.</li>
+      <li>It's also cheaper. Six of the seven steps are plain code, so only the two that need judgment cost anything.</li>
     </ul>
-    <div class="backing"><b>Proof — two things to put on screen while you say it</b>
-      <ul>
-        <li>The hook and its source link. Click it. The sentence is right there on the page.</li>
-        <li>The findings list: “this is everything it looked at, and why each one was kept or dropped.”</li>
-      </ul></div>
-    <div class="trap"><b>Don't say:</b> pipeline, grounding, extraction, provenance, multiplier. If one slips out, you've failed the question — and they're asking it on purpose.</div>
+    <div class="why"><b>Why that matters commercially, not just technically</b>
+      <p>Because a rep who can't tell why the tool was wrong stops trusting it entirely after the first bad result. A rep who can see “it read 44 pages and found nothing tied to this company” learns where the tool is reliable. Explainability isn't a nicety here — it's what determines whether the thing is still in use in week three.</p>
+    </div>
     <div class="chain"><b>Then they'll ask</b>
       <dl>
-        <dt>“What would a salesperson find confusing?”</dt>
-        <dd>The findings column. It shows the working, and most people only want the answer. It earns its place the first time the tool gets it wrong and they can see exactly why.</dd>
-        <dt>“What does it need them to do?”</dt>
-        <dd>Read the email and press send. Everything else is optional — and their edits are what teach it.</dd>
+        <dt>“Isn't that more code to maintain?”</dt>
+        <dd>Yes, and worth it. The alternative isn't less code — it's the same complexity hidden inside a prompt where you can't test it.</dd>
       </dl></div>
   </div>
+
+  <div class="qa">
+    <span class="tests">tests · do you know when not to use AI</span>
+    <p class="q">Why not fine-tune a model?</p>
+    <div class="say"><b>Say this</b>“Because my problem isn't that the model writes badly. It's that it doesn't know anything true about this person.”</div>
+    <ul>
+      <li>Fine-tuning teaches <em>style</em>. Style was never the bottleneck — a prompt handles it.</li>
+      <li>The bottleneck is fresh, specific, checkable facts, which no amount of training gives you.</li>
+      <li>It would also need training data I don't have: hundreds of examples of the right hook chosen from a real fact set.</li>
+      <li>And it makes the output <em>less</em> explainable, which is the opposite of what this needs.</li>
+    </ul>
+    <div class="why"><b>Why the persona learns by rules instead</b>
+      <p>Because style adaptation needs to be reversible and visible. A learned rule can be read, argued with and undone; a fine-tuned weight can't. And it works from three examples rather than three hundred — which matters when your user is one salesperson, not a data-labelling team.</p>
+    </div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“When would fine-tuning be right?”</dt>
+        <dd>Once there are thousands of sent-and-replied emails per customer, and the goal shifts from “sound like them” to “sound like what works”. That's an outcome-data problem, and I don't have outcome data.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · build vs buy</span>
+    <p class="q">Why build this at all? Clay and Apollo exist.</p>
+    <div class="say"><b>Say this</b>“They're mostly data plus templating. The part I built is the part they leave to you — deciding which fact is worth opening with.”</div>
+    <ul>
+      <li>Those tools are very good at <em>finding</em> people and enriching rows. That's genuinely hard and I'm not competing with it.</li>
+      <li>What they hand back is a spreadsheet with more columns. Choosing the angle is still your job.</li>
+      <li>They also mostly work at company level. My whole argument is that person-level signals are the ones that earn a reply.</li>
+      <li>And they're paid, which the brief ruled out for this build.</li>
+    </ul>
+    <div class="why"><b>Why that gap is the interesting one</b>
+      <p>Because enrichment is a commodity — several companies sell the same data — while judgment is not. If you can already buy the columns, the defensible work is what you do with them. That's also the part that improves with use, because it learns from which hooks a specific person actually sends.</p>
+    </div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“So would you integrate with them rather than compete?”</dt>
+        <dd>Yes, and that's the honest answer. Let them supply the list and the contact data; this decides what to say. That's a better product than either half alone.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · lateral thinking</span>
+    <p class="q">If you couldn't use AI at all, what would you build?</p>
+    <div class="say"><b>Say this</b>“A change detector. Watch a list of people, and tell a rep the day something happens.”</div>
+    <ul>
+      <li>Most of the value here is <em>timing</em>, not prose. Knowing someone changed jobs on Tuesday beats a beautiful sentence on Friday.</li>
+      <li>That's a diff over profiles plus a notification. No AI needed.</li>
+      <li>It's also a reminder about the actual ranking of levers: targeting, timing, offer relevance, and only then the writing.</li>
+      <li>The AI adds the last one. The first three are ordinary software.</li>
+    </ul>
+    <div class="why"><b>Why answer it that way</b>
+      <p>Because the question is testing whether you think AI is the product or a component. Saying “I couldn't build it” fails. Naming the version that delivers most of the value without any AI shows you know which part is actually doing the work — and that's the same judgment they're grading everywhere else.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · design imagination</span>
+    <p class="q">What's the version of this you'd build with no constraints at all?</p>
+    <div class="say"><b>Say this</b>“It wouldn't be an app you open. It would be a queue that tells you who to write to today, and why.”</div>
+    <ul>
+      <li>Today you bring it a name. That's backwards — you already had to decide who mattered.</li>
+      <li>The better shape: watch a list continuously, and surface the twenty people where something changed this week.</li>
+      <li>Then the draft is a by-product, not the destination.</li>
+      <li>It would also live inside the CRM rather than beside it, because that's where the work already happens.</li>
+    </ul>
+    <div class="why"><b>Why I didn't build that version</b>
+      <p>Because it needs continuous monitoring, feeds I'd have to pay for, and a place to live inside someone else's tool — none of which was reachable in a week on free tiers. And it would have demonstrated less: a queue is a scheduling problem, whereas “which fact deserves the first sentence” is the judgment problem the brief is actually grading.</p>
+    </div>
+  </div>
+
+  <!-- ================================================== business -->
+  <h2><span class="lvl">level 4</span>The business case</h2>
+  <p class="section-note">The commercial angle. This is where a Founder's Office interview usually goes, and where technical candidates most often go quiet.</p>
 
   <div class="qa">
     <span class="tests">tests · commercial realism</span>
@@ -570,6 +1071,9 @@
       <li>But they have two hundred. So they don't research at all. They use a template, and the reply rate shows it.</li>
       <li>This isn't competing with a rep at their best. It's competing with the email they actually send on a Thursday afternoon.</li>
     </ul>
+    <div class="why"><b>Why that framing matters</b>
+      <p>Because it sets the benchmark correctly. Compared to careful human research, this loses. Compared to what actually gets sent, it wins easily — and the second comparison is the real one. Getting this wrong is how tools get demoed against a standard nobody meets in practice.</p>
+    </div>
     <div class="backing"><b>Proof</b>
       <ul>
         <li>About <strong>50 seconds</strong> per prospect versus roughly 40 minutes by hand. That's not a small saving — it's the difference between doing it and not doing it.</li>
@@ -592,6 +1096,9 @@
       <li>The CSV export is the stopgap, not the answer.</li>
       <li>Writing straight back into the CRM is the first thing I'd build with a real budget — ahead of any new feature.</li>
     </ul>
+    <div class="why"><b>Why I'd spend the next budget there rather than on quality</b>
+      <p>Because an unused tool has zero quality. Adoption gates everything else: a 10% better hook delivered into a workflow nobody opens is worth less than the current hook delivered where they already are. Distribution beats capability until the tool is actually in the daily loop.</p>
+    </div>
     <div class="backing"><b>Proof — what already softens it</b>
       <ul>
         <li>The export is shaped for a sequencer, not a data dump: first name, email, where the email came from, subject, body, segment, sent status.</li>
@@ -605,8 +1112,419 @@
       </dl></div>
   </div>
 
+  <div class="qa">
+    <span class="tests">tests · can you value your own work</span>
+    <p class="q">What's this worth? Who pays for it?</p>
+    <div class="say"><b>Say this</b>“It's priced against a rep's hour, not against other software.”</div>
+    <ul>
+      <li>The saving is roughly <strong>39 minutes per prospect</strong>. At 200 prospects a month that's most of a working week.</li>
+      <li>The buyer is a sales leader, not a rep — reps don't hold budget, and the pain shows up as pipeline, not as effort.</li>
+      <li>The pitch to that buyer isn't “faster emails”. It's “your team actually researches now”.</li>
+      <li>Honest caveat: without reply-rate data I can't put a number on the revenue side, only on the time side.</li>
+    </ul>
+    <div class="why"><b>Why time-saved is the weaker half of the argument</b>
+      <p>Because time saved is only real if the rep spends it on something better — and that's outside my control. The stronger claim is that work which previously didn't happen at all now happens. Reframing from “cheaper” to “possible” is the difference between a cost-saving pitch and a revenue one.</p>
+    </div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What's the pricing model?”</dt>
+        <dd>Per seat with a research allowance, because the cost driver is searches per prospect and that scales with usage rather than headcount alone.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · did you look at the company</span>
+    <p class="q">How does this relate to what Zamp does?</p>
+    <div class="say"><b>Say this</b>“Same shape of problem. You're automating work that used to need a person's judgment, and the hard part isn't the automation — it's knowing when not to trust it.”</div>
+    <ul>
+      <li>Both cases involve an AI doing work a careful human used to do, where a confident wrong answer is worse than no answer.</li>
+      <li>Both need the same discipline: show the working, cite the source, stop when unsure, never auto-commit anything irreversible.</li>
+      <li>Every design decision I've described — the source check, the stop-and-ask, the human review — is that discipline applied to outreach.</li>
+      <li>It also happens to <em>be</em> a GTM tool, which is the function the role sits in.</li>
+    </ul>
+    <div class="why"><b>Why lead with the shape rather than the domain</b>
+      <p>Because the domain overlap is a coincidence and the reasoning overlap isn't. The transferable claim is “I know how to build AI that admits uncertainty”, and that holds whether the output is an email or a reconciled ledger. Leading with the domain makes it sound like a lucky fit; leading with the shape makes it sound like judgment.</p>
+    </div>
+    <div class="trap"><b>Don't over-claim knowledge of their product.</b> One accurate sentence about the shape of the problem beats three about their roadmap that you've inferred from the website.</div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · competitive awareness</span>
+    <p class="q">What stops someone building this in a weekend?</p>
+    <div class="say"><b>Say this</b>“Nothing stops them building the demo. The week goes on the parts that only show up once it's wrong.”</div>
+    <ul>
+      <li>A weekend gets you: search, an AI call, an email. It'll demo beautifully.</li>
+      <li>What it won't have: the same-name filter, the colleague filter, the source check, the date distrust, the tiered ranking.</li>
+      <li>Every one of those came from a specific failure, and none of them is obvious before you hit it.</li>
+      <li>So the moat isn't the code. It's knowing which failures matter — and that only comes from having been wrong.</li>
+    </ul>
+    <div class="why"><b>Why that's a real answer and not a dodge</b>
+      <p>Because it's testable: I can name the four failures, show the run each one came from, and demonstrate the behaviour live. “Hard to replicate” is a claim; “here are the three runs where it went wrong and what changed” is evidence.</p>
+    </div>
+  </div>
+
+  <!-- ================================================== explaining -->
+  <h2><span class="lvl">level 3</span>Explaining it to someone non-technical</h2>
+  <p class="section-note">Graded explicitly. They may ask you to do it right there in the room.</p>
+
+  <div class="qa">
+    <span class="tests">tests · can you drop the jargon</span>
+    <p class="q">Explain what this does to a salesperson who's never used an AI tool.</p>
+    <div class="say"><b>Say this</b>“Give it a name and a company. It does the reading you don't have time for, writes the email, and shows you the page every single claim came from.”</div>
+    <ul>
+      <li>Then add the one rule: <strong>it's not allowed to make anything up.</strong></li>
+      <li>If it can't point at a page, the claim doesn't survive.</li>
+      <li>Everything else in the build is machinery to enforce that one sentence.</li>
+      <li>Stop there. Don't keep going — the shortness <em>is</em> the answer.</li>
+    </ul>
+    <div class="why"><b>Why brevity is the graded skill here</b>
+      <p>Because the test isn't whether you understand it — they already know you do. It's whether you can tell which 10% of what you know the listener needs. Adding a fourth sentence demonstrates the opposite of the thing being measured.</p>
+    </div>
+    <div class="backing"><b>Proof — two things to put on screen while you say it</b>
+      <ul>
+        <li>The hook and its source link. Click it. The sentence is right there on the page.</li>
+        <li>The findings list: “this is everything it looked at, and why each one was kept or dropped.”</li>
+      </ul></div>
+    <div class="trap"><b>Don't say:</b> pipeline, grounding, extraction, provenance, multiplier. If one slips out, you've failed the question — and they're asking it on purpose.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would a salesperson find confusing?”</dt>
+        <dd>The findings column. It shows the working, and most people only want the answer. It earns its place the first time the tool gets it wrong and they can see exactly why.</dd>
+        <dt>“What does it need them to do?”</dt>
+        <dd>Read the email and press send. Everything else is optional — and their edits are what teach it.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · can you explain a mechanism simply</span>
+    <p class="q">Explain how it avoids making things up — to someone with no technical background.</p>
+    <div class="say"><b>Say this</b>“Before any claim is allowed into the email, it has to find those exact words on the page it says they came from. If it can't, the claim is deleted.”</div>
+    <ul>
+      <li>Use an analogy if they want more: <em>it's a quote check, like a sub-editor verifying a quotation before it goes to print.</em></li>
+      <li>Then the key point: <strong>the check is deliberately stupid.</strong> It's a plain text match, not a judgment.</li>
+      <li>Why that matters: an AI can argue its way past another AI. It can't argue its way past “those words aren't on the page”.</li>
+      <li>And say what it <em>doesn't</em> catch — misreading a real sentence. Volunteering the limit makes the claim credible.</li>
+    </ul>
+    <div class="why"><b>Why dumb beats smart here</b>
+      <p>Because a smarter checker is another model, and two models can share the same mistake — the second one can be talked into agreeing with the first. A mechanical text match has no opinion to change. Choosing the less capable component on purpose, because it can't be persuaded, is the actual insight in this answer.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · explaining a trade-off without jargon</span>
+    <p class="q">Explain why it sometimes refuses to write anything good.</p>
+    <div class="say"><b>Say this</b>“Because I'd rather hand you an honest blank than a convincing lie.”</div>
+    <ul>
+      <li>When it finds nothing real, it writes something generic and <strong>labels it generic</strong>.</li>
+      <li>It could easily produce something that <em>sounds</em> personal instead. Every tool in this space does.</li>
+      <li>But a fake-personal email is worse than an obviously generic one — the recipient can tell, and now you've also looked dishonest.</li>
+      <li>So the refusal is a feature, and the label is the important half.</li>
+    </ul>
+    <div class="why"><b>Why label it rather than just fail</b>
+      <p>Because a rep sometimes still wants to send something, and a hard failure just makes them go and write it themselves with less information. Labelling keeps the choice with the person while making sure they can't be misled by their own tool — which is the same principle as showing sources, applied to absence.</p>
+    </div>
+    <div class="backing"><b>Proof</b>
+      <ul>
+        <li>The Harshad run: 44 pages read, 15 facts about a different person discarded, status <code>no_signal_found</code>, and the draft says so on its face.</li>
+      </ul></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · audience adaptation</span>
+    <p class="q">Now explain the same thing to an engineer.</p>
+    <div class="say"><b>Say this</b>“Seven stages, each persisted independently. Facts carry subject, company and source. Grounding is a verbatim entity match against retrieved text. Ranking is tiered, then one LLM call over the top eight.”</div>
+    <ul>
+      <li>Same content, different compression. To an engineer you can name the mechanism; to a rep you name the effect.</li>
+      <li>Watch for the tell: if they nod at “verbatim entity match”, go deeper. If they don't, drop back to plain words instantly.</li>
+      <li>The skill being graded is noticing which audience you're in — and being able to switch mid-sentence.</li>
+    </ul>
+    <div class="why"><b>Why they might ask both versions back to back</b>
+      <p>Because doing one well can be rehearsal. Doing both, and adjusting the level without being asked, is the thing that can't be memorised — and it's the day-to-day skill in a role that sits between a technical team and a commercial one.</p>
+    </div>
+  </div>
+
+  <!-- ================================================== process -->
+  <h2><span class="lvl">level 4</span>How you actually worked</h2>
+  <p class="section-note">The process angle. For a Founder's Office role this matters as much as the output — they're hiring how you operate, not just what you shipped.</p>
+
+  <div class="qa">
+    <span class="tests">tests · can you run yourself</span>
+    <p class="q">How did you plan the week?</p>
+    <div class="say"><b>Say this</b>“Badly at first. I built forward until something broke, then let the break tell me what to build next.”</div>
+    <ul>
+      <li>Honest version: I didn't map the decision points up front. I discovered each one when it failed.</li>
+      <li>That worked, because the failures were fast and cheap — but it cost me the four ranking attempts.</li>
+      <li>What I did do consistently: write down every decision with its cause, as I made it.</li>
+      <li>That record is why I can answer these questions with specifics instead of impressions.</li>
+    </ul>
+    <div class="why"><b>Why the record mattered more than the plan</b>
+      <p>Because a plan made on day one is guesses about a problem you haven't met yet, whereas a record of decisions is evidence you can reread. When the ranking kept failing, the log is what showed me the four attempts were <em>different</em> wrong answers rather than converging ones — which is the observation that changed the approach.</p>
+    </div>
+    <div class="backing"><b>Proof</b>
+      <ul>
+        <li><strong>214</strong> decisions recorded with their reasons.</li>
+        <li><strong>16</strong> commits, each naming the failure that caused it. Six are ranking alone.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would you do differently?”</dt>
+        <dd>Map the decision points on paper before building any of them. I'd have found the tiering idea in an afternoon instead of on day four.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · where you spent the week</span>
+    <p class="q">Where did most of your time go? Was that right?</p>
+    <div class="say"><b>Say this</b>“Deciding which fact to open with. Far more than on the searching or the writing. And yes — though I'd get there faster now.”</div>
+    <ul>
+      <li>Searching was basically solved in a day.</li>
+      <li>Writing is a prompt.</li>
+      <li>The hard, ambiguous part was judgment: which of 30 facts earns the first sentence, for a person you know nothing about.</li>
+      <li>What I'd change: stop sooner when a tuning approach keeps producing <em>different</em> wrong answers.</li>
+    </ul>
+    <div class="why"><b>Why it was right to spend the week there</b>
+      <p>Because that's the part the brief is grading and the part nobody can copy in a weekend. Retrieval and drafting are commodity — there are a dozen ways to do each and they all work. Choosing well is the only step where the output would be visibly different from anyone else's build.</p>
+    </div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would you do first if you started over?”</dt>
+        <dd>Map every decision point on paper before building any of them. I got there in the end — but by discovering each one when it broke.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · honesty about tooling</span>
+    <p class="q">How much of this did AI write?</p>
+    <div class="say"><b>Say this</b>“A lot of the code. None of the decisions — and the decisions are what's being graded.”</div>
+    <ul>
+      <li>Be completely straight about this. Pretending otherwise is both dishonest and easy to catch.</li>
+      <li>What AI is good at here: writing the code once you know what you want.</li>
+      <li>What it isn't: knowing that four failed tuning attempts mean the model is wrong, not the numbers.</li>
+      <li>Every failure in the record was found by <em>running</em> it and being unsatisfied with the answer. That's the part that isn't automatable.</li>
+    </ul>
+    <div class="why"><b>Why this answer helps rather than hurts</b>
+      <p>Because for an AI Solutions role, using AI well <em>is</em> the skill being hired. The interesting question isn't whether you used it — it's whether you could tell when its output was wrong. The four ranking reversals are proof that I could, and they're a better credential than claiming to have typed everything by hand.</p>
+    </div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“So what did you actually contribute?”</dt>
+        <dd>The problem framing, every reversal, every edge case, and the decision to stop tuning. Also: noticing that a verification command had been passing without checking anything.</dd>
+        <dt>“Could you rebuild it without AI?”</dt>
+        <dd>Slower, yes. The design would be identical, because the design came from running it and disagreeing with the output.</dd>
+      </dl></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · do you verify your own work</span>
+    <p class="q">How did you check any of this actually works?</p>
+    <div class="say"><b>Say this</b>“By running it, mostly. And by finding out that one of my checks wasn't checking anything.”</div>
+    <ul>
+      <li>The type-checking command I'd been trusting was exiting successfully <em>without checking a single file</em> — a config quirk.</li>
+      <li>I had reported several passes on it. All meaningless.</li>
+      <li>Same shape twice more: a safety-guard self-test only ran when credentials happened to be present, and the database schema file had drifted from the code.</li>
+      <li>All three were found by looking, not by review. That's why I count them separately.</li>
+    </ul>
+    <div class="why"><b>Why I volunteer this one</b>
+      <p>Because “my verification was fake” is the least flattering thing in the whole record, and it's the strongest evidence that the rest of the numbers are real. Anyone can claim they test. Naming the time your test was a no-op shows the standard you apply to your own claims.</p>
+    </div>
+    <div class="backing"><b>Proof — things found by running, not reading</b>
+      <ul>
+        <li><strong>9 bugs</strong> found by testing rather than review.</li>
+        <li>No HTTP timeouts anywhere — the default was <strong>five minutes</strong>, so one unreachable host would have stalled a 40-contact campaign for hours.</li>
+        <li>A health check was making a real search and a real AI call on <em>every page load</em>, spending credits to draw a status badge.</li>
+      </ul></div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · can you work with someone else's code</span>
+    <p class="q">What happened when you had to work with code you didn't write?</p>
+    <div class="say"><b>Say this</b>“I overwrote two files without checking they existed, and destroyed work that wasn't mine.”</div>
+    <ul>
+      <li>Recovered byte-for-byte, but only because an editor happened to keep a transcript. The project wasn't in version control yet.</li>
+      <li>I noticed because a route answered with an error message I hadn't written.</li>
+      <li>What changed: it's a git repository now, with a secrets scan that caught a hardcoded key before the first push.</li>
+      <li>And I kept the other author's schema over mine, because it was the better fit.</li>
+    </ul>
+    <div class="why"><b>Why tell this story at all</b>
+      <p>Because it answers a question they can't ask directly: what do you do when you've broken something. The useful part isn't the mistake, it's that I found it from a symptom, recovered fully, and changed the conditions that allowed it. Leaving it out would make the record a highlight reel, which is exactly what makes a record worthless.</p>
+    </div>
+  </div>
+
+  <!-- ================================================== gut -->
+  <h2><span class="lvl">level 3</span>The gut-feel questions</h2>
+  <p class="section-note">The instinct angle. No right answer, no data to hide behind — they're finding out whether you have opinions and whether you'll say them out loud.</p>
+
+  <div class="qa">
+    <span class="tests">tests · do you have taste</span>
+    <p class="q">What are you proud of?</p>
+    <div class="say"><b>Say this</b>“That it stops. Every other tool in this space will always give you an answer, and mine sometimes says it hasn't got one.”</div>
+    <ul>
+      <li>Two moments specifically: four believable Michael Chens and it refuses to pick; 44 pages read and it admits it found nothing.</li>
+      <li>Both are the app choosing to be less impressive on purpose.</li>
+      <li>That was a design decision I could have gone the other way on, and I think it's the best one in the build.</li>
+    </ul>
+    <div class="why"><b>Why that's the right thing to be proud of</b>
+      <p>Because it's the only part that cost something. Adding a feature is free credit; removing the ability to bluff makes the demo weaker and the tool better. Being proud of a restriction rather than a capability is itself the answer they're listening for.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · self-criticism without self-destruction</span>
+    <p class="q">What don't you like about it?</p>
+    <div class="say"><b>Say this</b>“The ranking still chases the most interesting fact rather than the most relevant one. I know exactly where the fix goes and I didn't get to it.”</div>
+    <ul>
+      <li>Concrete example, from a real run: it opened on a role change from 2023 when the company's move to AI agents was a better reason to write.</li>
+      <li>The reason is structural — what you sell reaches the writing step but only weakly reaches the ranking step.</li>
+      <li>It's a small change with a large effect on quality.</li>
+      <li>Name one flaw precisely. Naming five sounds like you don't know which matters.</li>
+    </ul>
+    <div class="why"><b>Why name a flaw you can fix rather than a fundamental one</b>
+      <p>Because a fixable flaw with a known location shows you've diagnosed it; a vague one shows you've only noticed it. “The ranking is imperfect” is a shrug. “Relevance reaches drafting but not ranking, and here's the run where that shows” is a diagnosis with an address.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · resilience</span>
+    <p class="q">What nearly made you give up?</p>
+    <div class="say"><b>Say this</b>“The fourth wrong hook. Three failures feel like progress. The fourth feels like the whole approach is wrong — which, in that case, it was.”</div>
+    <ul>
+      <li>Each fix was correct in isolation and produced a different bad answer.</li>
+      <li>The temptation was to tune once more. That would have been attempt five.</li>
+      <li>What broke the loop was noticing the <em>pattern</em> of failures rather than the failures themselves.</li>
+      <li>That's the actual lesson: when fixes stop converging, stop fixing.</li>
+    </ul>
+    <div class="why"><b>Why frustration was the useful signal</b>
+      <p>Because it arrived before the analysis did. The irritation at seeing a fourth unrelated wrong answer was the first evidence that the failures weren't random — I just hadn't articulated it yet. Treating that feeling as data rather than noise is what got me to the tiering model.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · conviction</span>
+    <p class="q">What's the one thing you'd refuse to change?</p>
+    <div class="say"><b>Say this</b>“Nothing sends without a human reading it. I'd give up throughput before I gave that up.”</div>
+    <ul>
+      <li>Every other decision here is a trade-off I'd revisit with data.</li>
+      <li>This one isn't, because the failure it prevents is irreversible — you can't unsend an email to the wrong person.</li>
+      <li>And it's doing more work than every filter combined.</li>
+      <li>Say it plainly. A candidate with no non-negotiables reads as someone who hasn't thought hard about consequences.</li>
+    </ul>
+    <div class="why"><b>Why this one and not the source check</b>
+      <p>Because the source check has a technical substitute — a better verifier, a second model, a confidence threshold. Human review has none. It's the only guard that catches the failures I haven't thought of yet, which is precisely the category that matters.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · does the demo match the belief</span>
+    <p class="q">If you could only show me one screen, which?</p>
+    <div class="say"><b>Say this</b>“The findings column. Not the email.”</div>
+    <ul>
+      <li>The email is the output. Any tool can produce one.</li>
+      <li>The findings column is the reasoning: 18 facts, one chosen, 16 rejected with reasons.</li>
+      <li>It's the only screen that lets you judge whether the tool was <em>thinking</em>.</li>
+      <li>And it's the screen that makes the tool correctable rather than something you either trust or don't.</li>
+    </ul>
+    <div class="why"><b>Why show the working when most users only want the answer</b>
+      <p>Because trust is built at the moment the tool is wrong, not the moment it's right. A rep who sees a bad hook and can immediately see <em>why</em> it was picked learns where to rely on it. A rep who just sees a bad email learns to stop opening the app.</p>
+    </div>
+  </div>
+
+  <!-- ================================================== hardest -->
+  <h2><span class="lvl">level 5</span>The hardest ones</h2>
+  <p class="section-note">Designed to knock you off balance. The content matters less than staying calm and not getting defensive.</p>
+
+  <div class="qa">
+    <span class="tests">tests · composure under dismissal</span>
+    <p class="q">This is just a wrapper around an LLM, isn't it?</p>
+    <div class="say"><b>Say this</b>“The LLM part took an afternoon. The week went on the parts that stop it being confidently wrong — and those are ordinary code, not prompts.”</div>
+    <ul>
+      <li>Don't get defensive, and don't over-argue. Agree with the true half.</li>
+      <li>Then be specific: the same-name filter, the colleague filter, the word-for-word source check, the date distrust, the tiered ranking. None of those is a prompt.</li>
+      <li>The AI is used twice in seven steps, and both uses are checked by code afterwards.</li>
+      <li>Offer the test: <em>“turn the AI ranking call off and it still produces an answer. That's how much of this isn't the model.”</em></li>
+    </ul>
+    <div class="why"><b>Why agreeing first is the strong move</b>
+      <p>Because the accusation is partly true, and denying it makes everything after sound defensive. Conceding the easy half buys the right to be precise about the hard half — and the precision is what actually answers the question.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · can you take a direct hit</span>
+    <p class="q">I ran it and the hook it picked was bad. Explain that.</p>
+    <div class="say"><b>Say this</b>“Show me the findings column and I'll tell you exactly why it picked that — and whether it's a bug or a bad rule.”</div>
+    <ul>
+      <li><strong>Don't</strong> explain in the abstract. Open the screen.</li>
+      <li>Every rejection has a recorded reason, so this is diagnosable in front of them — which is itself the answer.</li>
+      <li>Most likely causes, in order: the fact had no date so it ranked on evidence instead; the person-level tier beat a better company fact; or relevance to what you sell didn't reach the ranking step.</li>
+      <li>All three are known, and the third is the one I'd fix first.</li>
+    </ul>
+    <div class="why"><b>Why this question is an opportunity</b>
+      <p>Because being able to explain a bad output <em>on the spot</em>, from the record, is a stronger demonstration than any good output. It proves the reasoning is stored rather than reconstructed — and that's the claim the whole design rests on.</p>
+    </div>
+    <div class="trap"><b>Never say “that shouldn't happen”.</b> It did happen; they're looking at it. The right move is to diagnose it live.</div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · intellectual honesty under pressure</span>
+    <p class="q">Convince me this isn't a solution looking for a problem.</p>
+    <div class="say"><b>Say this</b>“The problem is that research is skipped, and you can verify that without me — look at your own inbox this morning.”</div>
+    <ul>
+      <li>Evidence you can point at: every templated cold email anyone receives is a rep who skipped the research step.</li>
+      <li>The tool doesn't create demand for personalisation. That demand is already why reply rates are what they are.</li>
+      <li>What's genuinely uncertain isn't the problem — it's whether this is the right <em>shape</em> of solution, versus something living inside the CRM.</li>
+      <li>Concede that second point. It's the honest half and it's also my roadmap.</li>
+    </ul>
+    <div class="why"><b>Why separate the two halves</b>
+      <p>Because “is this a real problem” and “is this the right solution” get bundled into one dismissal, and they deserve different answers. The problem is verifiable today. The solution shape is genuinely open — and saying so is more persuasive than defending both with equal confidence.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · can you be wrong gracefully</span>
+    <p class="q">I disagree with your ranking model. Personal facts aren't always better.</p>
+    <div class="say"><b>Say this</b>“You're right, and I have a run that proves it. It's the assumption I'm least sure about.”</div>
+    <ul>
+      <li>Do not defend it. Agreeing here is both honest and stronger.</li>
+      <li>The evidence is already in the app: four company facts within 0.01 of each other, and the AI call overrode the tier to pick one of them.</li>
+      <li>What I'd defend is the <em>default</em>: it stops a former employer beating last week's post, which was a real bug.</li>
+      <li>What I wouldn't defend is making it absolute.</li>
+    </ul>
+    <div class="why"><b>Why concede rather than argue the point</b>
+      <p>Because they may well be testing whether you can be moved by an argument. Defending a position you've already documented as uncertain would contradict your own record — and the record is on the table. Conceding the exact right amount, and naming what you'd still defend, is the harder and more useful skill.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · self-knowledge</span>
+    <p class="q">What would someone who worked with you last week say you got wrong?</p>
+    <div class="say"><b>Say this</b>“That I kept tuning something that needed rethinking, and that I overwrote two files without checking they existed.”</div>
+    <ul>
+      <li>Both are specific, both are true, and both have a stated fix.</li>
+      <li>The tuning one: four attempts where two would have been enough.</li>
+      <li>The files one: recovered fully, and the project is in version control now.</li>
+      <li>Avoid the disguised-strength answer. “I care too much about quality” fails this question outright.</li>
+    </ul>
+    <div class="why"><b>Why two rather than one</b>
+      <p>Because one sounds curated. Two, from different categories — a judgment error and a carelessness error — reads as an actual assessment rather than a prepared line. And naming a carelessness error is the harder one to volunteer, which is what makes it credible.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · the real question underneath</span>
+    <p class="q">Why should we hire you for this role?</p>
+    <div class="say"><b>Say this</b>“Because the thing this role does all day is decide what's worth building, and that's what the last week was — including the four times I decided wrong and changed direction.”</div>
+    <ul>
+      <li>Point at the specific evidence rather than claiming a trait.</li>
+      <li>I found the failures by running the thing and being unsatisfied — not by reviewing code.</li>
+      <li>I can explain it to a rep in two sentences and to an engineer in five.</li>
+      <li>And I can tell you what's wrong with it, precisely, without being asked.</li>
+    </ul>
+    <div class="why"><b>Why lead with the reversals rather than the build</b>
+      <p>Because everyone in the final round has a working build. The differentiator is whether you can show the decisions <em>behind</em> it — and a documented reversal is the only kind of evidence that can't be produced by someone who got lucky.</p>
+    </div>
+  </div>
+
   <!-- ================================================== forward -->
-  <h2>What you'd do next</h2>
+  <h2><span class="lvl">level 4</span>What you'd do next</h2>
   <p class="section-note">They're checking whether you can prioritise when everything is possible.</p>
 
   <div class="qa">
@@ -619,6 +1537,9 @@
       <li>And getting the result into the tool the rep already lives in.</li>
       <li>Replies come from persistence far more often than from a better opening line.</li>
     </ul>
+    <div class="why"><b>Why follow-ups before CRM write-back</b>
+      <p>Because follow-ups multiply the value of every run I already do, whereas write-back only moves existing output somewhere else. And the groundwork is already there — sends are recorded per lead, and the runner-up hooks are already discarded, so a second message has both the history and the material without new research.</p>
+    </div>
     <div class="backing"><b>Proof — the groundwork is already in</b>
       <ul>
         <li>Every send is recorded per lead with the email, subject and time — so a follow-up would already know what was said and when.</li>
@@ -642,6 +1563,9 @@
       <li>At that size the interesting question changes. Not “can it write 200 emails”, but “<strong>which 20 deserve a human's attention today</strong>”.</li>
       <li>The app already produces that ranking. I'd make it the main screen.</li>
     </ul>
+    <div class="why"><b>Why the question changes at that volume</b>
+      <p>Because at 200 a day the bottleneck moves from the machine to the person. Drafting 200 emails is easy; reading 200 is not — and nothing sends unread. So the useful work becomes triage, and the app already has the inputs for it: how well someone fits the ideal customer, and whether a personal hook was found at all.</p>
+    </div>
     <div class="backing"><b>Proof — measured, not projected</b>
       <ul>
         <li>Four contacts researched at once in <strong>98 seconds</strong>, versus about four minutes one after another.</li>
@@ -658,28 +1582,46 @@
   </div>
 
   <div class="qa">
-    <span class="tests">tests · where you spent the week</span>
-    <p class="q">Where did most of your time go? Was that right?</p>
-    <div class="say"><b>Say this</b>“Deciding which fact to open with. Far more than on the searching or the writing. And yes — though I'd get there faster now.”</div>
+    <span class="tests">tests · can you see past your own build</span>
+    <p class="q">Six months in. What does this look like?</p>
+    <div class="say"><b>Say this</b>“Not an app you open. A queue that tells you who to write to today, sitting inside the CRM.”</div>
     <ul>
-      <li>Searching was basically solved in a day.</li>
-      <li>Writing is a prompt.</li>
-      <li>The hard, ambiguous part was judgment: which of 30 facts earns the first sentence, for a person you know nothing about.</li>
-      <li>What I'd change: stop sooner when a tuning approach keeps producing <em>different</em> wrong answers.</li>
+      <li>Today you bring it a name, which means you've already done the hard targeting work yourself.</li>
+      <li>The version that earns daily use watches a list and surfaces the people where something changed this week.</li>
+      <li>The draft becomes a by-product of the alert rather than the destination.</li>
+      <li>And by then it should be learning from replies, not just from edits — which is the only feedback that says whether any of this works.</li>
     </ul>
-    <div class="backing"><b>Proof</b>
+    <div class="why"><b>Why the shape has to change and not just the features</b>
+      <p>Because the current shape asks the rep to remember to use it. Every tool that depends on being remembered loses to the one that interrupts you at the right moment. Moving from pull to push isn't a feature — it's the difference between a tool that's tried and a tool that's adopted.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <span class="tests">tests · does the learning claim survive scrutiny</span>
+    <p class="q">You say it learns. Prove it.</p>
+    <div class="say"><b>Say this</b>“Open Settings. Every learned rule shows the evidence it came from, and you can delete any of them.”</div>
+    <ul>
+      <li>Two separate things are learned. <strong>How you write</strong> — from edits you make to drafts. <strong>What you write about</strong> — from which hooks you actually send.</li>
+      <li>It waits for <strong>three consistent edits</strong> before writing a rule. One edit is a mood; three is a preference.</li>
+      <li>Only <em>costly</em> actions count. A send counts double a hand-pick. A draft you ignored teaches nothing.</li>
+      <li>It only ever promotes, never demotes — because not doing something isn't evidence you dislike it.</li>
+    </ul>
+    <div class="why"><b>Why ignoring a draft has to count for nothing</b>
+      <p>Because most drafts get ignored for reasons that have nothing to do with quality — the rep got busy, the lead went cold, the day ended. Counting inaction as dislike would teach it that everything is bad, and it would slowly converge back onto whatever the defaults already were. Only actions with a cost carry information.</p>
+    </div>
+    <div class="backing"><b>Proof — visible in the app</b>
       <ul>
-        <li><strong>214 decisions</strong> written down with their reasons — most about judgment, not plumbing.</li>
-        <li>Six of the sixteen commits are ranking alone.</li>
+        <li>Two hand-picked speaking hooks moved that category to <strong>×1.2</strong>, rising to <strong>×1.4</strong> once campaign sends were counted too.</li>
+        <li>On two facts of equal age, the defaults pick the promotion <strong>0.3725 to 0.3353</strong>. With learning applied, the talk wins <strong>0.4023 to 0.3725</strong> — the order flips.</li>
       </ul></div>
     <div class="chain"><b>Then they'll ask</b>
       <dl>
-        <dt>“What would you do first if you started over?”</dt>
-        <dd>Map every decision point on paper before building any of them. I got there in the end — but by discovering each one when it broke.</dd>
+        <dt>“What if it learns something wrong?”</dt>
+        <dd>You delete the rule, and rules are versioned so it's one click. A setting you state explicitly always beats a rule it inferred — a statement outranks a guess.</dd>
       </dl></div>
   </div>
 
-  <p class="foot">Notice the pattern: nearly every answer here contains either a specific failure or an option you rejected. That's not decoration. It's the difference between describing what you built and showing how you decided.</p>
+  <p class="foot">Notice the pattern running through every answer: a specific failure, a rejected alternative, or a reason you can point at. That's not decoration. It's the difference between describing what you built and showing how you decided.</p>
 
 </div>
 </body>
