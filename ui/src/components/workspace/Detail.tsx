@@ -150,8 +150,19 @@ export function Detail({
   const author = p?.draftedBy || ""
   // A draft written by an identity that is no longer the active one. Compared
   // by id, so renaming an identity does not read as a different author.
-  const stale = Boolean(
+  // Two different kinds of out-of-date, and they need different words.
+  //
+  // A persona change never rewrites work already done — a sent message is a
+  // record, and a draft someone has read is theirs. But a draft written before
+  // the brief changed should say so rather than looking current, with one
+  // click to bring it forward.
+  const otherAuthor = Boolean(
     p?.draft?.body && persona && p.personaId != null && p.personaId !== persona.id)
+  const olderBrief = Boolean(
+    p?.draft?.body && persona && p.personaId === persona.id
+    && persona.brief_updated_at && p.personaVersion
+    && p.personaVersion < persona.brief_updated_at)
+  const stale = otherAuthor || olderBrief
 
   async function save() {
     if (!p?.runId || saving) return
@@ -328,8 +339,16 @@ export function Detail({
                                transition hover:opacity-80 disabled:opacity-50">
                     {redrafting ? <Loader2 className="size-3 animate-spin" />
                       : <Sparkles className="size-3" />}
-                    Redraft as {persona!.emoji} {persona!.name}
+                    {olderBrief
+                      ? "Written before the brief changed — redraft"
+                      : `Redraft as ${persona!.emoji} ${persona!.name}`}
                   </button>
+                )}
+                {p.sentAt && olderBrief && (
+                  <p className="mt-1 text-[11.5px] text-[var(--ink-7)]">
+                    Already sent, so this stays as it went out. A redraft replaces
+                    the draft, never the record.
+                  </p>
                 )}
                 <div className="mt-0.5 flex flex-wrap items-baseline gap-x-4 text-[14px]">
                   <span className="text-[var(--ink-6)]">

@@ -92,6 +92,9 @@ CREATE TABLE IF NOT EXISTS runs (
     -- identity can be deleted and the draft it wrote still has an author.
     persona_id    BIGINT,
     drafted_by    TEXT NOT NULL DEFAULT '',
+    -- Which version of that persona's brief wrote this draft, so a message
+    -- written before the brief changed can say so rather than looking current.
+    persona_version TEXT NOT NULL DEFAULT '',
     -- What the research found that contradicts the row as imported: a new
     -- employer, a new title. CRM rows go stale silently, and a job change is
     -- both the best hook there is and the reason an address stops working.
@@ -573,6 +576,21 @@ async def create_run(batch_id: str, p_: dict) -> int:
     ))
 
 
+def brief_version(persona: dict | None) -> str:
+    """When this persona's brief last changed, learned rules included.
+
+    Not just `updated_at` on the row: a rule learned from edits changes what
+    the writer is told without touching the persona itself, and a draft written
+    before that rule is just as out of date as one written before a hand edit.
+    """
+    pd = persona or {}
+    stamps = [pd.get("updated_at")]
+    for m in pd.get("memories") or []:
+        stamps += [m.get("created_at"), m.get("retired_at")]
+    best = max((str(x) for x in stamps if x), default="")
+    return best
+
+
 def authored(persona: dict | None) -> dict:
     """The author fields to store next to any draft.
 
@@ -583,7 +601,11 @@ def authored(persona: dict | None) -> dict:
     """
     pd = persona or {}
     name = f"{pd.get('emoji') or ''} {pd.get('name') or ''}".strip()
-    return {"persona_id": pd.get("id"), "drafted_by": name}
+    # The version too, so a draft can say it predates the current brief. A
+    # persona change must never rewrite work already done — but it should be
+    # visible that it is now out of date, and one click to bring it forward.
+    return {"persona_id": pd.get("id"), "drafted_by": name,
+            "persona_version": brief_version(pd) or None}
 
 
 async def update_run(run_id: int, **fields) -> None:
@@ -953,7 +975,8 @@ async def reset_run(run_id: int) -> None:
                 "chosen_hook=NULL, hook_category=NULL, hook_date=NULL, "
                 "hook_source=NULL, draft_subject=NULL, draft_body=NULL, "
                 # The author goes with the draft it wrote.
-                "persona_id=NULL, drafted_by='', job_change=NULL, "
+                "persona_id=NULL, drafted_by='', persona_version='', "
+                "job_change=NULL, "
                 "failure_reason=NULL, elapsed_ms=NULL, updated_at=now() "
                 "WHERE id=$1", run_id)
 
@@ -1006,8 +1029,21 @@ async def list_runs(limit: int = 200, batch_id: str = "") -> list[dict]:
 # ------------------------------------------------------------- personas ---
 async def list_personas() -> list[dict]:
     p = await pool()
-    return [_row(r) for r in await p.fetch(
+    rows = [_row(r) for r in await p.fetch(
         "SELECT * FROM personas ORDER BY is_selected DESC, id")]
+    # The brief version rides along so the lead screen can tell a draft written
+    # before the brief changed from one written after it, without a second
+    # request per persona.
+    for row in rows:
+        await _with_brief_version(row)
+    return rows
+
+
+async def _with_brief_version(row: dict) -> dict:
+    """Attach the persona's current brief version, memories included."""
+    row["memories"] = await active_memories(row["id"])
+    row["brief_updated_at"] = brief_version(row)
+    return row
 
 
 async def get_selected_persona() -> dict | None:
@@ -1020,7 +1056,7 @@ async def get_selected_persona() -> dict | None:
     p = await pool()
     row = _row(await p.fetchrow("SELECT * FROM personas WHERE is_selected LIMIT 1"))
     if row:
-        row["memories"] = await active_memories(row["id"])
+        await _with_brief_version(row)
     return row
 
 

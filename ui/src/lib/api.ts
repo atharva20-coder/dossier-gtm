@@ -55,6 +55,8 @@ export interface Persona {
   brief: string
   /** A message they wrote themselves, as the anchor for voice. */
   sample: string
+  /** When this persona's brief last changed, learned rules included. */
+  brief_updated_at: string
 }
 
 /** One rule the persona learned from edits, and whether it is still in force. */
@@ -146,6 +148,8 @@ export interface Prospect {
   jobChange: JobChange | null
   /** Which identity wrote the current draft — not necessarily the active one. */
   draftedBy: string
+  /** Which version of that persona's brief wrote the current draft. */
+  personaVersion: string
   personaId: number | null
   /** Where a message would go, and the record of it having gone. */
   email: string

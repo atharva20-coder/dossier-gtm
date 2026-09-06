@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS runs (
     -- identity can be deleted and the draft it wrote still has an author.
     persona_id    BIGINT,
     drafted_by    TEXT NOT NULL DEFAULT '',
+    -- Which version of that persona's brief wrote this draft, so a message
+    -- written before the brief changed can say so rather than looking current.
+    persona_version TEXT NOT NULL DEFAULT '',
     -- What the research found that contradicts the row as imported: a new
     -- employer, a new title. CRM rows go stale silently, and a job change is
     -- both the best hook there is and the reason an address stops working.

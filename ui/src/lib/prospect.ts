@@ -15,7 +15,7 @@ export function blank(p: any, idx: number): Prospect {
     url: p.url || "", relationship: p.relationship || "",
     status: "idle", runId: p.run_id ?? null, stages: [], facts: [], verdicts: [],
     rejected: [], sources: [], candidates: null, hook: null, draft: null,
-    draftedBy: "", personaId: null, jobChange: null, priority: "", fromCampaign: false,
+    draftedBy: "", personaId: null, personaVersion: "", jobChange: null, priority: "", fromCampaign: false,
     seniority: "", function: "", icpScore: null,
     personSources: 0, companySources: 0, ms: null, note: "", graph: null,
     factOverrides: p.fact_overrides ?? null,
@@ -77,6 +77,7 @@ export function fromRun(run: any, idx: number): Prospect {
                 note: p.draft?.note || "" }
   }
   p.draftedBy = run.drafted_by || ""
+  p.personaVersion = run.persona_version || ""
   return p
 }
 
