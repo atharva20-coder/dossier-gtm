@@ -913,7 +913,9 @@ async def regenerate(run_id: int, choice: HookChoice):
         reason = "chosen by hand, overriding the ranking"
     else:
         jr = judge.judge(kept, target_company=p.company, writer=writer,
-                         stakeholder=stakeholder)
+                         stakeholder=stakeholder,
+                         persona=await db.get_selected_persona(),
+                         learned=judge.learned_weights(await db.hook_outcomes()))
         hook, reason = jr.chosen, jr.chosen_reason
 
     style = [StyleExample(original=e["original"], edited=e["edited"],
@@ -1009,6 +1011,32 @@ async def save_draft_edit(run_id: int, edit: DraftEdit):
     return {"ok": True, "learned": learned,
             "style_examples": (await db.style_stats())["examples"],
             "persona_changes": persona_changes}
+
+
+@app.get("/api/learned/triggers")
+async def learned_triggers():
+    """Which kinds of hook this sender actually acts on.
+
+    Shown rather than applied silently: a ranking that quietly reshapes itself
+    is one nobody can argue with. Every row says what was learned and from how
+    much evidence, so it can be disagreed with — and overridden outright by
+    setting an explicit weight, which always wins.
+    """
+    outcomes = await db.hook_outcomes()
+    learned = judge.learned_weights(outcomes)
+    rows = [{
+        "category": category,
+        "drafted": o["drafted"],
+        "sent": o["sent"],
+        "hand_picked": o["hand_picked"],
+        "weight": learned.get(category, 1.0),
+        "learned": category in learned,
+    } for category, o in sorted(
+        outcomes.items(), key=lambda kv: -(kv[1]["sent"] * 2 + kv[1]["hand_picked"]))]
+    return {"triggers": rows,
+            "min_evidence": config.LEARN_MIN_EVIDENCE,
+            "note": ("A send counts double a hand-pick. Leaving a draft alone "
+                     "teaches nothing — not acting is not a preference.")}
 
 
 # ------------------------------------------------------- outbound campaigns ---

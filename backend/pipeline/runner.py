@@ -332,8 +332,11 @@ async def run(run_id: int, p: ProspectInput) -> None:
         # ---------- Stage 4: judgment ------------------------------------
         t0 = time.perf_counter()
         await stage("judge", "started", "Applying eligibility rules")
+        # What this sender has actually sent and hand-picked, so ranking bends
+        # toward the triggers they act on rather than the taxonomy's defaults.
         jr = judge.judge(kept, today=today, target_company=p.company,
-                         writer=writer, stakeholder=stakeholder)
+                         writer=writer, stakeholder=stakeholder, persona=persona,
+                         learned=judge.learned_weights(await db.hook_outcomes()))
         # Each verdict carries the fact's stable id so the UI can include or
         # exclude it by hand later without re-running any research.
         await stage("judge", "done", jr.chosen_reason,

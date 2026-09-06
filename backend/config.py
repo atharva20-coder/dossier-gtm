@@ -227,3 +227,10 @@ ACTIVITY_BOOST = float(os.getenv("ACTIVITY_BOOST", "1.45"))
 # When nothing recent qualifies, how far back a last-resort hook may reach.
 # Last year reads as thin; a decade ago reads as automated.
 LAST_RESORT_MULTIPLE = float(os.getenv("LAST_RESORT_MULTIPLE", "4"))
+
+# --- learning which triggers this sender actually acts on --------------------
+# A send counts double a hand-pick. Two hand-picks, or one send, is enough to
+# move a weight — each is a deliberate act, unlike leaving a draft alone.
+LEARN_MIN_EVIDENCE = int(os.getenv("LEARN_MIN_EVIDENCE", "2"))
+LEARN_EVIDENCE_CAP = int(os.getenv("LEARN_EVIDENCE_CAP", "6"))
+LEARN_STEP = float(os.getenv("LEARN_STEP", "0.1"))

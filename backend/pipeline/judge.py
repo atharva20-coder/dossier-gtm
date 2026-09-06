@@ -207,17 +207,48 @@ def activity_boost(fact: ExtractedFact, age: int | None) -> float:
     return 1.0
 
 
-def intent_weight(category: str, writer: WriterConfig | None) -> float:
+def learned_weights(outcomes: dict[str, dict] | None) -> dict[str, float]:
+    """Multipliers learned from what the user actually sent and hand-picked.
+
+    The taxonomy's defaults are one team's opinion about which triggers matter.
+    They are a reasonable starting point and a poor permanent answer: a
+    recruiter, an investor and an AP-automation vendor want different things,
+    and none of them should have to edit a weights table to say so.
+
+    Only costly acts count. Sending is worth most — a real message to a real
+    person. Hand-picking a hook is next, because overruling the ranking is
+    deliberate. A hook the user simply left alone is worth nothing: not acting
+    is not a preference, and counting it would just re-learn the defaults.
+
+    Promotion only. This can raise a category the user demonstrably favours; it
+    never demotes one on absence of evidence, which would let a quiet week
+    teach the system something false.
+    """
+    if not outcomes:
+        return {}
+    learned: dict[str, float] = {}
+    for category, o in outcomes.items():
+        evidence = o.get("sent", 0) * 2 + o.get("hand_picked", 0)
+        if evidence < config.LEARN_MIN_EVIDENCE:
+            continue
+        capped = min(evidence, config.LEARN_EVIDENCE_CAP)
+        learned[category] = round(1.0 + config.LEARN_STEP * capped, 3)
+    return learned
+
+
+def intent_weight(category: str, writer: WriterConfig | None,
+                  learned: dict[str, float] | None = None) -> float:
     """Weight for an intent category.
 
-    Order of precedence: what the writer explicitly configured, then the
-    taxonomy default. This is what lets an investor treat 'fundraise' as their
-    top signal while an AP-automation vendor treats 'hiring' as theirs, with no
-    code change.
+    Precedence: what the writer explicitly configured, then the taxonomy
+    default adjusted by what they have actually sent. An explicit setting is a
+    statement and always wins; the learned multiplier is an inference and only
+    ever nudges.
     """
     if writer and writer.intent_weights and category in writer.intent_weights:
         return float(writer.intent_weights[category])
-    return DEFAULT_INTENT_WEIGHTS.get(category, DEFAULT_INTENT_WEIGHTS["other"])
+    base = DEFAULT_INTENT_WEIGHTS.get(category, DEFAULT_INTENT_WEIGHTS["other"])
+    return base * (learned or {}).get(category, 1.0)
 
 
 def fact_id_for_text(text: str) -> str:
@@ -251,8 +282,9 @@ def score_fact(
     age: int | None,
     writer: WriterConfig | None = None,
     offer: set[str] | None = None,
+    learned: dict[str, float] | None = None,
 ) -> float:
-    score = outreach_value(age) * intent_weight(fact.category, writer)
+    score = outreach_value(age) * intent_weight(fact.category, writer, learned)
 
     # Relevance to the offer, applied before every other multiplier so that a
     # fact with nothing to do with what the sender sells cannot win on charm.
@@ -286,6 +318,7 @@ def judge(
     writer: WriterConfig | None = None,
     stakeholder: StakeholderProfile | None = None,
     persona: dict | None = None,
+    learned: dict[str, float] | None = None,
 ) -> JudgeResult:
     today = today or date.today()
     verdicts: list[FactVerdict] = []
@@ -359,7 +392,7 @@ def judge(
                 score=0.0))
             continue
 
-        score = score_fact(f, age, writer, offer)
+        score = score_fact(f, age, writer, offer, learned)
         fit, hits = relevance(f, offer)
 
         # Not a gate on truth — a gate on being the OPENING LINE. The fact stays
@@ -380,11 +413,14 @@ def judge(
                    else f"{age}d old")
         fresh_txt = ("; recent activity of theirs"
                      if activity_boost(f, age) > 1.0 else "")
+        learned_txt = ("" if not (learned or {}).get(f.category)
+                       else f"; you act on {f.category.replace('_', ' ')} hooks")
         fit_txt = ("" if not offer
                    else f"; {hits} word(s) in common with what you sell" if hits
                    else "; nothing in common with what you sell")
         reason = (f"eligible — {tier}-level {f.category}, {age_txt}, specific and safe"
-                  f"{fresh_txt}{fit_txt}; {provenance.describe(tier, fact_sources(f))}")
+                  f"{fresh_txt}{learned_txt}{fit_txt}; "
+                  f"{provenance.describe(tier, fact_sources(f))}")
 
         # Not a gate: a company milestone referenced at a junior prospect should
         # be framed as context, not as their personal achievement.
@@ -429,6 +465,9 @@ def judge(
     reason = f"highest score ({best.score}) — {best_tier}-level {best.fact.category}"
     if best_tier == "person":
         reason += ", preferred because it is about them rather than their employer"
+    if (boost := (learned or {}).get(best.fact.category)):
+        reason += (f", and it is a hook type you act on "
+                   f"(weighted x{boost} from what you have sent)")
     if (hits := relevance(best.fact, offer)[1]):
         reason += f", and it touches what you sell ({hits} term(s) in common)"
     reason += f"; {provenance.describe(best_tier, fact_sources(best.fact))}"

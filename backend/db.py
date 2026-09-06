@@ -931,6 +931,28 @@ async def provider_month(provider: str) -> dict:
     return {"month": int(r["month"]), "today": int(r["today"])}
 
 
+async def hook_outcomes() -> dict[str, dict]:
+    """What the user has actually done with each kind of hook.
+
+    Only acts that cost the user something count as evidence. Sending is the
+    strongest — a real message to a real person. Hand-picking is next: they
+    overruled the ranking on purpose. A hook the judge chose and the user simply
+    left alone says nothing, because not acting is not a preference.
+    """
+    p = await pool()
+    rows = await p.fetch("""
+        SELECT hook_category AS category,
+               count(*)                                        AS drafted,
+               count(*) FILTER (WHERE sent_at IS NOT NULL)      AS sent,
+               count(*) FILTER (WHERE coalesce(fact_overrides->>'chosen','') <> '')
+                                                                AS hand_picked
+        FROM runs
+        WHERE chosen_hook IS NOT NULL AND coalesce(hook_category,'') <> ''
+        GROUP BY hook_category""")
+    return {r["category"]: {"drafted": int(r["drafted"]), "sent": int(r["sent"]),
+                            "hand_picked": int(r["hand_picked"])} for r in rows}
+
+
 async def latest_leads(limit: int = 200) -> list[dict]:
     """One row per lead — the run worth showing — across every batch.
 

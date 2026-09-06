@@ -570,6 +570,33 @@ attributing a message to someone who did not write it.
 
 ---
 
+## Learning which triggers matter
+
+**The weight table is a starting point, not a permanent answer.** — It is one
+team's opinion about which triggers matter. A recruiter, an investor and an
+AP-automation vendor want different things and none of them should have to edit
+a table to say so.
+
+**Only costly acts count as evidence.** — Sending is worth double: a real
+message to a real person. Hand-picking a hook is next, because overruling the
+ranking is deliberate. A draft left alone teaches nothing — not acting is not a
+preference, and counting it would just re-learn the defaults.
+
+**Promotion only; it never demotes on absence.** — A quiet week would otherwise
+teach the system something false.
+
+**An explicit weight always beats a learned one.** — A setting is a statement,
+an inference is a guess.
+
+**What it learned is shown, not applied silently.** — A ranking that quietly
+reshapes itself is one nobody can argue with. Every row says what was learned
+and from how much evidence.
+
+**The reason string names it.** — "it is a hook type you act on (weighted x1.2
+from what you have sent)", so a surprising choice can be traced.
+
+---
+
 ## Ranking: recency and relevance
 
 **An undated fact is missing information, not fresh.** — It scored 0.35, above
