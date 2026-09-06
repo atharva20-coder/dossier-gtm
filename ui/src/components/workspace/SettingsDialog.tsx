@@ -249,6 +249,16 @@ export function SettingsDialog({
   // it, which read as the feature having disappeared.
   const describing = mode === "describe"
 
+  // The factual fields a short description usually cannot fill. Voice is safe
+  // to elaborate — "blunt" reasonably becomes "no throat-clearing" — but what
+  // someone sells is not, so those stay empty and get named here instead.
+  const gaps = [
+    !product.trim() && "what you sell",
+    !problem.trim() && "the problem it removes",
+    !proof.trim() && "any proof",
+    !lookingFor.trim() && "who is worth writing to",
+  ].filter(Boolean) as string[]
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[88dvh] flex-col gap-0 overflow-hidden p-0
@@ -284,8 +294,9 @@ export function SettingsDialog({
                     className="min-h-[190px] text-[13px]"
                     placeholder={"I'm a founder selling AI research tooling to heads of sales at B2B SaaS companies.\n\nI write like an engineer talking to a peer — short, three sentences, no fluff. I open with the exact thing I noticed about them, never a greeting. No exclamation marks, never say synergy or circle back. I end with one small concrete ask."} />
                   <p className="text-[11px] text-muted-foreground">
-                    Full sentences are easier than filling in fields. Mention tone,
-                    length, how you open and close, and anything you never say.
+                    Two or three lines is enough — it writes the rest. Say who you
+                    are, what you sell and to whom, and how you write. It will
+                    elaborate the voice, and it will not invent what you sell.
                   </p>
                 </div>
                 {error && <p className="text-[12px] text-destructive">{error}</p>}
@@ -310,6 +321,26 @@ export function SettingsDialog({
               </>
             ) : (
               <>
+                {/* Built from a couple of lines, some of this is empty on
+                    purpose: it will not invent a product or a proof point,
+                    because an invented one becomes a claim in every message
+                    this persona ever writes. Blank fields say so instead of
+                    sitting there looking finished. */}
+                {editing && gaps.length > 0 && (
+                  <div className="rounded-[10px] border border-amber-500/40
+                                  bg-amber-500/5 px-3 py-2">
+                    <p className="text-[12.5px] font-medium">
+                      Still needs {gaps.length === 1 ? "one thing" : `${gaps.length} things`}
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                      You did not mention {gaps.join(", ")}, and it will not make
+                      them up — an invented proof point becomes a claim in every
+                      message. Add a line each below, or leave them and it writes
+                      without them.
+                    </p>
+                  </div>
+                )}
+
                 {/* The way back to describing. Filling fields in by hand is the
                     fallback, not the front door — nobody has an opinion about
                     a "character" field, and everybody can describe how they
