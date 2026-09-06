@@ -175,6 +175,56 @@
     color: var(--ink);
   }
 
+  .backing {
+    background: var(--soft);
+    border-radius: 6px;
+    padding: 0.7rem 0.95rem;
+    margin-top: 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .backing > b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+
+  .backing ul { margin: 0; padding-left: 1.05rem; }
+  .backing li { margin-bottom: 0.28rem; }
+  .backing li:last-child { margin-bottom: 0; }
+  .backing li::marker { color: var(--faint); }
+  .backing code { background: var(--card); }
+
+  .chain {
+    border-top: 1px dashed var(--rule);
+    margin-top: 0.85rem;
+    padding-top: 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .chain > b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.4rem;
+  }
+
+  .chain dl { margin: 0; }
+  .chain dt {
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 0.5rem;
+  }
+  .chain dt:first-child { margin-top: 0; }
+  .chain dd { margin: 0.1rem 0 0; color: var(--ink-2); }
+
   .trap {
     border-left: 3px solid var(--warn);
     background: var(--warn-bg);
@@ -218,6 +268,19 @@
     <p class="q">Why did you pick PS-3?</p>
     <p class="lede">Because the bottleneck in it isn't writing, and every tool in that space is built as if it were.</p>
     <p>The brief describes an SDR who can't spend twenty minutes a prospect. The obvious reading is “make the writing faster”. But writing is the cheap half — the expensive half is finding a reason to write at all, and then re-reading your own notes to turn it into a sentence. I picked it because the obvious solution and the correct one are different, which is where there's something to prove.</p>
+    <div class="backing"><b>Backing — point at</b>
+      <ul>
+        <li>A finished run: <strong>58 sources read in ~50 seconds</strong>, 39 of them about the person rather than the company.</li>
+        <li>The findings column — <strong>29 facts considered</strong> on that run, one chosen, every rejection carrying its reason.</li>
+        <li>Drafting is the last stage and the shortest: about <strong>10 of the 50 seconds</strong>. The other 40 is the part a rep skips.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Wouldn't PS-1 have been safer?”</dt>
+        <dd>Yes — invoices have a right answer you can check. I picked the one where “correct” is a judgment call, because that's the harder thing to demonstrate.</dd>
+        <dt>“What made you sure the research is the bottleneck?”</dt>
+        <dd>I timed the manual version: finding a real, current, relevant signal for one prospect took me about forty minutes across LinkedIn, X and press. Writing from notes took four.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -225,7 +288,20 @@
     <p class="q">What does “good” look like for a hook? How did you decide?</p>
     <p class="lede">Recent, about the person rather than their employer, and connected to what the sender sells. In that order.</p>
     <p>I started with just recent and specific, and it produced hooks that were true and useless — a decade-old research paper, a headquarters address. The missing dimension was the sender: the system was optimising for the most <em>interesting</em> fact about a person rather than the one that gives you a reason to write. Once the sender's product and problem feed into ranking, the same fact set produces a different, better answer.</p>
+    <div class="backing"><b>Backing — the numbers on this machine</b>
+      <ul>
+        <li>Across every run: <strong>1,114 sources</strong>, <strong>307 from LinkedIn or X</strong> — the two largest by a wide margin.</li>
+        <li><strong>58% of chosen hooks</strong> came from LinkedIn or X, and <strong>12 of 24</strong> were about the person rather than their employer.</li>
+        <li>On one run it discarded <strong>six IEEE papers</strong>, all genuinely his, aged <strong>120 to 143 months</strong>. True, correctly attributed, and no reason to write.</li>
+      </ul></div>
     <div class="trap"><b>Follow-up to expect:</b> “How do you know it's better?” Be honest — you can't measure reply rate on a case study. What you can measure is the share of runs producing a person-level hook rather than a company-level one, and that's the leading indicator worth watching.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Who decides what's relevant — you or the model?”</dt>
+        <dd>Rules narrow it, one judgment picks. The rules are auditable and the final call is shown with its reason, so a rep can disagree with either.</dd>
+        <dt>“What if the sender sells something unusual?”</dt>
+        <dd>Then the ranking changes without code: the product and problem fields feed relevance, and the trigger weights are configurable. A recruiter and an investor want opposite things from the same fact set.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -233,6 +309,19 @@
     <p class="q">What did you decide not to build?</p>
     <p class="lede">A sequencer, a CRM connector, and bulk sending — the last one deliberately, not for lack of time.</p>
     <p>The first two are the right next things and both are integration work rather than judgment work: they'd have eaten the week and demonstrated nothing about how the process decides. Bulk send I left out on principle. A campaign that can mail forty strangers on one click is a different product with a different blast radius, and the guardrail is worth more than the feature.</p>
+    <div class="backing"><b>Backing — what exists instead</b>
+      <ul>
+        <li>A CSV export carrying the columns a sequencer imports — address, its provenance, subject, body, segment, and whether it has already been sent.</li>
+        <li>Sending is one contact per request, with a second confirmation, on both screens.</li>
+        <li>Re-running research deliberately does <em>not</em> clear the sent record. Researching someone again should never erase that they were already emailed.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“If a customer demanded bulk send?”</dt>
+        <dd>I'd add it behind an explicit review step — every draft approved before the batch goes — rather than a button that skips the review. The point isn't slowness, it's that nothing unreviewed leaves.</dd>
+        <dt>“What else did you cut?”</dt>
+        <dd>Follow-up sequences and a per-lead work queue. Both are real, both need state I hadn't designed, and neither would have shown anything new about judgment.</dd>
+      </dl></div>
   </div>
 
   <!-- ================================================== edge cases -->
@@ -245,6 +334,21 @@
     <p class="lede">Because each one is a way of being confidently wrong, and confidently wrong is the only failure that reaches a real person.</p>
     <p>A slow run is annoying. A crash is visible. But an email about the wrong Michael Chen, or congratulating someone on a colleague's award, is fluent, plausible, and lands in a stranger's inbox under a real name. I picked the failures that <em>look like success</em>, because those are the ones nobody catches.</p>
     <p>They also weren't chosen in advance. Every one is something that actually happened while building — a namesake's podcast got picked as a hook, an intern's award nearly went out to an executive. They chose themselves.</p>
+    <div class="backing"><b>Backing — run these live</b>
+      <ul>
+        <li><code>Michael Chen</code>, no company → <strong>4 plausible people</strong>, run parked, nothing spent.</li>
+        <li><code>Harshad Vaidya · Kelphi Systems</code> → 44 sources read, <strong>15 facts about a namesake discarded</strong>, nothing cleared the gates, generic draft <em>labelled</em> generic.</li>
+        <li>Three provider keys set to garbage → run <strong>completes</strong>, receipts read “Hunter rejected the key — check it has not expired”.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What edge cases did you consider and reject?”</dt>
+        <dd>A rate limit, a malformed CSV, a very long name. All real, all boring — the process behaves the same way afterwards. I kept the ones where the <em>output</em> changes, not the plumbing.</dd>
+        <dt>“What if the person has no LinkedIn at all?”</dt>
+        <dd>It falls to press and the open web, and the run says which. If nothing person-level survives, it uses a company-level hook and marks it as such rather than pretending it's personal.</dd>
+        <dt>“What if two of these happen at once?”</dt>
+        <dd>They're independent gates, so they compose — the Harshad run is exactly that: the namesake gate and the no-signal path firing together.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -252,6 +356,19 @@
     <p class="q">When two people share a name, why stop and ask instead of picking the most likely?</p>
     <p class="lede">Because the two outcomes cost wildly different amounts and the confidence score doesn't know that.</p>
     <p>Guessing right saves four seconds. Guessing wrong produces a well-researched email about a stranger, sent under your name, to someone who can tell immediately. That asymmetry doesn't show up in a confidence number, so it has to be a rule. The same logic decides what happens when nothing is found — it writes a generic message and labels it generic, rather than inventing something to say.</p>
+    <div class="backing"><b>Backing</b>
+      <ul>
+        <li>It stops only when two candidates are <em>genuinely</em> plausible. Give it a company and identity resolves immediately at <strong>confidence 100</strong> — no interruption on the happy path.</li>
+        <li>Answering the question costs one cheap pass, not a fresh run.</li>
+        <li>The same rule governs job changes: a new employer is only reported when the match is resolved <em>and</em> confidence is at least 75, because a shaky match claiming a new job is more likely the wrong person than a real move.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Doesn't that stop a batch of 200 dead?”</dt>
+        <dd>Only the ambiguous ones park; the rest finish. At volume that queue is a worklist — and it's short, because most rows arrive with a company attached.</dd>
+        <dt>“Where did you set the threshold, and why there?”</dt>
+        <dd>Deliberately conservative, and I'd tune it with real data. Right now I'd rather ask too often than send one wrong email.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -259,6 +376,19 @@
     <p class="q">What happens when the research is just wrong?</p>
     <p class="lede">Sometimes it will be, and the design assumes that rather than pretending otherwise.</p>
     <p>Every claim is checked back against the retrieved page, which stops invention but not misinterpretation — a real sentence can still be read wrongly. So the human stays in the loop by construction: every fact is shown with its source, any of them can be excluded and the message rebuilt, and nothing sends by itself. The system is designed to be <em>corrected</em>, not trusted.</p>
+    <div class="backing"><b>Backing — show the correction loop</b>
+      <ul>
+        <li>Untick a fact in the findings column, press <strong>Rewrite</strong>: the message rebuilds from what's left, no new research, no new spend.</li>
+        <li>Every fact carries a clickable source. Open one mid-demo — the claim is on the page.</li>
+        <li>Correcting it teaches the persona: three consistent edits become a standing rule, shown in Settings with its evidence.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“How would you catch a misreading at scale, when nobody's checking?”</dt>
+        <dd>You wouldn't, reliably — which is why nothing sends automatically. That constraint is doing the work, not a confidence score.</dd>
+        <dt>“Has it actually been wrong?”</dt>
+        <dd>Yes, and I can name them: a namesake's podcast, an intern's award, and a hook about a company he'd left. Each became a gate.</dd>
+      </dl></div>
   </div>
 
   <!-- ================================================== changed mind -->
@@ -271,7 +401,23 @@
     <p class="lede">Ranking. I tried to solve it with arithmetic four times before accepting the arithmetic was the wrong instrument.</p>
     <p>Facts get scored on recency, source quality, relevance. Each fix produced a <em>different</em> wrong answer — a work anniversary, then a decade-old exam result, then a role at a company he'd left. Four attempts in, the number of attempts was the evidence: a multiplier lets a well-evidenced trivial fact climb past a plainly better one, because the comparison is between facts, not within them.</p>
     <p>So I replaced it with an explicit ordering — what they said themselves, then their current job, then anything else, then a former employer — where the band beats the score outright. And then one final judgment across the shortlist, because “of these eight, which is worth opening with” isn't an arithmetic question.</p>
+    <div class="backing"><b>Backing — the four attempts, in order</b>
+      <ul>
+        <li>Undated facts scored <code>0.35</code>, beating dated ones — so the version of an event that said <em>less</em> won.</li>
+        <li>A three-character token floor was silently dropping <strong>“AI”</strong>, the most load-bearing word in the offer.</li>
+        <li><strong>4 of 13 dated hooks carried the run's own date</strong> — the extractor stamping “now” when it couldn't find one, and “today” scores maximum freshness.</li>
+        <li>The person-tier boost applied to <code>other</code>, the catch-all meaning “couldn't classify this at all”.</li>
+      </ul></div>
     <div class="trap"><b>Say the number.</b> “Four attempts” is the part that shows judgment. Saying “I iterated on the ranking” conveys nothing.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“How did you know it was the approach and not the parameters?”</dt>
+        <dd>Because each fix produced a <em>different</em> wrong answer rather than a closer one. Converging would have meant tuning; jumping around meant the model was wrong.</dd>
+        <dt>“Why keep any scoring at all?”</dt>
+        <dd>It's cheap, deterministic and explainable, and it narrows thirty facts to eight. The final comparison is the only part that needed judgment, so that's the only part that gets a model call.</dd>
+        <dt>“What if that call is wrong?”</dt>
+        <dd>It can decline, and any failure falls back to the ranked order. Turn it off entirely and the deterministic path still produces an answer.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -279,6 +425,19 @@
     <p class="q">What did you learn about the problem that you didn't know at the start?</p>
     <p class="lede">That most facts have no usable date, which quietly breaks the thing recency-based ranking rests on.</p>
     <p>I'd assumed dates would be there. About a third of extracted facts have none, and worse, some arrive stamped with today's date because the extractor defaults to “now” when it can't find one — and today scores maximum freshness. So the facts it could <em>not</em> date were outranking the ones it could. The fix was to distrust any date on or after the run date, and to rank undated facts on how well evidenced they are instead.</p>
+    <div class="backing"><b>Backing — measured, not estimated</b>
+      <ul>
+        <li><strong>4 of 13</strong> dated hooks in the database carry the date of the run that produced them.</li>
+        <li>Undated facts are now separated by how many <em>independent domains</em> carry them, and by the wording — “just launched” counts, “will be… soon” is penalised.</li>
+        <li>The year is read out of the sentence when the field is empty — “in 2014”, “since January 2023” — but only behind a preposition, so a headcount is never mistaken for a date.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What's the proper fix?”</dt>
+        <dd>Extraction returning a confidence on the date rather than a date or nothing. That's a data-model change I didn't have the week for, and the current version is a workaround I'd replace.</dd>
+        <dt>“Doesn't distrusting today's date lose real same-day news?”</dt>
+        <dd>Yes, and I took that trade knowingly: one genuinely fresh fact demoted, against a third of all dates being wrong in the other direction.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -286,6 +445,18 @@
     <p class="q">What's the assumption you're least sure about?</p>
     <p class="lede">That a person-level hook is always better than a company-level one.</p>
     <p>It's baked into the ordering and I believe it, but I've seen counter-examples in my own output: for someone whose company just moved its whole product onto AI agents, that company fact is a far better opener than anything personal. The current design treats the tier as a hard ordering. A more honest version would let a strong-enough company signal cross the band boundary, and I don't yet know where that threshold sits.</p>
+    <div class="backing"><b>Backing — the counter-example is in the app</b>
+      <ul>
+        <li>On the Zamp run, four company-level facts sat within <strong>0.01 of each other</strong> — a product launch, an expansion, and the move to AI agents. The ordering can't separate those, and a human obviously can.</li>
+        <li>The final judgment overrode the arithmetic's top pick and chose the AI-agents fact, giving as its reason that it aligns with what the sender sells. That's the band boundary being crossed by judgment rather than by rule.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“So is the ordering wrong?”</dt>
+        <dd>It's right as a default and wrong as an absolute. It stops a former employer beating a post from last week, which was a real bug — it just shouldn't be unbreakable.</dd>
+        <dt>“How would you find the threshold?”</dt>
+        <dd>From replies, not from intuition. Until there's outcome data, a hard default with a judgment override is the honest position.</dd>
+      </dl></div>
   </div>
 
   <!-- ================================================== explaining -->
@@ -297,7 +468,19 @@
     <p class="q">Explain what this does to an SDR who's never used an AI tool.</p>
     <p class="lede">“Give it a name and a company. It does the reading you don't have time for, then writes the email — and shows you the page every claim came from.”</p>
     <p>Then the one rule: it isn't allowed to make anything up. If it can't point at a page, the claim doesn't survive. Everything else in the build is machinery to enforce that sentence.</p>
+    <div class="backing"><b>Backing — the two things to put on screen while you say it</b>
+      <ul>
+        <li>The hook and its source link. Click through. The sentence is on the page.</li>
+        <li>The findings list: “this is everything it considered, and why each one was kept or dropped.”</li>
+      </ul></div>
     <div class="trap"><b>Don't say:</b> pipeline, grounding, extraction, provenance, multiplier. If you use one, you've failed the question — and the question is being asked on purpose.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would an SDR find confusing?”</dt>
+        <dd>The findings column — it shows the working, and most people only want the answer. It earns its place the first time the tool is wrong and they can see why.</dd>
+        <dt>“What does it need them to do?”</dt>
+        <dd>Read the message and press send. Everything else is optional, and the editing is what teaches it.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -305,6 +488,16 @@
     <p class="q">Why wouldn't a rep just do this themselves? They're better at it.</p>
     <p class="lede">They are better at it. They just don't do it — that's the whole problem.</p>
     <p>A rep researching properly beats this every time on one prospect. But they have two hundred, so they don't research at all, they template it, and the reply rate reflects that. This isn't competing with a rep doing their best work. It's competing with the version of the email they actually send on a Thursday afternoon.</p>
+    <div class="backing"><b>Backing</b>
+      <ul>
+        <li>About <strong>50 seconds</strong> a prospect against roughly forty minutes by hand — so it isn't a marginal saving, it's the difference between doing it and not.</li>
+        <li>And it doesn't replace the rep's judgment: it hands them the reason and the sources, and they decide.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“So it's for volume teams only?”</dt>
+        <dd>No — a founder doing their own sales gets the opposite value: very few prospects, very high care, and they'll edit every word. Which is exactly what the persona learns from.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -312,7 +505,17 @@
     <p class="q">Would a rep still be using this in week three?</p>
     <p class="lede">Not as it stands — because it lives outside the tools they already work in.</p>
     <p>That's the documented failure mode for this category: enthusiastic in week one, abandoned by week three, because reps live in Outreach and HubSpot and copying drafts across by hand is worse than not having the tool. The CSV export is the stopgap. Writing back into the CRM is the first thing I'd build with real budget, ahead of any new capability.</p>
+    <div class="backing"><b>Backing — what's already there to soften it</b>
+      <ul>
+        <li>The export is sequencer-shaped, not a data dump: first name, address, provenance, subject, body, segment, sent status.</li>
+        <li>Sending works from inside the app for the one-at-a-time case, so a rep isn't forced out of it to send a single message.</li>
+      </ul></div>
     <div class="trap"><b>Trap:</b> this is a test of self-awareness, not optimism. Answering “yes, they'd love it” fails it.</div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Then why build the UI at all?”</dt>
+        <dd>Because the reviewing has to happen somewhere, and reviewing is the point. The draft can go to the CRM; the reasoning needs a screen.</dd>
+      </dl></div>
   </div>
 
   <!-- ================================================== forward -->
@@ -324,6 +527,16 @@
     <p class="q">Another week. What do you build?</p>
     <p class="lede">Follow-ups, then CRM write-back. Not more research.</p>
     <p>Research quality is the part that's already good enough to judge. What's missing is what happens <em>after</em> the first message: a second and third touch that know what the first one said and how long ago, and a way for the result to land where the rep already works. One reply comes from persistence far more often than from a better opening line.</p>
+    <div class="backing"><b>Backing — the groundwork is in</b>
+      <ul>
+        <li>Every send is already recorded per lead with its address, subject and time, so a follow-up would know what was said and when.</li>
+        <li>The judge already discards runner-up hooks; a second touch would use the best <em>unused</em> one rather than repeating the first.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“Why not more research quality?”</dt>
+        <dd>Diminishing returns. The first message being 10% better matters less than a second message existing at all.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -331,6 +544,19 @@
     <p class="q">I give you two hundred prospects tomorrow. What happens?</p>
     <p class="lede">It runs, and the search quota is what stops it — not the code.</p>
     <p>About fifteen searches a prospect, so two hundred is three thousand, which is beyond the free tier. Runs are already concurrent but bounded, and the app counts its own usage and stops cleanly with a reason rather than dying halfway. At that volume the interesting question stops being “can it draft two hundred” and becomes “which twenty are worth a human's attention today” — which is the prioritisation the ICP score and hook strength already produce, and which I'd make the main screen.</p>
+    <div class="backing"><b>Backing — measured, not projected</b>
+      <ul>
+        <li>Four contacts researched concurrently in <strong>98 seconds</strong>, against roughly four minutes one at a time.</li>
+        <li>One campaign spent <strong>59 searches</strong> — the app counts its own and warns before the month runs out.</li>
+        <li>Forced to zero budget, the run still completed: contacts found, addresses worked out, and the receipt saying “stopped researching, 0 searches left this month”.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What breaks first?”</dt>
+        <dd>The search quota, then wall-clock time. The database is doing almost nothing by comparison.</dd>
+        <dt>“How do you decide which twenty?”</dt>
+        <dd>A fresh job change first — it's the strongest reason to write today and it decays in weeks — then ICP fit combined with having a person-level hook at all.</dd>
+      </dl></div>
   </div>
 
   <div class="qa">
@@ -338,6 +564,16 @@
     <p class="q">Where did most of your time go, and was that right?</p>
     <p class="lede">Deciding which fact to open with — far more than on research or writing. And yes, though I'd get there faster now.</p>
     <p>Retrieval was largely solved in a day. Writing is a prompt. The hard, ambiguous part — worth the time — was judgment: which of thirty facts deserves the first sentence, and how to be right about that for a person you know nothing about. What I'd change is stopping sooner when a tuning approach kept producing different wrong answers.</p>
+    <div class="backing"><b>Backing</b>
+      <ul>
+        <li><strong>214 decisions</strong> recorded with their reasons, and the majority are about judgment rather than plumbing.</li>
+        <li>Six of the sixteen commits are ranking alone.</li>
+      </ul></div>
+    <div class="chain"><b>Then they'll ask</b>
+      <dl>
+        <dt>“What would you do first if you started again?”</dt>
+        <dd>Map the decision points on paper before building any of them. I got there eventually, but by discovering each one when it broke.</dd>
+      </dl></div>
   </div>
 
   <p class="foot">Nearly every answer here has a specific failure or a rejected alternative in it. That's not decoration — it's the difference between describing what you built and showing how you decided.</p>
