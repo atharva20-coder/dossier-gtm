@@ -1047,11 +1047,24 @@ async def get_outbound_contacts_api(run_id: int):
     campaigns = {c["persona"]: c
                  for c in await outbound_db.get_outbound_campaigns(run_id)}
     sender = (await db.get_config("writer") or {}).get("sender_name", "")
+    # The hook a deeply-researched contact was written from, so the screen can
+    # show what the opener rests on rather than just the sentence it produced.
+    lead_ids = [c["lead_run_id"] for c in contacts if c.get("lead_run_id")]
+    hooks: dict[int, dict] = {}
+    if lead_ids:
+        pool = await db.pool()
+        for row in await pool.fetch(
+                "SELECT id, chosen_hook, hook_level, hook_source, "
+                "(SELECT count(*) FROM run_sources s WHERE s.run_id = r.id) AS sources "
+                "FROM runs r WHERE id = ANY($1::bigint[])", lead_ids):
+            hooks[row["id"]] = dict(row)
+
     for c in contacts:
         subject, body = outbound_pipeline.render_message(
             c, campaigns.get(c.get("persona_segment") or ""), sender)
         c["subject"] = subject
         c["message"] = body
+        c["research"] = hooks.get(c.get("lead_run_id") or 0)
     return {"contacts": contacts}
 
 class OutboundSend(BaseModel):

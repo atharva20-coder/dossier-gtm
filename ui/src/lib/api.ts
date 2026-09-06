@@ -172,6 +172,15 @@ export interface OutboundContact {
   /** The record of a message having gone out. Null until one has. */
   sent_at: string | null
   sent_to: string | null
+  /** The lead this contact was researched as, when the run went deep. */
+  lead_run_id: number | null
+  research: {
+    id: number
+    chosen_hook: string | null
+    hook_level: string | null
+    hook_source: string | null
+    sources: number
+  } | null
 }
 
 export interface OutboundCampaign {

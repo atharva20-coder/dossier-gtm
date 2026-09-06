@@ -570,6 +570,29 @@ attributing a message to someone who did not write it.
 
 ---
 
+## Research inside a campaign
+
+**A campaign contact is researched by the same runner a lead is.** — Delegated
+wholesale rather than given a lighter second pipeline: a cheaper research path
+would drift from the one that is actually exercised, and the contact then gets
+sources, the traversal graph and a grounded hook for free.
+
+**The contact becomes a real lead, and links to it.** — `lead_run_id` on the
+contact, so "open as lead" shows the whole research trail on the screen built
+for it.
+
+**Deep research is capped and defaults low.** — Each one is a full pipeline run:
+minutes of wall clock and a handful of search credits. Three by default, ten
+maximum, raised per run with `config.deep`.
+
+**Contacts past the cap keep the shallow opener.** — Falling back is better than
+leaving an opener blank, and the receipt says how many of each.
+
+**A researched contact that found nothing worth saying falls back too.** — An
+empty opener is worse than the competitor angle.
+
+---
+
 ## Sending from a campaign
 
 **One contact per request, and no send-all.** — A campaign that can mail forty

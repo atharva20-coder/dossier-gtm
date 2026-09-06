@@ -11,12 +11,19 @@ import time
 from typing import Any
 
 from .. import outbound_db
-from . import competitors, contacts, waterfall
+from . import competitors, contacts, runner, waterfall
 from . import draft as draft_pipeline
 from ..models import ProspectInput, WriterConfig, StakeholderProfile
 from .. import db
 
 log = logging.getLogger(__name__)
+
+# Researching a contact properly is a full pipeline run: minutes of wall clock
+# and a handful of search credits each. Capped so a wide campaign cannot spend
+# the month's allowance in one click, and defaulted low so the common case is
+# cheap. Raise it per run with `config.deep`.
+DEEP_DEFAULT = 3
+DEEP_MAX = 10
 
 
 async def run_outbound_pipeline(run_id: int):
@@ -27,7 +34,7 @@ async def run_outbound_pipeline(run_id: int):
             return
 
         target_company = run["target_company"]
-        config = run.get("config", {})
+        config_dict = run.get("config", {})
         
         # 1. Discover Competitors
         await _stage_start(run_id, "competitor_discovery")
@@ -48,9 +55,9 @@ async def run_outbound_pipeline(run_id: int):
         start_time = time.time()
         
         # Limit the number of competitors to avoid exploding API limits on free tiers
-        max_competitors = config.get("max_competitors", 5)
-        titles = config.get("target_titles", [])  # e.g., ["VP Engineering", "Head of Sales"]
-        contacts_per_company = config.get("contacts_per_company", 5)
+        max_competitors = config_dict.get("max_competitors", 5)
+        titles = config_dict.get("target_titles", [])  # e.g., ["VP Engineering", "Head of Sales"]
+        contacts_per_company = config_dict.get("contacts_per_company", 5)
         
         # People come from public pages, read by the same finder the leads
         # screen uses. Every person carries the URL that named them, and one
@@ -151,8 +158,54 @@ async def run_outbound_pipeline(run_id: int):
         drafted_count = 0
         db_contacts = await outbound_db.get_outbound_contacts(run_id)
         
-        # We need a fallback hook if we don't do full Dossier research on the contacts
+        # How many contacts get the full leads-page treatment: identity,
+        # search, extraction, grounding and the judge. That is a real research
+        # run each — minutes and search credits — so it is capped and the rest
+        # fall back to the shallow opener rather than being left blank.
+        deep_budget = int(config_dict.get("deep", DEEP_DEFAULT))
+        deep_budget = max(0, min(deep_budget, DEEP_MAX))
+        deep_done = 0
+
         for contact in db_contacts:
+            # --- the deep path: research this person properly ---------------
+            #
+            # Delegated to the same runner the leads screen uses, so a contact
+            # gets sources, the traversal graph and a grounded hook rather than
+            # "works at a competitor" — and the lead it produces opens on the
+            # leads screen unchanged. Reused wholesale because a second, lighter
+            # research path would drift from the one that is actually tested.
+            if deep_done < deep_budget:
+                try:
+                    lead_id = await db.create_run(f"outbound-{run_id}", {
+                        "name": contact["name"], "company": contact["company"],
+                        "role": contact["role"], "url": contact["linkedin_url"],
+                        "email": contact.get("email") or "",
+                    })
+                    await runner.run(lead_id, ProspectInput(
+                        name=contact["name"], company=contact["company"],
+                        role=contact["role"], url=contact["linkedin_url"]))
+                    lead = await db.get_run(lead_id)
+                    deep_done += 1
+
+                    pool = await db.pool()
+                    await pool.execute(
+                        "UPDATE outbound_contacts SET lead_run_id=$1 WHERE id=$2",
+                        lead_id, contact["id"])
+
+                    body = (lead or {}).get("draft_body") or ""
+                    opener = _first_sentence(body)
+                    if opener:
+                        await pool.execute(
+                            "UPDATE outbound_contacts SET opener_line=$1 WHERE id=$2",
+                            opener, contact["id"])
+                        drafted_count += 1
+                        continue
+                    # Researched but nothing worth saying: fall through to the
+                    # shallow opener rather than sending an empty one.
+                except Exception as e:                # noqa: BLE001
+                    log.warning("deep research failed for %s: %s", contact["name"], e)
+
+            # --- the shallow path ------------------------------------------
             # Written for everyone found, address or not: an opener is what
             # makes the contact worth anything, and a missing email is a
             # separate problem with its own fix.
@@ -197,7 +250,13 @@ async def run_outbound_pipeline(run_id: int):
                 drafted_count += 1
                 
         elapsed = int((time.time() - start_time) * 1000)
-        await _stage_done(run_id, "drafting", f"Drafted {drafted_count} messages", {"drafted_count": drafted_count}, elapsed)
+        await _stage_done(
+            run_id, "drafting",
+            f"Drafted {drafted_count} openers"
+            + (f" — {deep_done} from full research, "
+               f"{drafted_count - deep_done} from the competitor angle alone"
+               if deep_done else " from the competitor angle"),
+            {"drafted_count": drafted_count, "deep": deep_done}, elapsed)
         
         # 5. Create Campaign Groupings
         # Group by Persona/Role

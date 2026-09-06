@@ -440,6 +440,32 @@ export function OutboundPage() {
                         <p className="mt-1.5 line-clamp-2 text-[12.5px] italic
                                       text-[var(--ink-5)]">“{c.opener_line}”</p>
                       )}
+
+                      {/* A researched contact carries the hook its opener was
+                          written from, and the lead it was researched as. */}
+                      {c.research?.chosen_hook && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2
+                                        gap-y-1">
+                          <span className="inline-flex items-center gap-1 rounded-[6px]
+                                           bg-[var(--violet-bg)] px-1.5 py-0.5
+                                           text-[10.5px] text-[var(--violet-fg)]">
+                            <Sparkles className="size-2.5" />
+                            {c.research.hook_level === "person"
+                              ? "researched — about them" : "researched"}
+                          </span>
+                          <span className="text-[11px] text-[var(--ink-7)]">
+                            {c.research.sources} sources
+                          </span>
+                          <span onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/leads/${c.lead_run_id}`)
+                          }}
+                            role="link"
+                            className="cursor-pointer text-[11px] text-[var(--link)]">
+                            open as lead →
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="min-w-0 sm:w-[240px]">
                       {c.email ? (

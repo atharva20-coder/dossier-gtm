@@ -232,6 +232,10 @@ CREATE TABLE IF NOT EXISTS outbound_contacts (
     sent_to        TEXT,
     sent_subject   TEXT,
     sent_message_id TEXT,
+    -- The lead this contact was researched as. Set when the run went deep:
+    -- the contact then has everything a lead has — sources, the graph, the
+    -- grounded hook — and the leads screen opens it unchanged.
+    lead_run_id    BIGINT REFERENCES runs(id) ON DELETE SET NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS outbound_contacts_idx ON outbound_contacts (run_id, id);
