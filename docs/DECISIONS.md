@@ -570,6 +570,31 @@ attributing a message to someone who did not write it.
 
 ---
 
+## Watching a run
+
+**One row per stage, not one per event.** — The pipeline writes a row when a
+stage starts and another when it ends, so rendering them raw showed every stage
+twice: "Competitors · in progress" directly above "Competitors · found 8". Ten
+rows collapse to five.
+
+**Stages that have not begun are shown greyed, not hidden.** — The shape of the
+run is visible from the first second, instead of appearing a line at a time.
+
+**Polling paces itself: fast while running, slow when idle, stopped when
+done.** — A `setInterval` cannot slow itself down once there is nothing left to
+ask for.
+
+**The run renders the moment it is created.** — It exists as soon as the POST
+returns, and waiting for the first poll to say so leaves the pane blank for a
+beat right after the only click the user made.
+
+**Switching runs clears; arriving at the run just created does not.** — Clearing
+unconditionally blanks the pane that was just filled in. Never clearing shows
+the previous run's stages under the new run's name, which is worse than a blank
+because it looks like data.
+
+---
+
 ## Research inside a campaign
 
 **Every contact is researched; the limit is the budget, not a count.** — A count

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
   ResizableHandle, ResizablePanel, ResizablePanelGroup,
@@ -21,7 +21,10 @@ import {
   ExternalLink, Loader2, Mail, Play, Radar, Send, Sparkles, Target, Trash2, Users,
 } from "lucide-react"
 
-const POLL_MS = 3000
+// While a run is moving there is a new stage every few seconds and the screen
+// should keep up; once it is finished there is nothing left to ask for.
+const POLL_RUNNING = 1200
+const POLL_IDLE = 4000
 const DONE = new Set(["completed", "error", "empty"])
 
 const DOT: Record<string, string> = {
@@ -107,6 +110,15 @@ export function OutboundPage() {
   /* --------------------------------------------------- one run, polled */
   useEffect(() => {
     if (!selectedId) { setRun(null); setStages([]); setContacts([]); setCampaigns([]); return }
+
+    // Clear only when this is genuinely a different run from the one on
+    // screen. Clearing unconditionally blanks the pane that `start` just
+    // filled in; never clearing shows the previous run's stages and contacts
+    // under the new run's name until the first fetch lands, which is worse
+    // than a blank because it looks like data.
+    if (run && run.id !== selectedId) {
+      setStages([]); setContacts([]); setCampaigns([]); setTab("contacts")
+    }
     let live = true
 
     async function read() {
@@ -126,12 +138,24 @@ export function OutboundPage() {
       } catch { /* a dropped poll is not a failed run */ }
     }
 
-    read()
-    const timer = setInterval(async () => {
+    let timer: ReturnType<typeof setTimeout>
+
+    // Self-scheduling rather than setInterval: the pace depends on the answer,
+    // and an interval cannot slow itself down once the run is finished.
+    async function tick() {
       const status = await read()
-      if (status && DONE.has(status)) { clearInterval(timer); reloadRuns() }
-    }, POLL_MS)
-    return () => { live = false; clearInterval(timer) }
+      if (!live) return
+      if (status && DONE.has(status)) { reloadRuns(); return }
+      timer = setTimeout(tick, status === "running" ? POLL_RUNNING : POLL_IDLE)
+    }
+
+    read().then((status) => {
+      if (!live) return
+      if (status && DONE.has(status)) return
+      timer = setTimeout(tick, status === "running" ? POLL_RUNNING : POLL_IDLE)
+    })
+    return () => { live = false; clearTimeout(timer) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, reloadRuns])
 
   /* ------------------------------------------------------------- start */
@@ -145,8 +169,19 @@ export function OutboundPage() {
         max_competitors: 3, contacts_per_company: 3,
       })
       setTarget("")
-      // Navigate first. Executing takes minutes, and waiting for it before
-      // showing anything leaves the user on a spinner with no way to watch.
+      // Show it immediately. The run exists the moment it is created, and
+      // waiting for the first poll to say so leaves the pane blank for a beat
+      // right after the one click the user made.
+      setRun({
+        id: run_id, target_company: name, status: "running",
+        competitors: [], config: {}, created_at: new Date().toISOString(),
+      })
+      setStages([]); setContacts([]); setCampaigns([]); setTab("contacts")
+      setRuns((prev) => [{
+        id: run_id, target_company: name, status: "running", competitors: [],
+        config: {}, created_at: new Date().toISOString(),
+        contact_count: 0, campaign_count: 0,
+      }, ...prev])
       navigate(`/outbound/${run_id}`)
       await reloadRuns()
       api.executeOutbound(run_id)
@@ -188,6 +223,35 @@ export function OutboundPage() {
   }
 
   const running = run?.status === "running"
+
+  /**
+   * One row per stage, showing its latest state.
+   *
+   * The pipeline writes a row when a stage starts and another when it ends, so
+   * rendering them raw showed every stage twice — "Competitors · in progress"
+   * directly above "Competitors · found 8". Collapsed to the newest row per
+   * stage, the list reads as five lines that fill in, which is what is actually
+   * happening.
+   *
+   * Stages that have not been reached yet are shown greyed rather than absent,
+   * so the shape of the run is visible from the first second instead of
+   * appearing a line at a time.
+   */
+  const latestStages = useMemo(() => {
+    const newest = new Map<string, OutboundStage>()
+    for (const s of stages) newest.set(s.stage, s)   // later rows overwrite earlier
+    const known = Object.keys(STAGE_LABEL).filter((k) => k !== "pipeline")
+    const rows = known.map((stage) => newest.get(stage) ?? ({
+      id: -1, stage, status: "waiting", detail: "Not started",
+      payload: {}, elapsed_ms: null,
+    } as OutboundStage))
+    // Anything the pipeline reported that is not one of the known stages —
+    // a failure, say — still belongs on the list.
+    for (const [stage, row] of newest) {
+      if (!known.includes(stage)) rows.push(row)
+    }
+    return rows
+  }, [stages])
   const segments = [...new Set(contacts.map((c) => c.persona_segment).filter(Boolean))]
   const withEmail = contacts.filter((c) => c.email).length
 
@@ -652,25 +716,38 @@ export function OutboundPage() {
               <p className="px-4 py-10 text-center text-[13px] text-[var(--ink-7)]">
                 Nothing recorded yet.
               </p>
-            ) : stages.map((s) => {
+            ) : latestStages.map((s) => {
               // Which provider did what, counted once. An expired key that
               // silently degraded to the free path is the single most useful
               // thing this screen can say.
               const providers: Record<string, number> = s.payload?.providers ?? {}
+              const busy = s.status === "started"
               return (
-                <div key={s.id} className="border-b border-[var(--line-2)] px-4 py-2.5
-                                           last:border-0">
+                <div key={s.stage} className="border-b border-[var(--line-2)] px-4 py-2.5
+                                              last:border-0">
                   <div className="flex items-start gap-2.5">
-                    <ChevronRight className="mt-0.5 size-3 shrink-0 text-[var(--ink-9)]" />
+                    {busy
+                      ? <Loader2 className="mt-0.5 size-3 shrink-0 animate-spin
+                                            text-[var(--violet-fg)]" />
+                      : s.status === "failed"
+                      ? <CircleSlash className="mt-0.5 size-3 shrink-0 text-[#EF4444]" />
+                      : s.status === "waiting"
+                      ? <span className="mt-[7px] size-1.5 shrink-0 rounded-full
+                                         bg-[var(--ink-9)]" />
+                      : <CheckCircle2 className="mt-0.5 size-3 shrink-0
+                                                 text-[var(--green-fg)]" />}
                     <div className="min-w-0 flex-1">
                       <span className="text-[12.5px] font-medium text-[var(--ink-3)]">
                         {STAGE_LABEL[s.stage] ?? s.stage}
                       </span>
-                      <span className="ml-2 text-[12px] text-[var(--ink-6)]">{s.detail}</span>
+                      <span className={`ml-2 text-[12px] ${
+                        s.status === "waiting" ? "text-[var(--ink-9)]"
+                                               : "text-[var(--ink-6)]"}`}>{s.detail}</span>
                     </div>
                     <span className={`shrink-0 text-[11px] ${
                       s.status === "failed" ? "text-[#EF4444]" : "text-[var(--ink-8)]"}`}>
-                      {s.status}{s.elapsed_ms ? ` · ${(s.elapsed_ms / 1000).toFixed(1)}s` : ""}
+                      {busy ? "working…"
+                        : s.elapsed_ms ? `${(s.elapsed_ms / 1000).toFixed(1)}s` : s.status}
                     </span>
                   </div>
 
