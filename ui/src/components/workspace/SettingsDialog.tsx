@@ -819,11 +819,24 @@ export function SettingsDialog({
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             {describing ? (
-              <Button onClick={generatePersona}
-                disabled={describe.trim().length < 20 || generating}>
-                {generating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                Build persona
-              </Button>
+              /* Never a greyed button with no reason. It needs a sentence or
+                 two to work from, and saying so is the difference between a
+                 disabled control and a broken one. */
+              <div className="flex items-center gap-2">
+                {describe.trim().length < 20 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {describe.trim().length === 0
+                      ? "Describe how you write first"
+                      : `A bit more — ${20 - describe.trim().length} more character${
+                          20 - describe.trim().length === 1 ? "" : "s"}`}
+                  </span>
+                )}
+                <Button onClick={generatePersona}
+                  disabled={describe.trim().length < 20 || generating}>
+                  {generating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                  Build persona
+                </Button>
+              </div>
             ) : (
               <Button onClick={save} disabled={saving}>
                 {saving && <Loader2 className="animate-spin" />} Save
