@@ -120,7 +120,6 @@ export function SettingsDialog({
       reasons: string[]
       weight: number; learned: boolean; examples: string[] }[]>([])
   const [triggerNote, setTriggerNote] = useState("")
-  const [minEvidence, setMinEvidence] = useState(2)
   // One open at a time: these are full sentences, and every row expanded is a
   // wall of near-identical text in a dialog that is already dense.
   const [openTrigger, setOpenTrigger] = useState("")
@@ -152,7 +151,6 @@ export function SettingsDialog({
     api.learnedTriggers()
       .then((t) => {
         setTriggers(t.triggers); setTriggerNote(t.note)
-        setMinEvidence(t.min_evidence)
       })
       .catch(() => {})
   }, [open])
@@ -506,7 +504,9 @@ export function SettingsDialog({
                 </p>
               ) : (
                 <ul className="mt-2 space-y-1">
-                  {triggers.map((t) => {
+                  {triggers.filter((t) =>
+                    t.learned || t.sent > 0 || t.hand_picked > 0 || t.excluded > 0
+                  ).map((t) => {
                     const open = openTrigger === t.category
                     return (
                       <li key={t.category} className="overflow-hidden rounded-[8px] border">
@@ -541,16 +541,15 @@ export function SettingsDialog({
 
                         {open && (
                           <div className="border-t bg-muted/30 px-2.5 py-2">
-                            <p className="mb-1.5 text-[11px] text-muted-foreground">
-                              {!t.learned
-                                ? `Not learned yet — needs ${minEvidence} point(s) of `
-                                  + "evidence, and a draft you left alone is worth none."
-                                : t.weight < 1
-                                ? `Weighted \u00d7${t.weight} — you dropped this kind `
-                                  + `${t.excluded} time(s) by hand, so it now has to be `
-                                  + "clearly better than anything else to win."
-                                : `Weighted \u00d7${t.weight} because you acted on these.`}
-                            </p>
+                            {t.learned && (
+                              <p className="mb-1.5 text-[11px] text-muted-foreground">
+                                {t.weight < 1
+                                  ? `Weighted \u00d7${t.weight} — you dropped this kind `
+                                    + `${t.excluded} time(s) by hand, so it now has to be `
+                                    + "clearly better than anything else to win."
+                                  : `Weighted \u00d7${t.weight} because you acted on these.`}
+                              </p>
+                            )}
                             {t.restored > 0 && (
                               <p className="mb-1.5 text-[11px] text-muted-foreground">
                                 Put back {t.restored} time(s) — a restore cancels a drop,
