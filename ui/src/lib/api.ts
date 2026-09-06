@@ -381,6 +381,17 @@ export const api = {
   deleteOutbound: (id: number) =>
     fetch(`/api/outbound/runs/${id}`, { method: "DELETE" }).then(json<{ ok: boolean }>),
 
+  /** Which kinds of hook this sender actually acts on, and what was learned. */
+  learnedTriggers: () =>
+    fetch("/api/learned/triggers").then(json<{
+      triggers: {
+        category: string; drafted: number; sent: number
+        hand_picked: number; weight: number; learned: boolean
+      }[]
+      min_evidence: number
+      note: string
+    }>),
+
   /** Decision-makers at a company, for a team that has accounts not people. */
   findContacts: (company: string, roles: string[] = []) =>
     fetch("/api/contacts/find", {

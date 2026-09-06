@@ -113,6 +113,12 @@ export function SettingsDialog({
   // --- learned tab -------------------------------------------------------
   const [memories, setMemories] = useState<PersonaMemory[]>([])
 
+  // --- what the ranking has learned about which triggers matter ---------
+  const [triggers, setTriggers] = useState<
+    { category: string; drafted: number; sent: number
+      hand_picked: number; weight: number; learned: boolean }[]>([])
+  const [triggerNote, setTriggerNote] = useState("")
+
   // --- connected services, checked only on request ----------------------
   const [apis, setApis] = useState<any>(null)
   const [checking, setChecking] = useState(false)
@@ -130,6 +136,11 @@ export function SettingsDialog({
     api.getConfig().then((c) => {
       setWriter(c.writer); setIcp(c.icp); setExamples(c.style_examples?.examples ?? 0)
     }).catch(() => {})
+    // Counted from the runs themselves, so it costs a local query and nothing
+    // else — safe to read every time the dialog opens.
+    api.learnedTriggers()
+      .then((t) => { setTriggers(t.triggers); setTriggerNote(t.note) })
+      .catch(() => {})
   }, [open])
 
   useEffect(() => {
@@ -416,6 +427,45 @@ export function SettingsDialog({
                 ))}
               </ul>
             )}
+
+            {/* The second axis. The rules above are how you write; this is what
+                you write ABOUT — learned from hooks you sent or picked by hand,
+                never from drafts you simply left alone. */}
+            <div className="border-t pt-3">
+              <p className="text-[13px] font-medium">Triggers you act on</p>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {triggerNote || "Learned from hooks you sent or picked by hand."}
+              </p>
+
+              {triggers.length === 0 ? (
+                <p className="py-6 text-center text-[13px] text-muted-foreground">
+                  Nothing yet. Send a message, or pick a different hook by hand,
+                  and the kinds you favour rise in the ranking.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1">
+                  {triggers.map((t) => (
+                    <li key={t.category}
+                      className="flex items-center gap-2 rounded-[8px] border px-2.5 py-1.5">
+                      <span className={`size-1.5 shrink-0 rounded-full ${
+                        t.learned ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                      <span className="flex-1 truncate text-[13px]">
+                        {t.category.replace(/_/g, " ")}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {t.sent > 0 && `${t.sent} sent · `}
+                        {t.hand_picked > 0 && `${t.hand_picked} picked · `}
+                        {t.drafted} drafted
+                      </span>
+                      <span className={`w-12 shrink-0 text-right text-[12px] tabular-nums ${
+                        t.learned ? "font-medium text-primary" : "text-muted-foreground"}`}>
+                        {t.learned ? `\u00d7${t.weight}` : "—"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="writer" className="space-y-3 pt-4">
