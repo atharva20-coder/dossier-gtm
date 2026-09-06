@@ -20,10 +20,13 @@ about the same person, and a claim carried by both beats either alone).
 """
 from __future__ import annotations
 
+import logging
 import re
 from datetime import date, datetime
 
 from .. import config
+from pydantic import BaseModel, Field
+
 from ..models import ExtractedFact, FactVerdict, JudgeResult, StakeholderProfile, WriterConfig
 from ..taxonomy import (
     BLOCKED_INTENTS,
@@ -33,6 +36,9 @@ from ..taxonomy import (
     tier_of,
 )
 from . import provenance
+from ..integrations import llm
+
+log = logging.getLogger(__name__)
 
 VAGUE_PATTERNS = [
     r"\bis growing\b", r"\bcontinues to grow\b", r"\bis expanding\b$",
@@ -450,7 +456,88 @@ def score_fact(
     return round(score, 4)
 
 
-def judge(
+class Pick(BaseModel):
+    """The collective call's answer."""
+    index: int = Field(default=-1, description="which candidate to open with, or -1 for none")
+    why: str = Field(default="", description="one line, in the words a rep would use")
+
+
+COLLECTIVE_PROMPT = """Pick the ONE fact to open a cold email to this person with.
+
+WHO
+{name}{role_part}, currently at {company}.
+
+WHAT THE SENDER SELLS
+{offer}
+
+CANDIDATES
+{candidates}
+
+HOW TO CHOOSE
+- Something they said or did themselves beats something that happened to them,
+  and both beat something their company announced.
+- Recent beats old, and a dated fact beats an undated one of similar quality:
+  a date is evidence, its absence is not freshness.
+- A fact connected to what the sender sells beats a more interesting one that
+  is not — the message needs a reason to exist, not a fun opening line.
+- NEVER pick a role at a company that is not {company}. Opening on a former
+  employer is wrong and provably so in one click.
+- Reject an award, a qualification or an anniversary unless nothing else
+  remains: nobody replies to being congratulated on a decade-old exam result.
+- If none of them is worth opening with, answer -1. A generic message is better
+  than a strange one.
+
+`why` is one line explaining the choice to the rep who has to send it.
+"""
+
+
+async def collective_pick(candidates: list[FactVerdict], *, name: str, role: str,
+                          company: str, offer: str, today: date) -> tuple[int, str]:
+    """One judgment over the whole shortlist, instead of arithmetic per fact.
+
+    The scores narrow the field; this decides among what is left. Ranking each
+    fact in isolation and taking the maximum cannot express "of these eight,
+    this is the one worth opening with" — every multiplier tried on that problem
+    let some well-evidenced trivial fact climb over a plainly better one, and no
+    amount of retuning fixed it because the comparison is between facts, not
+    within them.
+
+    Returns (index, reason), or (-1, "") when the model declines or fails. The
+    deterministic order is always there to fall back to, so a run never depends
+    on this working.
+    """
+    if not candidates:
+        return -1, ""
+
+    lines = []
+    for i, v in enumerate(candidates):
+        age = _age_days(v.fact, today)
+        when = "undated" if age is None else f"{round(age / 30)} months old"
+        lines.append(
+            f"[{i}] {v.fact.text}\n"
+            f"     {v.fact.level}-level {v.fact.category} · {when} · "
+            f"about {v.fact.subject_company or 'unknown'} · "
+            f"{provenance.describe(v.fact.level, fact_sources(v.fact))}")
+
+    try:
+        pick = await llm.structured(
+            Pick,
+            COLLECTIVE_PROMPT.format(
+                name=name, role_part=f", {role}" if role else "",
+                company=company or "an unknown company",
+                offer=offer or "(not configured)",
+                candidates="\n".join(lines)),
+            model=config.MODEL_FAST)
+    except Exception as e:                       # noqa: BLE001 — never fail a run
+        log.warning("collective pick failed, using the ranked order: %s", e)
+        return -1, ""
+
+    if not (0 <= pick.index < len(candidates)):
+        return -1, pick.why
+    return pick.index, pick.why.strip()
+
+
+async def judge(
     facts: list[ExtractedFact],
     *,
     today: date | None = None,
@@ -459,6 +546,8 @@ def judge(
     stakeholder: StakeholderProfile | None = None,
     persona: dict | None = None,
     learned: dict[str, float] | None = None,
+    name: str = "",
+    role: str = "",
 ) -> JudgeResult:
     today = today or date.today()
     verdicts: list[FactVerdict] = []
@@ -616,6 +705,21 @@ def judge(
         return JudgeResult(verdicts=verdicts, chosen=None, background=background,
                            chosen_reason="no candidate cleared the eligibility gates")
 
+    # The rules narrow; one call decides. A shortlist rather than everything,
+    # so the model is choosing between real contenders instead of re-deriving
+    # the gates — and capped, because a long list is where attention goes.
+    shortlist = eligible[:config.SHORTLIST_SIZE]
+    picked_reason = ""
+    if len(shortlist) > 1 and config.COLLECTIVE_PICK:
+        index, why = await collective_pick(
+            shortlist, name=name, role=role, company=target_company,
+            offer=", ".join(sorted(offer)[:24]), today=today)
+        if index >= 0:
+            # Move the chosen one to the front, keeping the rest in rank order.
+            chosen_v = shortlist[index]
+            eligible = [chosen_v] + [v for v in eligible if v is not chosen_v]
+            picked_reason = why
+
     best = eligible[0]
     runners = eligible[1:]
     best_tier = best.fact.level if best.fact.level in ("person", "company") else tier_of(best.fact.category)
@@ -626,6 +730,8 @@ def judge(
                 3: "a former employer — nothing more current was found"}[band]
     reason = (f"{band_txt}; best of that group at {best.score} — "
               f"{best_tier}-level {best.fact.category}")
+    if picked_reason:
+        reason = f"{picked_reason} (chosen across {len(shortlist)} candidates); {reason}"
     if best_tier == "person":
         reason += ", preferred because it is about them rather than their employer"
     if (boost := (learned or {}).get(best.fact.category)):

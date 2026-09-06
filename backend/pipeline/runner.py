@@ -334,7 +334,8 @@ async def run(run_id: int, p: ProspectInput) -> None:
         await stage("judge", "started", "Applying eligibility rules")
         # What this sender has actually sent and hand-picked, so ranking bends
         # toward the triggers they act on rather than the taxonomy's defaults.
-        jr = judge.judge(kept, today=today, target_company=p.company,
+        jr = await judge.judge(kept, today=today, target_company=p.company,
+                               name=p.name, role=p.role,
                          writer=writer, stakeholder=stakeholder, persona=persona,
                          learned=judge.learned_weights(await db.hook_outcomes()))
         # Each verdict carries the fact's stable id so the UI can include or

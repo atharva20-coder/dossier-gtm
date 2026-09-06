@@ -165,10 +165,11 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
             hook = next((f for f in facts
                          if judge_stage.fact_id_for_text(f.text) == chosen), None)
         else:
-            hook = judge_stage.judge(
+            hook = (await judge_stage.judge(
                 facts, target_company=prospect.company, writer=writer,
                 stakeholder=stakeholder, persona=persona,
-                learned=judge_stage.learned_weights(await db.hook_outcomes())).chosen
+                name=prospect.name, role=prospect.role,
+                learned=judge_stage.learned_weights(await db.hook_outcomes()))).chosen
 
         d = await draft_stage.write(prospect, hook, writer=writer,
                                     stakeholder=stakeholder, persona=persona)

@@ -912,7 +912,8 @@ async def regenerate(run_id: int, choice: HookChoice):
             raise HTTPException(400, "That fact was not found among this run's facts.")
         reason = "chosen by hand, overriding the ranking"
     else:
-        jr = judge.judge(kept, target_company=p.company, writer=writer,
+        jr = await judge.judge(kept, target_company=p.company, writer=writer,
+                               name=p.name, role=p.role,
                          stakeholder=stakeholder,
                          persona=await db.get_selected_persona(),
                          learned=judge.learned_weights(await db.hook_outcomes()))

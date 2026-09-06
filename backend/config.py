@@ -245,3 +245,8 @@ FUTURE_TALK = float(os.getenv("FUTURE_TALK", "0.6"))
 # career history far more often than news, and opening with the wrong employer
 # is the mistake that proves nobody read anything.
 OTHER_EMPLOYER_UNDATED = float(os.getenv("OTHER_EMPLOYER_UNDATED", "0.45"))
+
+# The rules narrow the field; one model call decides among what is left, because
+# comparing facts to each other is not something a per-fact multiplier can do.
+COLLECTIVE_PICK = os.getenv("COLLECTIVE_PICK", "1") not in ("0", "false", "")
+SHORTLIST_SIZE = int(os.getenv("SHORTLIST_SIZE", "8"))
