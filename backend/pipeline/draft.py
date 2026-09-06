@@ -225,7 +225,11 @@ def _persona_block(persona: dict | None) -> str:
     if persona.get("instructions"):
         out.append(f"\nHOW THEY WRITE — follow this closely:\n{persona['instructions']}")
 
-    memories = [m["rule"] for m in (persona.get("memories") or []) if m.get("rule")]
+    # Only the rules not yet written into the instructions above. A rule that
+    # has been folded in is already there; appending it again would state it
+    # twice, and the second copy claims to override the first.
+    memories = [m["rule"] for m in (persona.get("memories") or [])
+                if m.get("rule") and not m.get("folded")]
     if memories:
         out.append(
             "\nLEARNED FROM THEIR EDITS — inferred from changes they made to real "

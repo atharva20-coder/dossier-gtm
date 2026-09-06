@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
-  Brain, Check, ChevronRight, Pencil, Sparkles, Undo2, X,
+  Brain, Check, ChevronRight, FileText, Pencil, Sparkles, Undo2, X,
 } from "lucide-react"
 import { api, type LearnEvent } from "@/lib/api"
 
@@ -27,6 +27,8 @@ const LOOK: Record<string, { Icon: typeof Brain; tint: string; ring: string }> =
   included: { Icon: Undo2,    tint: "text-[var(--ink-6)]",     ring: "bg-[var(--surface-4)]" },
   chose:    { Icon: Check,    tint: "text-[var(--green-fg)]",  ring: "bg-[var(--green-bg)]" },
   edit:     { Icon: Pencil,   tint: "text-[var(--ink-6)]",     ring: "bg-[var(--surface-4)]" },
+  // The strongest event there is: the brief the writer follows changed.
+  brief:    { Icon: FileText, tint: "text-[var(--violet-fg)]", ring: "bg-[var(--violet-bg)]" },
 }
 
 function ago(iso: string): string {

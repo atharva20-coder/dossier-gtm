@@ -696,14 +696,20 @@ async def persona_prompt(persona_id: int):
     if not persona:
         raise HTTPException(404, "Persona not found")
     persona["memories"] = await db.active_memories(persona_id)
-    rules = [m["rule"] for m in persona["memories"]]
+    # Two different things, and reporting them as one list was misleading: a
+    # folded rule is IN the instructions above, and listing it again as
+    # "appended" implies the model is told it twice.
+    folded = [m["rule"] for m in persona["memories"] if m.get("folded")]
+    appended = [m["rule"] for m in persona["memories"] if not m.get("folded")]
     return {
         "prompt": draft._persona_block(persona),
-        "learned_rules": rules,
+        "learned_rules": appended,
+        "folded_rules": folded,
         "authored_instructions": persona.get("instructions") or "",
-        "note": ("Everything above the LEARNED block is what you wrote. The block "
-                 "itself is what it worked out from your edits, and it overrides "
-                 "anything above that contradicts it."),
+        "note": ("The instructions are yours, except where it has written a "
+                 "learned rule into them — those are listed under Learned with "
+                 "the edits behind them. Anything still in the LEARNED block "
+                 "below is applied on top and overrides what contradicts it."),
     }
 
 

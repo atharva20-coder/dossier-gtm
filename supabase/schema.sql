@@ -354,6 +354,11 @@ CREATE TABLE IF NOT EXISTS persona_memories (
     learned_from  INTEGER NOT NULL DEFAULT 0,
     supersedes    BIGINT,
     active        BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Whether this rule has been written into the persona's own instructions.
+    -- Once it has, the prompt must stop appending it separately or the model
+    -- is told the same thing twice, in two voices, one of them claiming to
+    -- override the other.
+    folded        BOOLEAN NOT NULL DEFAULT FALSE,
     -- When it stopped being used. `active` alone says a rule was retired but
     -- not when, and a timeline cannot show an event with no time.
     retired_at    TIMESTAMPTZ,

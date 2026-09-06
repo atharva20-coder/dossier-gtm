@@ -391,6 +391,11 @@ CREATE TABLE IF NOT EXISTS persona_memories (
     learned_from  INTEGER NOT NULL DEFAULT 0,
     supersedes    BIGINT,
     active        BOOLEAN NOT NULL DEFAULT TRUE,
+    -- Whether this rule has been written into the persona's own instructions.
+    -- Once it has, the prompt must stop appending it separately or the model
+    -- is told the same thing twice, in two voices, one of them claiming to
+    -- override the other.
+    folded        BOOLEAN NOT NULL DEFAULT FALSE,
     -- When it stopped being used. `active` alone says a rule was retired but
     -- not when, and a timeline cannot show an event with no time.
     retired_at    TIMESTAMPTZ,
@@ -744,6 +749,21 @@ async def learning_feed(limit: int = 60) -> list[dict]:
                 "why": "it no longer matched what you were writing", "who": who,
             })
 
+    briefs = await p.fetch(
+        """SELECT v.created_at, v.summary, v.learned_from, pr.name, pr.emoji
+           FROM persona_revisions v LEFT JOIN personas pr ON pr.id = v.persona_id
+           WHERE v.learned_from > 0
+           ORDER BY v.id DESC LIMIT $1""", limit)
+    for r in briefs:
+        events.append({
+            "at": r["created_at"], "kind": "brief", "action": "brief",
+            "title": "Rewrote its own instructions",
+            "detail": r["summary"] or "folded what it learned into the brief",
+            "replaced": None,
+            "why": f"from {r['learned_from']} edit(s) · Settings → Learned to read it",
+            "who": f"{r['emoji'] or ''} {r['name'] or ''}".strip(),
+        })
+
     facts = await p.fetch(
         """SELECT f.action, f.category, f.fact_text, f.via, f.created_at,
                   f.run_id, f.reason, f.fact_id, r.name
@@ -1083,6 +1103,15 @@ async def add_memory(persona_id: int, rule: str, learned_from: int,
                 "VALUES ($1,$2,$3,$4) RETURNING *",
                 persona_id, rule, learned_from, supersedes)
     return _row(row)
+
+
+async def mark_memories_folded(ids: list[int]) -> None:
+    """Note that these rules now live in the instructions themselves."""
+    if not ids:
+        return
+    p = await pool()
+    await p.execute("UPDATE persona_memories SET folded=TRUE WHERE id = ANY($1::bigint[])",
+                    ids)
 
 
 async def active_memories(persona_id: int) -> list[dict]:

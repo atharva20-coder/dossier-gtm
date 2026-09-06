@@ -67,8 +67,9 @@ export interface PersonaMemory {
 /** One thing the app learned, and the evidence for it. */
 export interface LearnEvent {
   at: string
-  kind: "rule" | "fact" | "edit"
-  action: "learned" | "replaced" | "dropped" | "excluded" | "included" | "chose" | "edit"
+  kind: "rule" | "fact" | "edit" | "brief"
+  action: "learned" | "replaced" | "dropped" | "excluded" | "included" | "chose"
+    | "edit" | "brief"
   title: string
   detail: string
   why: string
@@ -406,6 +407,8 @@ export const api = {
   personaPrompt: (id: number) =>
     fetch(`/api/personas/${id}/prompt`).then(json<{
       prompt: string; learned_rules: string[]
+      /** Rules written into the instructions themselves, not appended. */
+      folded_rules: string[]
       authored_instructions: string; note: string
     }>),
 

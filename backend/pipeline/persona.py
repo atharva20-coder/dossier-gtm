@@ -194,6 +194,47 @@ HARD RULES
 """
 
 
+FOLD_PROMPT = """Write newly learned rules into a persona's own instructions.
+
+THEIR INSTRUCTIONS AS THEY STAND:
+\"\"\"
+{instructions}
+\"\"\"
+
+WHAT HAS JUST BEEN LEARNED, from edits they made to real drafts:
+{rules}
+
+Return the instructions with the new rules written in — one or two lines, in
+the same voice as the lines already there, so the whole thing reads as one set
+someone wrote rather than a list with an appendix.
+
+HARD RULES
+- Keep every existing line that the new rules do not contradict, WORD FOR WORD.
+  These are their words. Rewriting them to sound better is losing them.
+- Where a new rule contradicts an existing line, replace that line rather than
+  adding next to it. Two lines pulling opposite ways make the persona incoherent.
+- Add at most two lines. If a new rule is already covered by an existing line,
+  add nothing for it.
+- Every line is one imperative about VOICE: tone, length, sentence shape, how to
+  open, how to close, words to avoid.
+- NEVER a name — not the sender's, not a recipient's, not a company or product.
+  A persona is a way of writing that anyone could use.
+- NEVER a fact about a company, product, prospect or market.
+- Keep the whole thing under fourteen lines. At that length, merge rather than
+  append.
+
+Also return `summary`: one short clause naming what changed, for the history.
+"""
+
+
+class FoldResult(BaseModel):
+    instructions: str = Field(description="The full updated instructions, all lines.")
+    summary: str = Field(
+        default="",
+        description="One short clause on what changed, e.g. 'added a rule about "
+                    "where the ask goes'.")
+
+
 class MemoryOp(BaseModel):
     action: str = Field(description="One of: add, replace, drop, none.")
     target: int | None = Field(
@@ -300,7 +341,8 @@ async def learn(persona: dict) -> list[dict]:
             new = await db.add_memory(persona["id"], rule, len(lessons), target["id"])
             live = [m for m in live if m["id"] != target["id"]] + [new]
             applied.append({"action": "replace", "rule": rule,
-                            "replaced": target["rule"], "why": op.why})
+                            "replaced": target["rule"], "why": op.why,
+                            "memory_id": new["id"]})
 
         elif action == "add" and rule:
             # Guards the model is asked to respect but might not: no duplicates,
@@ -312,9 +354,63 @@ async def learn(persona: dict) -> list[dict]:
                 continue
             new = await db.add_memory(persona["id"], rule, len(lessons))
             live.append(new)
-            applied.append({"action": "add", "rule": rule, "why": op.why})
+            applied.append({"action": "add", "rule": rule, "why": op.why,
+                            "memory_id": new["id"]})
+
+    # ---- write what was learned into the instructions themselves ---------
+    #
+    # A rule appended to the prompt as a separate block works, and reads as a
+    # sticky note on someone else's document. The persona is supposed to BE the
+    # brief, so what it learns belongs in the brief — which also means the
+    # change is visible as text, and a version of that text is kept.
+    fresh = [a for a in applied if a["action"] in ("add", "replace") and a.get("rule")]
+    if fresh:
+        await _fold_into_instructions(persona, fresh, len(lessons))
 
     return applied
+
+
+async def _fold_into_instructions(persona: dict, learned: list[dict],
+                                  lesson_count: int) -> None:
+    """Rewrite the persona's instructions to include what it just learned.
+
+    Never raises. Failing to fold leaves the rule in the appended block, where
+    it still takes effect — a tidier prompt is not worth losing the lesson.
+    """
+    current = (persona.get("instructions") or "").strip()
+    if not current:
+        return
+    try:
+        result = await llm.structured(
+            FoldResult,
+            FOLD_PROMPT.format(
+                instructions=current,
+                rules="\n".join(f"- {a['rule']}" for a in learned)),
+            model=config.MODEL_SMART,
+            system=("You maintain one person's writing instructions. You preserve "
+                    "their wording and add as little as possible."),
+            temperature=0.2,
+        )
+    except Exception:
+        log.exception("could not fold learned rules into instructions")
+        return
+
+    updated = (result.instructions or "").strip()
+    # A fold that returns nothing, or throws the author's lines away, is worse
+    # than not folding. Length is a blunt check and it catches exactly that.
+    if not updated or len(updated) < len(current) * 0.5:
+        log.warning("fold produced a suspiciously short result; keeping the original")
+        return
+
+    await db.update_persona(persona["id"], instructions=updated)
+    await db.add_persona_revision(
+        persona["id"], updated,
+        result.summary or "learned from your edits", lesson_count)
+    await db.mark_memories_folded(
+        [a["memory_id"] for a in learned if a.get("memory_id")])
+    for a in learned:
+        a["folded"] = True
+        a["instructions_summary"] = result.summary
 
 
 async def note_edit(run_id: int | None, before: str, after: str,
