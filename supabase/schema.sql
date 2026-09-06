@@ -81,6 +81,16 @@ CREATE TABLE IF NOT EXISTS run_stages (
 );
 CREATE INDEX IF NOT EXISTS run_stages_run_id_idx ON run_stages (run_id, id);
 
+CREATE TABLE IF NOT EXISTS run_chat (
+    id         BIGSERIAL PRIMARY KEY,
+    run_id     BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    you        TEXT NOT NULL,
+    reply      TEXT NOT NULL DEFAULT '',
+    actions    JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS run_chat_run_id_idx ON run_chat (run_id, id);
+
 CREATE TABLE IF NOT EXISTS app_config (
     key        TEXT PRIMARY KEY,
     value      JSONB NOT NULL,

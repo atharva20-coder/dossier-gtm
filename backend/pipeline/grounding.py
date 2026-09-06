@@ -103,6 +103,33 @@ def verify_fact(
     return True, f"verified {len(supported)}/{len(entities)} entities in source text"
 
 
+def _squash(s: str) -> str:
+    """Letters and digits only — no spaces, punctuation or case."""
+    return re.sub(r"[^a-z0-9]", "", _norm(s))
+
+
+def named_in_prose(entity: str, draft_norm: str, draft_squashed: str) -> bool:
+    """Is this entity referred to in a sentence a human would actually write?
+
+    Looser than `entity_supported` on purpose, and only ever used against a
+    draft — never against source text. The two checks answer different
+    questions. Grounding asks "did the source say this", where a verbatim match
+    is the whole safeguard. This asks "does the message carry the specific
+    detail", where insisting on the exact string rejects correct drafts.
+
+    The case that forced it: a hook drawn from X carries the handles it was
+    written with — `@LightconePod`, `@pedroh96`. Nobody writes an email saying
+    "you were on @LightconePod", so every attempt was rejected and the run
+    finished with a hook and no message at all. Squashing to letters and digits
+    lets "the Lightcone podcast" satisfy `@LightconePod`, while still requiring
+    the name itself to be there.
+    """
+    if entity_supported(entity, draft_norm):
+        return True
+    squashed = _squash(entity.lstrip("@"))
+    return len(squashed) >= 5 and squashed in draft_squashed
+
+
 def verify_draft(draft: str, fact: ExtractedFact) -> tuple[bool, str]:
     """The draft must actually carry the hook's specific detail.
 
@@ -118,7 +145,8 @@ def verify_draft(draft: str, fact: ExtractedFact) -> tuple[bool, str]:
     if not entities:
         return False, "hook has no verifiable detail to carry into the draft"
 
-    if any(entity_supported(e, d) for e in entities):
+    squashed = _squash(draft)
+    if any(named_in_prose(e, d, squashed) for e in entities):
         return True, "draft carries the hook's specific detail"
     return False, "draft does not mention the hook's specific detail"
 

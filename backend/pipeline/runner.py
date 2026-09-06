@@ -358,11 +358,16 @@ async def run(run_id: int, p: ProspectInput) -> None:
 
         elapsed = int((time.perf_counter() - t_run) * 1000)
         if jr.chosen:
+            # A hook was found and the draft still came back empty — the writer
+            # rejected its own attempts. Record why. Without this the run reads
+            # as a clean success next to an empty message, and the only
+            # explanation sits in a stage payload nobody opens.
             await db.update_run(run_id, status="completed", chosen_hook=jr.chosen.text,
                                 hook_level=jr.chosen.level,
                                 hook_category=jr.chosen.category, hook_date=jr.chosen.date,
                                 hook_source=jr.chosen.source_url, draft_subject=d.subject,
                                 draft_body=d.body, elapsed_ms=elapsed,
+                                failure_reason=None if d.body else d.note,
                                 **db.authored(persona))
         else:
             await db.update_run(run_id, status="no_signal_found", draft_subject=d.subject,

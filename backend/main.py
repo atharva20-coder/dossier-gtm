@@ -848,6 +848,17 @@ class ChatMessage(BaseModel):
     message: str = ""
 
 
+@app.get("/api/runs/{run_id}/chat")
+async def chat_history(run_id: int):
+    """Everything said about this lead so far.
+
+    Read on open rather than kept in the browser, so the thread survives a
+    refresh, a different tab and a different machine — the same reason every
+    other part of a run is read back from the database rather than remembered.
+    """
+    return {"turns": await db.chat_turns(run_id)}
+
+
 @app.post("/api/runs/{run_id}/chat")
 async def chat(run_id: int, body: ChatMessage):
     """Talk to the assistant about one lead — and let it act.
@@ -860,9 +871,15 @@ async def chat(run_id: int, body: ChatMessage):
     if not body.message.strip():
         raise HTTPException(400, "Say something for it to act on.")
     try:
-        return await agent.run_turn(run_id, body.message, _stage_payload)
+        turn = await agent.run_turn(run_id, body.message, _stage_payload)
     except ValueError as e:
         raise HTTPException(404 if "not found" in str(e).lower() else 400, str(e))
+    # Stored after the turn succeeds, so a failed call leaves no half-exchange
+    # in the thread. A model that could not be reached is not a thing that was
+    # said.
+    await db.add_chat_turn(run_id, body.message.strip(),
+                           turn.get("reply") or "", turn.get("actions") or [])
+    return turn
 
 
 # --------------------------------------------------- overriding the judge ---
@@ -937,7 +954,10 @@ async def regenerate(run_id: int, choice: HookChoice):
         hook_date=hook.date if hook else None,
         hook_source=hook.source_url if hook else None,
         draft_subject=d.subject, draft_body=d.body, **db.authored(persona),
-        failure_reason=None if hook else "every remaining fact was excluded",
+        # Same reasoning as the runner: an empty draft has to say why it is
+        # empty, or a rewrite that produced nothing looks like a broken button.
+        failure_reason=("every remaining fact was excluded" if not hook
+                        else None if d.body else d.note),
         fact_overrides={"excluded": sorted(excluded), "chosen": choice.chosen},
     )
     await db.add_stage(run_id, "draft", "done",

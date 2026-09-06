@@ -36,6 +36,26 @@ const DOT: Record<string, string> = {
   planned: "bg-[var(--ink-10)]",
 }
 
+/**
+ * One thing a stage found — a competitor, a person, an address, a draft.
+ *
+ * Deliberately one loose shape rather than a union per stage: the receipts list
+ * renders whichever fields are present, so a stage can start reporting more
+ * without a matching change here.
+ */
+type Finding = {
+  name: string
+  role?: string
+  detail?: string
+  email?: string
+  source?: string
+  verified?: boolean
+  researched?: boolean
+  opener?: string
+  count?: number
+  url?: string
+}
+
 /** The five pipeline stages, in the order they run, with a readable name. */
 const STAGE_LABEL: Record<string, string> = {
   competitor_discovery: "Competitors",
@@ -721,6 +741,10 @@ export function OutboundPage() {
               // silently degraded to the free path is the single most useful
               // thing this screen can say.
               const providers: Record<string, number> = s.payload?.providers ?? {}
+              // What the stage actually found, not just that it finished.
+              // Every stage writes the same `found` shape, so one renderer
+              // serves all five rather than five special cases that drift.
+              const found: Finding[] = s.payload?.found ?? []
               const busy = s.status === "started"
               return (
                 <div key={s.stage} className="border-b border-[var(--line-2)] px-4 py-2.5
@@ -750,6 +774,60 @@ export function OutboundPage() {
                         : s.elapsed_ms ? `${(s.elapsed_ms / 1000).toFixed(1)}s` : s.status}
                     </span>
                   </div>
+
+                  {found.length > 0 && (
+                    <ul className="mt-2 space-y-1 pl-[22px]">
+                      {found.map((r, i) => (
+                        <li key={i} className="flex items-baseline gap-2 text-[11.5px]">
+                          <span className="shrink-0 text-[var(--ink-4)]">{r.name}</span>
+                          {r.role && (
+                            <span className="truncate text-[var(--ink-7)]">{r.role}</span>
+                          )}
+                          {r.email && (
+                            <span className="truncate font-mono text-[11px]
+                                             text-[var(--ink-6)]">{r.email}</span>
+                          )}
+                          {r.opener && (
+                            <span className="truncate text-[var(--ink-7)]">“{r.opener}”</span>
+                          )}
+                          {r.detail && !r.email && (
+                            <span className="truncate text-[var(--ink-7)]">{r.detail}</span>
+                          )}
+                          <span className="ml-auto flex shrink-0 items-center gap-1.5">
+                            {typeof r.count === "number" && (
+                              <span className="tabular-nums text-[var(--ink-8)]">
+                                {r.count}
+                              </span>
+                            )}
+                            {r.researched === true && (
+                              <span className="text-[10.5px] text-[var(--green-fg)]">
+                                researched
+                              </span>
+                            )}
+                            {r.researched === false && (
+                              <span className="text-[10.5px] text-[var(--ink-8)]">
+                                campaign angle
+                              </span>
+                            )}
+                            {/* Looked up and worked-out are different claims.
+                                Saying which is the whole point of a receipt. */}
+                            {r.source && (
+                              <span className={`text-[10.5px] ${
+                                r.source.startsWith("derived") ? "text-[var(--amber-fg)]"
+                                                              : "text-[var(--ink-8)]"}`}>
+                                {r.source.startsWith("derived") ? "worked out" : "looked up"}
+                              </span>
+                            )}
+                            {r.verified && (
+                              <span className="text-[10.5px] text-[var(--green-fg)]">
+                                verified
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
                   {Object.keys(providers).length > 0 && (
                     <div className="mt-1.5 space-y-0.5 pl-[22px]">

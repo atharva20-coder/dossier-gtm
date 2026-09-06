@@ -182,6 +182,7 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
             hook_date=hook.date if hook else None,
             hook_source=hook.source_url if hook else None,
             draft_subject=d.subject, draft_body=d.body, **db.authored(persona),
+            failure_reason=None if d.body else d.note,
             fact_overrides={"excluded": sorted(excluded), "chosen": chosen})
         run = await db.get_run(run_id)
 

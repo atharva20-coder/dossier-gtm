@@ -422,6 +422,11 @@ export const api = {
       body: JSON.stringify({ to, resend }),
     }).then(json<{ ok: boolean; run: any }>),
 
+  /** Everything said about this lead so far, oldest first. */
+  chatHistory: (id: number) =>
+    fetch(`/api/runs/${id}/chat`).then(
+      json<{ turns: { you: string; reply: string; actions: any[] }[] }>),
+
   /** Talk to the assistant about one lead. It can act, not just answer. */
   chat: (id: number, message: string) =>
     fetch(`/api/runs/${id}/chat`, {

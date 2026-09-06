@@ -43,21 +43,11 @@ export function fromRun(run: any, idx: number): Prospect {
   p.email = run.email ?? ""
   p.sentAt = run.sent_at ?? null
   p.sentTo = run.sent_to ?? null
-  if (run.chosen_hook) {
-    p.hook = {
-      text: run.chosen_hook, level: run.hook_level || "company",
-      category: run.hook_category || "", date: run.hook_date || "",
-      key_entities: [], source_url: run.hook_source || "", subject_company: "",
-    }
-  }
-  if (run.draft_body != null) {
-    p.draft = { body: run.draft_body, subject: run.draft_subject || "", note: "" }
-  }
-  p.draftedBy = run.drafted_by || ""
   p.jobChange = run.job_change ?? null
   p.priority = run.priority || ""
   p.fromCampaign = Boolean(run.from_campaign)
   p.personaId = run.persona_id ?? null
+
   // Replay whatever stages came with the run, so the pipeline view, evidence
   // and research graph come back too — not just the summary fields.
   for (const s of run.stages || []) {
@@ -66,6 +56,27 @@ export function fromRun(run: any, idx: number): Prospect {
       payload: s.payload || {}, elapsed_ms: s.elapsed_ms || 0,
     } as StageEvent)
   }
+
+  // The run's own columns are applied AFTER the replay, because they are the
+  // current state and a stage payload is a historical record of one attempt.
+  //
+  // The assistant rewrites a message by updating the run and adding no stage —
+  // there is nothing new to show in the pipeline. Applying the columns first
+  // meant the old draft stage was replayed straight over the new body, so a
+  // chat rewrite or a tone chip changed the database and never the screen.
+  if (run.chosen_hook) {
+    p.hook = {
+      text: run.chosen_hook, level: run.hook_level || "company",
+      category: run.hook_category || "", date: run.hook_date || "",
+      key_entities: p.hook?.key_entities ?? [],
+      source_url: run.hook_source || "", subject_company: "",
+    }
+  }
+  if (run.draft_body != null) {
+    p.draft = { body: run.draft_body, subject: run.draft_subject || "",
+                note: p.draft?.note || "" }
+  }
+  p.draftedBy = run.drafted_by || ""
   return p
 }
 

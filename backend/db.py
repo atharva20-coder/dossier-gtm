@@ -115,6 +115,16 @@ CREATE TABLE IF NOT EXISTS run_stages (
 );
 CREATE INDEX IF NOT EXISTS run_stages_run_id_idx ON run_stages (run_id, id);
 
+CREATE TABLE IF NOT EXISTS run_chat (
+    id         BIGSERIAL PRIMARY KEY,
+    run_id     BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    you        TEXT NOT NULL,
+    reply      TEXT NOT NULL DEFAULT '',
+    actions    JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS run_chat_run_id_idx ON run_chat (run_id, id);
+
 CREATE TABLE IF NOT EXISTS app_config (
     key        TEXT PRIMARY KEY,
     value      JSONB NOT NULL,
@@ -541,6 +551,42 @@ async def add_stage(run_id: int, stage: str, status: str, detail: str = "",
     )
 
 
+async def add_chat_turn(run_id: int, you: str, reply: str,
+                        actions: list | None = None) -> None:
+    """Store one exchange with the assistant.
+
+    The conversation is part of the record, not decoration. It is where a rep
+    said "that fact is wrong" and the tool acted on it, so losing it on refresh
+    loses the reason the current message reads the way it does — and asks
+    someone to retype instructions they already gave.
+    """
+    p = await pool()
+    await p.execute(
+        """INSERT INTO run_chat (run_id, you, reply, actions) VALUES ($1,$2,$3,$4)""",
+        run_id, you, reply or "", actions or [],
+    )
+
+
+async def chat_turns(run_id: int, limit: int = 100) -> list[dict]:
+    """Every exchange for one lead, oldest first."""
+    p = await pool()
+    rows = await p.fetch(
+        "SELECT * FROM run_chat WHERE run_id=$1 ORDER BY id LIMIT $2", run_id, limit)
+    out = []
+    for r in rows:
+        t = _row(r)
+        # Not `_json`: that normalises to a dict, and this column is a list.
+        a = t.get("actions")
+        if isinstance(a, str):
+            try:
+                a = json.loads(a or "[]")
+            except Exception:
+                a = []
+        t["actions"] = a if isinstance(a, list) else []
+        out.append(t)
+    return out
+
+
 async def add_sources(run_id: int, sources: list[dict]) -> None:
     if not sources:
         return
@@ -627,6 +673,10 @@ async def reset_run(run_id: int) -> None:
         async with c.transaction():
             await c.execute("DELETE FROM run_stages WHERE run_id=$1", run_id)
             await c.execute("DELETE FROM run_sources WHERE run_id=$1", run_id)
+            # The conversation was about facts this run is about to replace.
+            # Keeping it would leave instructions referring to evidence that no
+            # longer exists, which is worse than starting the thread again.
+            await c.execute("DELETE FROM run_chat WHERE run_id=$1", run_id)
             await c.execute(
                 # Deliberately does NOT clear email/sent_at/sent_to: re-running
                 # the research must never erase the record that a message was

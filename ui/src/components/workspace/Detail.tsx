@@ -120,7 +120,30 @@ export function Detail({
   const end = useRef<HTMLDivElement>(null)
 
   useEffect(() => { setDraft(p?.draft?.body ?? ""); setSavedNote("") }, [p?.runId, p?.draft?.body])
-  useEffect(() => { setTurns([]) }, [p?.runId])
+
+  // The thread is read back from the server, not held in this component.
+  //
+  // It used to be cleared on every lead switch and never stored anywhere, so a
+  // refresh — or simply looking at another lead and coming back — lost the
+  // conversation that explains why the message reads the way it does, and asked
+  // the rep to retype instructions they had already given.
+  useEffect(() => {
+    const id = p?.runId
+    if (!id) { setTurns([]); return }
+    let cancelled = false
+    setTurns([])
+    ;(async () => {
+      try {
+        const { turns: stored } = await api.chatHistory(id)
+        if (cancelled) return
+        setTurns(stored.map((t) => ({
+          you: t.you, reply: t.reply,
+          did: (t.actions ?? []).map(actionLabel),
+        })))
+      } catch { /* an empty thread is the right fallback */ }
+    })()
+    return () => { cancelled = true }
+  }, [p?.runId])
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }) }, [turns, thinking])
 
   const dirty = draft.trim() !== (p?.draft?.body ?? "").trim() && draft.trim().length > 0
@@ -394,11 +417,26 @@ export function Detail({
                 )}
               </div>
             ) : (
-              <p className="px-4 py-8 text-[14px] text-[var(--ink-6)] sm:px-6">
-                {p.status === "idle"
-                  ? "Not researched yet — Research this lead, in the findings column."
-                  : "No message drafted for this lead."}
-              </p>
+              <div className="px-4 py-8 sm:px-6">
+                <p className="text-[14px] text-[var(--ink-6)]">
+                  {p.status === "idle"
+                    ? "Not researched yet — Research this lead, in the findings column."
+                    : "No message drafted for this lead."}
+                </p>
+                {/* Why it is empty. A blank message with a hook sitting above
+                    it reads as a broken app; the reason is the difference
+                    between a bug and a decision the tool made on purpose. */}
+                {p.status !== "idle" && p.note && (
+                  <p className="mt-1.5 text-[13px] text-[var(--ink-7)]">{p.note}</p>
+                )}
+                {p.status !== "idle" && p.hook && (
+                  <Button size="sm" variant="outline" className="mt-3 h-8"
+                    onClick={onRedraft} disabled={redrafting}>
+                    {redrafting && <Loader2 className="mr-1.5 size-3 animate-spin" />}
+                    Try drafting again
+                  </Button>
+                )}
+              </div>
             )}
 
             {savedNote && (

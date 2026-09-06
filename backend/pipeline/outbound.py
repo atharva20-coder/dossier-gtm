@@ -43,7 +43,14 @@ async def run_outbound_pipeline(run_id: int):
         await outbound_db.update_outbound_run(run_id, competitors=comps)
         
         elapsed = int((time.time() - start_time) * 1000)
-        await _stage_done(run_id, "competitor_discovery", f"Found {len(comps)} competitors", {"competitors": comps}, elapsed)
+        await _stage_done(run_id, "competitor_discovery",
+                          f"Found {len(comps)} competitors",
+                          {"competitors": comps,
+                           "found": [{"name": c.get("name", ""),
+                                      "detail": c.get("domain", ""),
+                                      "url": (f"https://{c['domain']}"
+                                              if c.get("domain") else "")}
+                                     for c in comps]}, elapsed)
 
         if not comps:
             await outbound_db.update_outbound_run(run_id, status="completed")
@@ -83,10 +90,17 @@ async def run_outbound_pipeline(run_id: int):
                 })
 
         elapsed = int((time.time() - start_time) * 1000)
+        # The people themselves, not just how many. A receipt that says "found 2
+        # contacts" is a status; naming them is a finding someone can check, and
+        # it is the same standard the leads screen holds its evidence to.
         await _stage_done(run_id, "contact_search",
                           f"Found {len(all_contacts)} contacts across "
                           f"{min(len(comps), max_competitors)} competitors",
-                          {"count": len(all_contacts)}, elapsed)
+                          {"count": len(all_contacts),
+                           "found": [{"name": c["name"], "role": c["role"],
+                                      "company": c["company"],
+                                      "url": c.get("linkedin_url", "")}
+                                     for c in all_contacts]}, elapsed)
 
         if not all_contacts:
             await outbound_db.update_outbound_run(run_id, status="completed")
@@ -143,6 +157,14 @@ async def run_outbound_pipeline(run_id: int):
         await _stage_done(run_id, "email_enrichment", detail,
                           {"enriched_count": enriched_count,
                            "verified_count": verified_count,
+                           # Every address with where it came from, because
+                           # "looked up" and "calculated from the domain" are
+                           # different claims and a rep has to see which is which.
+                           "found": [{"name": c["name"],
+                                      "email": c.get("email") or "",
+                                      "source": c.get("email_source") or "",
+                                      "verified": bool(c.get("email_verified"))}
+                                     for c in all_contacts],
                            "providers": why}, elapsed)
 
         # 4. Generate Openers (Drafting)
@@ -217,6 +239,10 @@ async def run_outbound_pipeline(run_id: int):
                     await pool.execute(
                         "UPDATE outbound_contacts SET opener_line=$1 WHERE id=$2",
                         opener, contact["id"])
+                    # Kept on the dict too, not only in the row: the receipt is
+                    # built from these a few lines later, and reading the write
+                    # back would be a query per contact for data already in hand.
+                    contact["opener_line"] = opener
                     deep_done += 1
                     drafted_count += 1
                     contact["_done"] = True
@@ -265,6 +291,7 @@ async def run_outbound_pipeline(run_id: int):
                 await pool.execute(
                     "UPDATE outbound_contacts SET opener_line = $1 WHERE id = $2",
                     opener, contact["id"])
+                contact["opener_line"] = opener
                 drafted_count += 1
                 
         elapsed = int((time.time() - start_time) * 1000)
@@ -278,6 +305,14 @@ async def run_outbound_pipeline(run_id: int):
             {"drafted_count": drafted_count, "deep": deep_done,
              "leads_created": len(db_contacts),
              "skipped_for_budget": skipped_for_budget,
+             # Per lead: was it researched properly, and what does its opener
+             # say. Without this the only way to tell a fully-researched
+             # contact from a templated one is to open each in turn.
+             "found": [{"name": c["name"],
+                        "researched": bool(c.get("_done")),
+                        "opener": (c.get("opener_line") or "")[:140],
+                        "lead_run_id": c.get("lead_run_id")}
+                       for c in db_contacts],
              "searches_left": max(remaining, 0)}, elapsed)
         
         # 5. Create Campaign Groupings
@@ -316,7 +351,65 @@ async def run_outbound_pipeline(run_id: int):
                 contact_count=count
             )
             
-        await _stage_done(run_id, "campaign_creation", f"Created {len(groups)} campaigns", {"campaigns_created": len(groups)}, 0)
+        await _stage_done(run_id, "campaign_creation",
+                          f"Created {len(groups)} campaigns",
+                          {"campaigns_created": len(groups),
+                           "found": [{"name": f"{seg} at {target_company} competitors",
+                                      "count": n} for seg, n in groups.items()]}, 0)
+
+        # ---- put the campaign message on the lead it belongs to -------------
+        #
+        # Every contact already has a lead row, and until now that row could be
+        # empty: a contact the budget stopped short of researching got an opener
+        # written into the campaign and nothing at all onto its lead. Opening it
+        # from the leads screen showed a name, no findings and "No message
+        # drafted" — while the outbound screen showed a finished message for the
+        # same person.
+        #
+        # Rendered through `render_message`, the same function the outbound
+        # screen and the CSV export use, so all three show one message rather
+        # than three substitutions that can drift apart.
+        #
+        # Only ever fills a lead that has no draft of its own. A contact that
+        # WAS researched has a real, personal message and its own hook, and
+        # replacing that with a segment template would be a downgrade.
+        filled = 0
+        campaigns_by_seg = {c["persona"]: c
+                            for c in await outbound_db.get_outbound_campaigns(run_id)}
+        sender_name = (writer_cfg.sender_name if writer_cfg else "") or ""
+        for contact in await outbound_db.get_outbound_contacts(run_id):
+            lead_id = contact.get("lead_run_id")
+            if not lead_id:
+                continue
+            lead = await db.get_run(lead_id)
+            if not lead or (lead.get("draft_body") or "").strip():
+                continue
+            subject, body = render_message(
+                contact, campaigns_by_seg.get(contact.get("persona_segment") or ""),
+                sender_name)
+            if not body.strip():
+                continue
+            await db.update_run(
+                lead_id, status="completed",
+                draft_subject=subject, draft_body=body,
+                # No hook is claimed, because none was found. The angle is the
+                # competitor relationship, and saying so is honest where
+                # inventing a sourceless hook would not be.
+                failure_reason=("Written from the competitor angle — this lead was not "
+                                "researched individually. Research it to find a hook "
+                                "specific to them."),
+                **db.authored(persona))
+            await db.add_stage(
+                lead_id, "draft", "done",
+                f"Message written for the {contact.get('persona_segment') or 'campaign'} "
+                f"segment of the {target_company} competitor campaign.",
+                {"draft": {"subject": subject, "body": body, "grounded": False,
+                           "note": "from the competitor campaign"},
+                 "from_campaign": True})
+            filled += 1
+        if filled:
+            log.info("outbound %s: filled %s lead(s) with their campaign message",
+                     run_id, filled)
 
         await outbound_db.update_outbound_run(run_id, status="completed")
 
