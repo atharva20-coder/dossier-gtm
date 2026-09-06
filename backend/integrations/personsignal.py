@@ -268,6 +268,11 @@ async def health(probe: bool = False) -> tuple[bool, str]:
                 headers=_headers(),
                 json={"description": "chief operating officer", "limit": 1},
             )
+        # A probe is a real search against a small allowance, so it is recorded
+        # like any other call. Left uncounted, the usage figure the UI shows
+        # drifts below the truth every time someone presses "Check now" — and a
+        # budget that under-reports is the one that runs out by surprise.
+        await _record("search/people", r.status_code < 400)
         if r.status_code in (401, 403):
             return False, "API key rejected"
         if r.status_code >= 400:
