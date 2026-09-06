@@ -234,3 +234,14 @@ LAST_RESORT_MULTIPLE = float(os.getenv("LAST_RESORT_MULTIPLE", "4"))
 LEARN_MIN_EVIDENCE = int(os.getenv("LEARN_MIN_EVIDENCE", "2"))
 LEARN_EVIDENCE_CAP = int(os.getenv("LEARN_EVIDENCE_CAP", "6"))
 LEARN_STEP = float(os.getenv("LEARN_STEP", "0.1"))
+
+# With no parseable date, the wording is the only evidence of currency there is.
+# "just launched" is weaker than a date and far better than nothing; "will be
+# ... soon" describes something that has not happened.
+FRESH_TALK = float(os.getenv("FRESH_TALK", "1.5"))
+FUTURE_TALK = float(os.getenv("FUTURE_TALK", "0.6"))
+
+# An undated person-level fact at a company that is not their current one is
+# career history far more often than news, and opening with the wrong employer
+# is the mistake that proves nobody read anything.
+OTHER_EMPLOYER_UNDATED = float(os.getenv("OTHER_EMPLOYER_UNDATED", "0.45"))

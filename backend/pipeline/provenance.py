@@ -77,6 +77,11 @@ WEIGHTS: dict[str, dict[str, float]] = {
 # Applied when one fact is supported by both a first-party post and independent
 # web reporting. Two parties, not one repeated.
 CORROBORATION_BONUS = 1.20
+# Independent witnesses compound, with diminishing returns and a ceiling. This
+# is what ranks undated facts against each other: with no date to separate
+# them, how well evidenced they are is the only honest signal left.
+WITNESS_STEP = 0.14
+WITNESS_CAP = 1.55
 
 
 def source_weight(level: str, tier: str) -> float:
@@ -112,14 +117,51 @@ def describe(level: str, urls: list[str]) -> str:
     return f"first-party {label} post"
 
 
+def distinct_domains(urls: list[str]) -> int:
+    """How many separate places carry this fact.
+
+    Counted by registrable host, so five URLs from one site are one witness.
+    Two pages on linkedin.com are one source agreeing with itself.
+    """
+    hosts = set()
+    for u in urls:
+        if not u:
+            continue
+        try:
+            h = u.split("//", 1)[-1].split("/")[0].lower()
+        except Exception:      # noqa: BLE001
+            continue
+        if h.startswith("www."):
+            h = h[4:]
+        if h.startswith("in."):
+            h = h[3:]
+        if h:
+            hosts.add(h)
+    return len(hosts)
+
+
 def multiplier(level: str, urls: list[str]) -> float:
-    """Total provenance multiplier for a fact supported by these URLs."""
+    """Total provenance multiplier for a fact supported by these URLs.
+
+    Corroboration compounds rather than switching on once. A fact carried by
+    four independent places is better evidenced than one carried by two, and
+    the old binary bonus could not say so — which mattered most exactly where
+    dates are missing, because then the weight of evidence is all there is to
+    rank on. Diminishing returns, and capped: the fifth witness adds far less
+    than the second, and no amount of agreement should let a dull fact win.
+    """
     tiers = tiers_present(urls)
     best = LINKEDIN if LINKEDIN in tiers else (X if X in tiers else WEB)
     m = source_weight(level, best)
+
     if is_corroborated(urls):
         m *= CORROBORATION_BONUS
-    return m
+
+    # Each independent domain past the first adds a shrinking amount.
+    extra = max(distinct_domains(urls) - 1, 0)
+    if extra:
+        m *= min(1.0 + WITNESS_STEP * (1 - 0.5 ** extra) * 2, WITNESS_CAP)
+    return round(m, 4)
 
 
 def _demo() -> None:
@@ -136,6 +178,21 @@ def _demo() -> None:
     assert multiplier("person", [li, web]) > multiplier("person", [li])
     assert not is_corroborated([li, "https://x.com/a"]), "two social sources are not corroboration"
     assert is_corroborated([li, web])
+
+    # More independent places carrying a fact beats fewer, with the gap
+    # narrowing — the fifth witness is worth far less than the second.
+    one = multiplier("company", ["https://a.com/1"])
+    two = multiplier("company", ["https://a.com/1", "https://b.com/2"])
+    four = multiplier("company", [f"https://{c}.com/1" for c in "abcd"])
+    assert one < two < four, (one, two, four)
+    assert (four - two) < (two - one), "returns must diminish"
+    assert four <= one * WITNESS_CAP + 1e-9, "and stay capped"
+
+    # Five pages on one site are one witness, not five.
+    assert distinct_domains([f"https://linkedin.com/posts/{i}" for i in range(5)]) == 1
+    assert distinct_domains(["https://a.com/1", "https://www.a.com/2"]) == 1
+    assert distinct_domains(["https://a.com/1", "https://b.com/2"]) == 2
+    print("ok  corroboration compounds, with diminishing returns and a cap")
     # Company level: web is respectable, not penalised.
     assert source_weight("company", WEB) == 1.00
     assert source_weight("person", WEB) < 1.00

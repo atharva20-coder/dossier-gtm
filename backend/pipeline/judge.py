@@ -59,6 +59,31 @@ def _parse_date(s: str) -> date | None:
     return None
 
 
+# A year written into the sentence itself: "in 2014", "since January 2023".
+# Extraction leaves the date field empty far more often than the source is
+# actually undated, and the year is usually sitting in the text.
+_YEAR_IN_TEXT = re.compile(r"\b(?:in|since|during|back in)\s+"
+                           r"(?:[A-Z][a-z]+\s+)?(19[89]\d|20[0-4]\d)\b")
+
+
+def _year_from_text(text: str) -> date | None:
+    """The year a sentence dates itself to, if it names one.
+
+    Only with a preposition in front of it — "in 2014", "since 2023". A bare
+    number is as likely to be a headcount or a funding figure, and mistaking
+    "$2019M raised" for a date would be worse than having no date at all.
+    Resolved to mid-year, since the month is unknown and December-vs-January
+    guessing would swing the age by a year.
+    """
+    m = _YEAR_IN_TEXT.search(text or "")
+    if not m:
+        return None
+    try:
+        return date(int(m.group(1)), 7, 1)
+    except ValueError:
+        return None
+
+
 def _age_days(fact: ExtractedFact, today: date) -> int | None:
     """Age in days, or None when the date cannot be trusted.
 
@@ -73,6 +98,9 @@ def _age_days(fact: ExtractedFact, today: date) -> int | None:
     the right trade against a third of dates being wrong in the other direction.
     """
     d = _parse_date(fact.date)
+    if not d or d >= today:
+        # Nothing usable in the date field — try the sentence.
+        d = _year_from_text(fact.text)
     if not d or d >= today:
         return None
     return (today - d).days
@@ -91,6 +119,43 @@ def is_specific(fact: ExtractedFact) -> bool:
     has_named_entity = len(fact.key_entities or []) >= 1
     has_quote = '"' in t or "“" in t
     return has_number or has_named_entity or has_quote
+
+
+# Language a source uses when it is describing something that just happened.
+# Present tense about a state of affairs ("is live", "now offers") counts too:
+# it asserts currency even when nobody wrote a date.
+_FRESH_LANGUAGE = re.compile(
+    r"\b(just|recently|this (?:week|month|quarter)|last (?:week|month)|"
+    r"newly|new(?:ly)? (?:launched|appointed|hired|joined)|has (?:just|now)|"
+    r"today announced|announced today|now (?:live|available|offers?|leads?)|"
+    r"is (?:now|currently)|currently|as of (?:this|last))\b", re.I)
+
+# Language that points forward rather than back. "will be turning a year old
+# soon" is not evidence that anything has happened.
+_FUTURE_LANGUAGE = re.compile(
+    r"\b(will|soon|upcoming|plans to|expected to|scheduled to|is set to|"
+    r"next (?:week|month|quarter|year))\b", re.I)
+
+
+def content_recency(fact: ExtractedFact) -> float:
+    """What the text itself says about how current it is.
+
+    Only consulted when there is no usable date, which is most of the time: a
+    LinkedIn post rarely carries one an extractor can parse, and the alternative
+    is treating every undated fact as equally lukewarm. The source saying "just
+    launched" is real evidence of recency — weaker than a date, and far better
+    than nothing.
+
+    Forward-looking language earns nothing. "Will be turning a year old soon"
+    describes something that has not happened, and it was exactly the sentence
+    that beat a live product announcement.
+    """
+    text = fact.text or ""
+    if _FUTURE_LANGUAGE.search(text):
+        return config.FUTURE_TALK
+    if _FRESH_LANGUAGE.search(text):
+        return config.FRESH_TALK
+    return 1.0
 
 
 def outreach_value(age: int | None) -> float:
@@ -136,6 +201,12 @@ _STOPWORDS = {
 # Facts that describe a career rather than an event. These age out of being a
 # hook long before they stop being useful for knowing who someone is.
 CAREER_CATEGORIES = {"role_change", "promotion", "looking_for"}
+
+
+def _same_company(a: str, b: str) -> bool:
+    from .normalize import company_key
+    ka, kb = company_key(a), company_key(b)
+    return bool(ka) and bool(kb) and (ka == kb or ka in kb or kb in ka)
 
 
 def _norm(text: str) -> str:
@@ -298,6 +369,7 @@ def score_fact(
     writer: WriterConfig | None = None,
     offer: set[str] | None = None,
     learned: dict[str, float] | None = None,
+    target_company: str = "",
 ) -> float:
     score = outreach_value(age) * intent_weight(fact.category, writer, learned)
 
@@ -307,6 +379,21 @@ def score_fact(
 
     # Something they said or did in the last few weeks.
     score *= activity_boost(fact, age)
+
+    # With no date, the wording is the only thing left that speaks to currency.
+    if age is None:
+        score *= content_recency(fact)
+
+    # An undated fact about them at a DIFFERENT company is career history far
+    # more often than news. Keeping such facts is right — they say who someone
+    # is — but with no date there is nothing separating "just moved to F2A"
+    # from "was a Principal at F2A years ago", and opening a message with the
+    # wrong employer is the one mistake that proves nobody read anything. It
+    # stays a candidate; it stops winning on provenance alone.
+    if (age is None and target_company and fact.level == "person"
+            and fact.subject_company
+            and not _same_company(fact.subject_company, target_company)):
+        score *= config.OTHER_EMPLOYER_UNDATED
 
     # A person-level hook ("you were on that podcast", "you just moved into this
     # role") is what makes a message feel written FOR someone. A company-level
@@ -416,7 +503,7 @@ def judge(
                 score=0.0))
             continue
 
-        score = score_fact(f, age, writer, offer, learned)
+        score = score_fact(f, age, writer, offer, learned, target_company)
         fit, hits = relevance(f, offer)
 
         # Not a gate on truth — a gate on being the OPENING LINE. The fact stays
@@ -440,6 +527,16 @@ def judge(
                    else f"{age}d old")
         fresh_txt = ("; recent activity of theirs"
                      if activity_boost(f, age) > 1.0 else "")
+        if (age is None and target_company and f.level == "person" and f.subject_company
+                and not _same_company(f.subject_company, target_company)):
+            fresh_txt += (f"; undated and about them at {f.subject_company}, "
+                          f"not {target_company} — likely career history")
+        if age is None:
+            cr = content_recency(f)
+            if cr > 1.0:
+                fresh_txt += "; the source describes it as current"
+            elif cr < 1.0:
+                fresh_txt += "; it describes something that has not happened yet"
         learned_txt = ("" if not (learned or {}).get(f.category)
                        else f"; you act on {f.category.replace('_', ' ')} hooks")
         fit_txt = ("" if not offer
