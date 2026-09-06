@@ -572,6 +572,21 @@ attributing a message to someone who did not write it.
 
 ## Research inside a campaign
 
+**Every campaign contact becomes a lead, researched or not.** — A person found
+through a campaign is the same kind of thing as one typed in by hand: same list,
+same actions, same send path. Creating the row is free; researching is what
+costs, so the rest arrive queued and can be run individually whenever they are
+worth it.
+
+**A campaign-sourced lead is marked in the list.** — Otherwise an unfamiliar name
+appears with no way to explain it. Read off `batch_id`, which already records
+the origin, rather than storing it twice.
+
+**The campaign template uses the same persona brief the drafter does.** — Reduced
+to "name — character — role" it lost the persona's writing instructions, its
+seniority and intent stance, and every rule learned from edits — while the
+opener beside it kept all of them. Two halves of one email in two voices.
+
 **A campaign contact is researched by the same runner a lead is.** — Delegated
 wholesale rather than given a lighter second pipeline: a cheaper research path
 would drift from the one that is actually exercised, and the contact then gets

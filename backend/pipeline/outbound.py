@@ -174,23 +174,33 @@ async def run_outbound_pipeline(run_id: int):
             # "works at a competitor" — and the lead it produces opens on the
             # leads screen unchanged. Reused wholesale because a second, lighter
             # research path would drift from the one that is actually tested.
+            # EVERY contact becomes a lead, not only the researched ones.
+            #
+            # A person found through a campaign is the same kind of thing as one
+            # typed in by hand: they belong in the same list, with the same
+            # actions and the same send path. Creating the row is free — it is
+            # researching that costs — so the rest arrive unresearched and can
+            # be run individually from the leads screen whenever they are worth
+            # it, instead of existing only inside a campaign.
+            pool = await db.pool()
+            lead_id = contact.get("lead_run_id")
+            if not lead_id:
+                lead_id = await db.create_run(f"outbound-{run_id}", {
+                    "name": contact["name"], "company": contact["company"],
+                    "role": contact["role"], "url": contact["linkedin_url"],
+                    "email": contact.get("email") or "",
+                })
+                await pool.execute(
+                    "UPDATE outbound_contacts SET lead_run_id=$1 WHERE id=$2",
+                    lead_id, contact["id"])
+
             if deep_done < deep_budget:
                 try:
-                    lead_id = await db.create_run(f"outbound-{run_id}", {
-                        "name": contact["name"], "company": contact["company"],
-                        "role": contact["role"], "url": contact["linkedin_url"],
-                        "email": contact.get("email") or "",
-                    })
                     await runner.run(lead_id, ProspectInput(
                         name=contact["name"], company=contact["company"],
                         role=contact["role"], url=contact["linkedin_url"]))
                     lead = await db.get_run(lead_id)
                     deep_done += 1
-
-                    pool = await db.pool()
-                    await pool.execute(
-                        "UPDATE outbound_contacts SET lead_run_id=$1 WHERE id=$2",
-                        lead_id, contact["id"])
 
                     body = (lead or {}).get("draft_body") or ""
                     opener = _first_sentence(body)
@@ -252,11 +262,12 @@ async def run_outbound_pipeline(run_id: int):
         elapsed = int((time.time() - start_time) * 1000)
         await _stage_done(
             run_id, "drafting",
-            f"Drafted {drafted_count} openers"
-            + (f" — {deep_done} from full research, "
-               f"{drafted_count - deep_done} from the competitor angle alone"
+            f"{len(db_contacts)} added to Leads · {drafted_count} openers written"
+            + (f" — {deep_done} from full research, the rest from the "
+               f"competitor angle; research any of them from the lead"
                if deep_done else " from the competitor angle"),
-            {"drafted_count": drafted_count, "deep": deep_done}, elapsed)
+            {"drafted_count": drafted_count, "deep": deep_done,
+             "leads_created": len(db_contacts)}, elapsed)
         
         # 5. Create Campaign Groupings
         # Group by Persona/Role
@@ -383,7 +394,6 @@ sits — do not write an opener, and do not repeat what one would say.
 AUDIENCE
 {segment} at companies that compete with {target}.
 
-WHO IS WRITING
 {writer}
 
 RULES
@@ -391,12 +401,14 @@ RULES
 - The body MUST contain {{{{first_name}}}} once at the start and
   {{{{opener_line}}}} on its own line. End with {{{{sender_name}}}}. Write the
   braces exactly as shown, doubled. No other placeholders.
-- Three or four sentences after the opener. One ask, and make it small.
+- One ask, and make it small.
 - Say what is being offered and why it matters to THIS audience specifically —
   a CFO and a head of sales do not care about the same thing.
 - Invent nothing about their company. You know only that it competes with
   {target}.
 - No "I hope this finds you well", no "quick question", no flattery.
+- Everything above about how this person writes outranks these rules where they
+  disagree. Their sentence limit is their sentence limit.
 """
 
 
@@ -408,17 +420,20 @@ async def _segment_template(segment: str, target: str, persona: dict | None,
     a dull template is fixable in the UI, a run that died at the last stage
     throws away every search it already paid for.
     """
-    from .draft import split_subject
+    from .draft import BASE_SYSTEM, _persona_block, _writer_block, split_subject
     from ..integrations import llm
 
-    voice = " — ".join(x for x in [(persona or {}).get("name"),
-                                   (persona or {}).get("character"),
-                                   writer.sender_role, writer.product] if x)
+    # The SAME brief the per-lead drafter uses, not a summary of it. Reduced to
+    # "name — character — role" the template lost the persona's writing
+    # instructions, its seniority and intent stance, and every rule it had
+    # learned from edits — while the opener beside it kept all of them. Two
+    # halves of one email, written by two different voices.
+    voice = _persona_block(persona) + _writer_block(writer)
     try:
         raw = await llm.text(
             TEMPLATE_PROMPT.format(segment=segment, target=target,
-                                   writer=voice or "a founder"),
-            temperature=0.6)
+                                   writer=voice or "WHO IS WRITING\na founder"),
+            system=BASE_SYSTEM, temperature=0.6)
         subject, body = split_subject(raw)
         if subject and "{{first_name}}" in body:
             return subject, body

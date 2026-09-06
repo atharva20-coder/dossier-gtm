@@ -15,7 +15,7 @@ export function blank(p: any, idx: number): Prospect {
     url: p.url || "", relationship: p.relationship || "",
     status: "idle", runId: p.run_id ?? null, stages: [], facts: [], verdicts: [],
     rejected: [], sources: [], candidates: null, hook: null, draft: null,
-    draftedBy: "", personaId: null, jobChange: null, priority: "",
+    draftedBy: "", personaId: null, jobChange: null, priority: "", fromCampaign: false,
     seniority: "", function: "", icpScore: null,
     personSources: 0, companySources: 0, ms: null, note: "", graph: null,
     factOverrides: p.fact_overrides ?? null,
@@ -56,6 +56,7 @@ export function fromRun(run: any, idx: number): Prospect {
   p.draftedBy = run.drafted_by || ""
   p.jobChange = run.job_change ?? null
   p.priority = run.priority || ""
+  p.fromCampaign = Boolean(run.from_campaign)
   p.personaId = run.persona_id ?? null
   // Replay whatever stages came with the run, so the pipeline view, evidence
   // and research graph come back too — not just the summary fields.

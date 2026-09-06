@@ -7,7 +7,7 @@ import { Avatar } from "@/components/Avatar"
 import { type Persona, type Prospect } from "@/lib/api"
 import {
   ArrowDownWideNarrow, Building2, Loader2, MoreHorizontal, Play, Plus, Search,
-  Upload,
+  Target, Upload,
 } from "lucide-react"
 
 // Which to work first. "hot" is a job change — the one signal worth
@@ -236,8 +236,17 @@ export function Sidebar({
                   active ? "font-semibold text-[var(--ink)]" : "font-medium text-[var(--ink-2)]"}`}>
                   {p.name}
                 </div>
-                <div className="truncate text-[11px] leading-tight text-[var(--ink-7)]">
-                  {p.company || "no company"}
+                <div className="flex items-center gap-1 truncate text-[11px]
+                                leading-tight text-[var(--ink-7)]">
+                  {p.fromCampaign && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Target className="size-2.5 shrink-0 text-[var(--violet-fg)]" />
+                      </TooltipTrigger>
+                      <TooltipContent>Found by a competitor-outbound run</TooltipContent>
+                    </Tooltip>
+                  )}
+                  <span className="truncate">{p.company || "no company"}</span>
                 </div>
               </div>
               {p.status === "running" ? (

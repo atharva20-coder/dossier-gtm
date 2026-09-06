@@ -568,7 +568,11 @@ async def leads():
     # graph — hundreds of kilobytes per run — and the list screen shows none of
     # it. Sending it anyway made a page load scale with the total size of every
     # run ever done. The detail view fetches one run in full when opened.
-    rows = [{**r, "priority": _priority(r)} for r in await db.latest_leads()]
+    # `batch_id` already records where a lead came from — campaigns write
+    # "outbound-<id>" — so the origin is surfaced rather than stored twice.
+    rows = [{**r, "priority": _priority(r),
+             "from_campaign": str(r.get("batch_id") or "").startswith("outbound-")}
+            for r in await db.latest_leads()]
     return {"batch_id": rows[0]["batch_id"] if rows else "", "runs": rows}
 
 

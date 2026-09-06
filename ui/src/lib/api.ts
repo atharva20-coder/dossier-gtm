@@ -115,6 +115,8 @@ export interface Prospect {
   factOverrides: { excluded: string[]; chosen: string } | null
   /** Which to work first: hot, high, medium, low. Empty until researched. */
   priority: string
+  /** Found by a competitor-outbound run rather than added by hand. */
+  fromCampaign: boolean
   /** What the research found that contradicts the row as imported. */
   jobChange: JobChange | null
   /** Which identity wrote the current draft — not necessarily the active one. */
