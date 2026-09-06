@@ -91,6 +91,33 @@ CREATE TABLE IF NOT EXISTS run_chat (
 );
 CREATE INDEX IF NOT EXISTS run_chat_run_id_idx ON run_chat (run_id, id);
 
+CREATE TABLE IF NOT EXISTS fact_feedback (
+    id         BIGSERIAL PRIMARY KEY,
+    run_id     BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    fact_id    TEXT NOT NULL,
+    action     TEXT NOT NULL,          -- chose | excluded | included
+    category   TEXT NOT NULL DEFAULT '',
+    level      TEXT NOT NULL DEFAULT '',
+    fact_text  TEXT NOT NULL DEFAULT '',
+    via        TEXT NOT NULL DEFAULT '',   -- findings | assistant
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS fact_feedback_cat_idx ON fact_feedback (category, action);
+
+CREATE TABLE IF NOT EXISTS draft_revisions (
+    id          BIGSERIAL PRIMARY KEY,
+    run_id      BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    before_body TEXT NOT NULL DEFAULT '',
+    after_body  TEXT NOT NULL DEFAULT '',
+    subject     TEXT NOT NULL DEFAULT '',
+    source      TEXT NOT NULL DEFAULT '',   -- edit | assistant | rewrite | campaign
+    instruction TEXT NOT NULL DEFAULT '',
+    hook        TEXT NOT NULL DEFAULT '',
+    persona_id  BIGINT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS draft_revisions_run_idx ON draft_revisions (run_id, id);
+
 CREATE TABLE IF NOT EXISTS app_config (
     key        TEXT PRIMARY KEY,
     value      JSONB NOT NULL,

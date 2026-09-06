@@ -75,6 +75,46 @@ check("a very short entity cannot match on squashing alone",
       grounding.named_in_prose("@ai", "we build agents", "webuildagents"),
       False)
 
+# --------------------------------------------------------------------------
+# "It stores changes, it does not learn from them" — dropping a fact by hand
+# was recorded and then read by nothing.
+# --------------------------------------------------------------------------
+from backend import config                      # noqa: E402
+from backend.pipeline import judge              # noqa: E402
+
+MIN = config.LEARN_MIN_EVIDENCE
+
+check("sending and hand-picking still promote",
+      judge.learned_weights({"speaking": {"sent": 2, "hand_picked": 2}})["speaking"] > 1.0,
+      True)
+
+check("a category dropped by hand enough times is demoted",
+      judge.learned_weights({}, {"award": {"excluded": MIN, "included": 0}})["award"] < 1.0,
+      True)
+
+check("one drop is not a pattern",
+      judge.learned_weights({}, {"award": {"excluded": 1, "included": 0}}),
+      {})
+
+check("putting a fact back cancels having dropped it",
+      judge.learned_weights({}, {"award": {"excluded": MIN, "included": MIN}}),
+      {})
+
+check("demotion has a floor — unlikely, never unreachable",
+      judge.learned_weights(
+          {}, {"award": {"excluded": 500, "included": 0}})["award"] >= config.LEARN_FLOOR,
+      True)
+
+check("a category both sent and dropped lands between the two",
+      0.5 < judge.learned_weights(
+          {"hiring": {"sent": 3, "hand_picked": 0}},
+          {"hiring": {"excluded": 3, "included": 0}})["hiring"] < 1.5,
+      True)
+
+check("no history at all still returns nothing rather than failing",
+      judge.learned_weights(None, None), {})
+
+
 if FAILURES:
     print(f"\n{len(FAILURES)} failed: {', '.join(FAILURES)}")
     sys.exit(1)

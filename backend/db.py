@@ -41,12 +41,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 from datetime import datetime, timezone
 
 import asyncpg
 
 from . import config
+
+log = logging.getLogger(__name__)
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -124,6 +127,33 @@ CREATE TABLE IF NOT EXISTS run_chat (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS run_chat_run_id_idx ON run_chat (run_id, id);
+
+CREATE TABLE IF NOT EXISTS fact_feedback (
+    id         BIGSERIAL PRIMARY KEY,
+    run_id     BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    fact_id    TEXT NOT NULL,
+    action     TEXT NOT NULL,          -- chose | excluded | included
+    category   TEXT NOT NULL DEFAULT '',
+    level      TEXT NOT NULL DEFAULT '',
+    fact_text  TEXT NOT NULL DEFAULT '',
+    via        TEXT NOT NULL DEFAULT '',   -- findings | assistant
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS fact_feedback_cat_idx ON fact_feedback (category, action);
+
+CREATE TABLE IF NOT EXISTS draft_revisions (
+    id          BIGSERIAL PRIMARY KEY,
+    run_id      BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    before_body TEXT NOT NULL DEFAULT '',
+    after_body  TEXT NOT NULL DEFAULT '',
+    subject     TEXT NOT NULL DEFAULT '',
+    source      TEXT NOT NULL DEFAULT '',   -- edit | assistant | rewrite | campaign
+    instruction TEXT NOT NULL DEFAULT '',
+    hook        TEXT NOT NULL DEFAULT '',
+    persona_id  BIGINT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS draft_revisions_run_idx ON draft_revisions (run_id, id);
 
 CREATE TABLE IF NOT EXISTS app_config (
     key        TEXT PRIMARY KEY,
@@ -549,6 +579,95 @@ async def add_stage(run_id: int, stage: str, status: str, detail: str = "",
            VALUES ($1,$2,$3,$4,$5,$6)""",
         run_id, stage, status, detail, payload or {}, elapsed_ms,
     )
+
+
+async def add_draft_revision(run_id: int, before: str, after: str, *,
+                             subject: str = "", source: str = "",
+                             instruction: str = "", hook: str = "",
+                             persona_id: int | None = None) -> None:
+    """Append every version of a message rather than only keeping the last.
+
+    The run row holds the current draft, and updating it in place was throwing
+    away the thing worth having: what changed, why, and at whose request. That
+    history is what the persona learns from, and it is the only way to answer
+    "why does this message read like this" a day later.
+
+    Appended by every path that changes a draft — a hand edit, the assistant,
+    a rewrite from the findings column — so no route can quietly skip the
+    record by being the newest one.
+    """
+    if (before or "").strip() == (after or "").strip():
+        return
+    try:
+        p = await pool()
+        await p.execute(
+            """INSERT INTO draft_revisions
+                   (run_id, before_body, after_body, subject, source,
+                    instruction, hook, persona_id)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8)""",
+            run_id, before or "", after or "", subject or "", source or "",
+            instruction or "", hook or "", persona_id)
+    except Exception:
+        log.exception("could not record draft revision")
+
+
+async def draft_revisions(run_id: int, limit: int = 30) -> list[dict]:
+    """Every version of this lead's message, oldest first."""
+    p = await pool()
+    return [_row(r) for r in await p.fetch(
+        "SELECT * FROM draft_revisions WHERE run_id=$1 ORDER BY id LIMIT $2",
+        run_id, limit)]
+
+
+async def record_fact_feedback(run_id: int, action: str, fact: dict,
+                               via: str = "") -> None:
+    """Remember that the user deliberately chose, dropped or restored a fact.
+
+    Every one of these costs the user something — they read the evidence and
+    acted on it — which is exactly the standard the rest of the learning holds.
+
+    Recorded as it happens rather than derived from the run's final overrides,
+    because the final state loses the history: someone who excludes a fact and
+    then puts it back has told you two things, and the row that survives says
+    neither.
+    """
+    try:
+        p = await pool()
+        await p.execute(
+            """INSERT INTO fact_feedback
+                   (run_id, fact_id, action, category, level, fact_text, via)
+               VALUES ($1,$2,$3,$4,$5,$6,$7)""",
+            run_id, str(fact.get("fact_id") or ""), action,
+            str(fact.get("category") or ""), str(fact.get("level") or ""),
+            str(fact.get("text") or "")[:500], via)
+    except Exception:
+        log.exception("could not record fact feedback")
+
+
+async def fact_feedback_counts() -> dict[str, dict]:
+    """Per category: how often it was chosen by hand, and how often dropped.
+
+    Both directions matter and they are not the same signal. Choosing says
+    "more of this". Dropping is the only explicit negative the app ever gets —
+    a fact the user read and rejected — and until now it was stored and never
+    looked at.
+    """
+    p = await pool()
+    rows = await p.fetch("""
+        SELECT category,
+               count(*) FILTER (WHERE action = 'chose')    AS chose,
+               count(*) FILTER (WHERE action = 'excluded') AS excluded,
+               count(*) FILTER (WHERE action = 'included') AS included,
+               (array_agg(fact_text ORDER BY id DESC)
+                  FILTER (WHERE action = 'excluded'))[1:3] AS dropped_examples
+        FROM fact_feedback
+        WHERE coalesce(category,'') <> ''
+        GROUP BY category""")
+    return {r["category"]: {
+        "chose": int(r["chose"]), "excluded": int(r["excluded"]),
+        "included": int(r["included"]),
+        "dropped_examples": [x for x in (r["dropped_examples"] or []) if x],
+    } for r in rows}
 
 
 async def add_chat_turn(run_id: int, you: str, reply: str,

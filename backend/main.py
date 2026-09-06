@@ -914,6 +914,26 @@ async def regenerate(run_id: int, choice: HookChoice):
     if not kept:
         raise HTTPException(400, "Every fact was excluded — nothing left to write from.")
 
+    # Everything the user decided here is evidence, and only what CHANGED is.
+    # Re-recording the same exclusions on every rewrite would let one opinion
+    # held twice look like two opinions.
+    was = run.get("fact_overrides") or {}
+    before_excluded = set(was.get("excluded") or [])
+    before_chosen = was.get("chosen") or ""
+    by_id = {judge.fact_id(f): f for f in facts}
+    for fid in excluded - before_excluded:
+        if fid in by_id:
+            await db.record_fact_feedback(
+                run_id, "excluded", {"fact_id": fid, **by_id[fid].model_dump()}, "findings")
+    for fid in before_excluded - excluded:
+        if fid in by_id:
+            await db.record_fact_feedback(
+                run_id, "included", {"fact_id": fid, **by_id[fid].model_dump()}, "findings")
+    if choice.chosen and choice.chosen != before_chosen and choice.chosen in by_id:
+        await db.record_fact_feedback(
+            run_id, "chose",
+            {"fact_id": choice.chosen, **by_id[choice.chosen].model_dump()}, "findings")
+
     writer = WriterConfig(**(await db.get_config("writer") or {}))
     stakeholder = StakeholderProfile(
         **(_stage_payload(run, "profile").get("stakeholder") or {}))
@@ -933,7 +953,8 @@ async def regenerate(run_id: int, choice: HookChoice):
                                name=p.name, role=p.role,
                          stakeholder=stakeholder,
                          persona=await db.get_selected_persona(),
-                         learned=judge.learned_weights(await db.hook_outcomes()))
+                         learned=judge.learned_weights(await db.hook_outcomes(),
+                                                       await db.fact_feedback_counts()))
         hook, reason = jr.chosen, jr.chosen_reason
 
     style = [StyleExample(original=e["original"], edited=e["edited"],
@@ -945,6 +966,11 @@ async def regenerate(run_id: int, choice: HookChoice):
     d = await draft.write(p, hook, writer=writer, stakeholder=stakeholder,
                           style_examples=style, persona=persona)
 
+    await db.add_draft_revision(
+        run_id, run.get("draft_body") or "", d.body,
+        subject=d.subject, source="rewrite",
+        instruction=reason, hook=hook.text if hook else "",
+        persona_id=(persona or {}).get("id"))
     await db.update_run(
         run_id,
         status="completed" if hook else "no_signal_found",
@@ -1027,6 +1053,10 @@ async def save_draft_edit(run_id: int, edit: DraftEdit):
         await db.add_style_example(run_id, run.get("name", ""), original, edited)
         # The same edit is evidence about how this person writes.
         persona_changes = await persona_stage.note_edit(run_id, original, edited)
+        await db.add_draft_revision(
+            run_id, original, edited, subject=run.get("draft_subject") or "",
+            source="edit", hook=run.get("chosen_hook") or "",
+            persona_id=run.get("persona_id"))
     await db.update_run(run_id, draft_body=edited)
 
     return {"ok": True, "learned": learned,
@@ -1044,21 +1074,36 @@ async def learned_triggers():
     setting an explicit weight, which always wins.
     """
     outcomes = await db.hook_outcomes()
-    learned = judge.learned_weights(outcomes)
-    rows = [{
-        "category": category,
-        "drafted": o["drafted"],
-        "sent": o["sent"],
-        "hand_picked": o["hand_picked"],
-        "weight": learned.get(category, 1.0),
-        "learned": category in learned,
-        "examples": o.get("examples") or [],
-    } for category, o in sorted(
-        outcomes.items(), key=lambda kv: -(kv[1]["sent"] * 2 + kv[1]["hand_picked"]))]
+    feedback = await db.fact_feedback_counts()
+    learned = judge.learned_weights(outcomes, feedback)
+
+    # Every category anyone has acted on, in either direction. Built from both
+    # sides because a category that has only ever been rejected has no row in
+    # `outcomes` at all, and it is exactly the one worth showing.
+    blank = {"drafted": 0, "sent": 0, "hand_picked": 0, "examples": []}
+    rows = []
+    for category in sorted(set(outcomes) | set(feedback)):
+        o = {**blank, **outcomes.get(category, {})}
+        fb = feedback.get(category, {})
+        rows.append({
+            "category": category,
+            "drafted": o["drafted"],
+            "sent": o["sent"],
+            "hand_picked": o["hand_picked"],
+            "excluded": fb.get("excluded", 0),
+            "restored": fb.get("included", 0),
+            "dropped_examples": fb.get("dropped_examples") or [],
+            "weight": learned.get(category, 1.0),
+            "learned": category in learned,
+            "examples": o.get("examples") or [],
+        })
+    rows.sort(key=lambda r: (-abs(r["weight"] - 1.0),
+                             -(r["sent"] * 2 + r["hand_picked"] + r["excluded"])))
     return {"triggers": rows,
             "min_evidence": config.LEARN_MIN_EVIDENCE,
-            "note": ("A send counts double a hand-pick. Leaving a draft alone "
-                     "teaches nothing — not acting is not a preference.")}
+            "note": ("A send counts double a hand-pick, and dropping a fact by hand "
+                     "counts against its category. Leaving a draft alone teaches "
+                     "nothing — not acting is not a preference.")}
 
 
 # ------------------------------------------------------- outbound campaigns ---

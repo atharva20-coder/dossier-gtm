@@ -34,20 +34,35 @@ from . import judge as judge_stage
 
 log = logging.getLogger(__name__)
 
-SYSTEM = """You are the assistant inside a sales-research tool, working on one prospect.
+SYSTEM = """You are Dossier's assistant, working with someone on one prospect.
 
-You can inspect what the research found and act on it with the tools you have.
-Prefer acting over describing: if the user asks for a change you have a tool for,
-call it rather than explaining how they could do it themselves.
+This is a conversation, not a command line. You have the whole thread, so
+follow-ups like "no, the other one" or "why?" refer to what was just said.
+
+WHAT YOU CAN DO
+- Inspect what the research found and act on it with your tools.
+- Answer questions about the evidence without changing anything. "Why did it
+  pick this?" and "what else did you find?" are answered, not acted on.
+- Ask a question back when the request is genuinely ambiguous — two facts
+  match "the podcast one", or you cannot tell whether they want a fact dropped
+  or just want a different opening line. Ask, then wait; do not guess and act.
+
+WHEN TO ACT AND WHEN TO ASK
+- A clear instruction gets carried out: act rather than describing how they
+  could do it themselves.
+- An ambiguous one gets one short question. Name the options — "the Lightcone
+  podcast one, or the AI-agents one?" — so answering is a word, not an essay.
+- Never ask more than one question at a time, and never ask when the answer is
+  obvious from the thread.
 
 HARD RULES
 - Never invent facts about the prospect. You may only use what `list_facts`
-  returns. If asked to include something not there, say plainly that the research
-  did not find it.
+  returns. If asked to include something not there, say plainly that the
+  research did not find it, and offer what is there instead.
 - Excluding a fact or choosing a hook rewrites the message from the remaining
   evidence. That is expected; do it when asked.
-- After acting, reply in one or two short sentences saying what you did. No
-  bullet lists, no restating the whole message back.
+- After acting, say what you did in one or two short sentences. No bullet
+  lists, no restating the whole message back.
 """
 
 TOOLS = [
@@ -169,10 +184,16 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                 facts, target_company=prospect.company, writer=writer,
                 stakeholder=stakeholder, persona=persona,
                 name=prospect.name, role=prospect.role,
-                learned=judge_stage.learned_weights(await db.hook_outcomes()))).chosen
+                learned=judge_stage.learned_weights(
+                    await db.hook_outcomes(),
+                    await db.fact_feedback_counts()))).chosen
 
         d = await draft_stage.write(prospect, hook, writer=writer,
                                     stakeholder=stakeholder, persona=persona)
+        await db.add_draft_revision(
+            run_id, run.get("draft_body") or "", d.body, subject=d.subject,
+            source="assistant", instruction="re-judged after a change of evidence",
+            hook=hook.text if hook else "", persona_id=(persona or {}).get("id"))
         await db.update_run(
             run_id,
             status="completed" if hook else "no_signal_found",
@@ -211,6 +232,17 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                 excluded.discard(fid)
                 chosen = fid
             overrides = {"excluded": sorted(excluded), "chosen": chosen}
+            # Asking for a fact to be dropped and unticking it in the findings
+            # column are the same judgement, so they teach the same thing. The
+            # only difference recorded is which way the user said it.
+            row = next((r for r in _fact_rows(run, verdicts, overrides)
+                        if r["fact_id"] == fid), None)
+            if row:
+                await db.record_fact_feedback(
+                    run_id,
+                    {"exclude_fact": "excluded", "include_fact": "included",
+                     "choose_hook": "chose"}[name],
+                    row, "assistant")
             await rebuild()
             return {"ok": True, "hook_now": run.get("chosen_hook")}
 
@@ -232,6 +264,11 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                 fields = {"draft_body": d.body, **db.authored(persona)}
                 if d.subject:
                     fields["draft_subject"] = d.subject
+                await db.add_draft_revision(
+                    run_id, before, d.body, subject=d.subject or "",
+                    source="assistant", instruction=str(args.get("instruction") or ""),
+                    hook=run.get("chosen_hook") or "",
+                    persona_id=(persona or {}).get("id"))
                 await db.update_run(run_id, **fields)
                 run = await db.get_run(run_id)
                 # An instruction plus the rewrite it produced is the clearest
@@ -244,14 +281,24 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
         return {"error": f"no such tool: {name}"}
 
     facts_now = _fact_rows(run, verdicts, overrides)
+
+    # The thread so far, so a follow-up means what it says. Without this every
+    # message arrived as if it were the first, so "no, the other one" had
+    # nothing to refer to and the assistant could not ask a question and then
+    # use the answer — it would ask again.
+    history = await db.chat_turns(run_id, limit=config.CHAT_HISTORY_TURNS)
+    thread = "\n".join(
+        f"USER: {t['you']}\nYOU: {t['reply']}" for t in history if t.get("you"))
+
     prompt = (
         f"PROSPECT: {prospect.name}"
         f"{' at ' + prospect.company if prospect.company else ''}"
         f"{', ' + prospect.role if prospect.role else ''}\n\n"
         f"CURRENT MESSAGE:\n{run.get('draft_body') or '(none yet)'}\n\n"
         f"FACTS AVAILABLE ({len(facts_now)}): "
-        f"{json.dumps([{k: f[k] for k in ('fact_id', 'text', 'eligible', 'excluded', 'is_hook')} for f in facts_now])}\n\n"
-        f"USER: {message.strip()}"
+        f"{json.dumps([{k: f[k] for k in ('fact_id', 'text', 'category', 'eligible', 'excluded', 'is_hook')} for f in facts_now])}\n\n"
+        + (f"CONVERSATION SO FAR:\n{thread}\n\n" if thread else "")
+        + f"USER: {message.strip()}"
     )
 
     try:

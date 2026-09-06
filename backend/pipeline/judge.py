@@ -299,7 +299,8 @@ def activity_boost(fact: ExtractedFact, age: int | None) -> float:
     return 1.0
 
 
-def learned_weights(outcomes: dict[str, dict] | None) -> dict[str, float]:
+def learned_weights(outcomes: dict[str, dict] | None,
+                    feedback: dict[str, dict] | None = None) -> dict[str, float]:
     """Multipliers learned from what the user actually sent and hand-picked.
 
     The taxonomy's defaults are one team's opinion about which triggers matter.
@@ -312,19 +313,38 @@ def learned_weights(outcomes: dict[str, dict] | None) -> dict[str, float]:
     deliberate. A hook the user simply left alone is worth nothing: not acting
     is not a preference, and counting it would just re-learn the defaults.
 
-    Promotion only. This can raise a category the user demonstrably favours; it
-    never demotes one on absence of evidence, which would let a quiet week
-    teach the system something false.
+    It never demotes on ABSENCE of evidence — a quiet week is not an opinion.
+    It does demote on PRESENCE of a negative one: a fact the user read and
+    dropped by hand is the only explicit "not this" the app ever receives, and
+    it costs them exactly as much as a hand-pick. Ignoring it meant the system
+    could be told no fifty times and learn nothing.
+
+    `feedback` is optional so the ranking still works with no history at all.
     """
-    if not outcomes:
+    if not outcomes and not feedback:
         return {}
     learned: dict[str, float] = {}
-    for category, o in outcomes.items():
+    for category, o in (outcomes or {}).items():
         evidence = o.get("sent", 0) * 2 + o.get("hand_picked", 0)
         if evidence < config.LEARN_MIN_EVIDENCE:
             continue
         capped = min(evidence, config.LEARN_EVIDENCE_CAP)
         learned[category] = round(1.0 + config.LEARN_STEP * capped, 3)
+
+    for category, fb in (feedback or {}).items():
+        # Putting a fact back cancels having dropped it. Someone who excluded
+        # something and then changed their mind has not rejected the category.
+        against = fb.get("excluded", 0) - fb.get("included", 0)
+        if against < config.LEARN_MIN_EVIDENCE:
+            continue
+        capped = min(against, config.LEARN_EVIDENCE_CAP)
+        # Multiplicative, so a category that is both often sent and often
+        # dropped ends up near where it started rather than at an extreme.
+        # Floored: this can make a category unlikely, never unreachable, because
+        # a hook nothing else can beat should still be offered.
+        base = learned.get(category, 1.0)
+        learned[category] = round(
+            max(config.LEARN_FLOOR, base * (1.0 - config.LEARN_STEP * capped)), 3)
     return learned
 
 

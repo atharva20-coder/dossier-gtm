@@ -234,6 +234,14 @@ LAST_RESORT_MULTIPLE = float(os.getenv("LAST_RESORT_MULTIPLE", "4"))
 LEARN_MIN_EVIDENCE = int(os.getenv("LEARN_MIN_EVIDENCE", "2"))
 LEARN_EVIDENCE_CAP = int(os.getenv("LEARN_EVIDENCE_CAP", "6"))
 LEARN_STEP = float(os.getenv("LEARN_STEP", "0.1"))
+# How far a repeatedly-rejected category can fall. A floor, not a ban: a
+# category the user keeps dropping should lose to almost anything, and
+# still be offered when there is nothing else to say.
+LEARN_FLOOR = float(os.getenv("LEARN_FLOOR", "0.4"))
+
+# How much of a lead's conversation the assistant is given back. Enough to
+# follow a thread, bounded because every turn is tokens on every later turn.
+CHAT_HISTORY_TURNS = int(os.getenv("CHAT_HISTORY_TURNS", "12"))
 
 # With no parseable date, the wording is the only evidence of currency there is.
 # "just launched" is weaker than a date and far better than nothing; "will be

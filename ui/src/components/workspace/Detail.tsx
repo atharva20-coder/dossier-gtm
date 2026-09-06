@@ -162,6 +162,30 @@ export function Detail({
     } catch (e: any) { setSavedNote(`Not saved — ${e.message}`) } finally { setSaving(false) }
   }
 
+  /**
+   * Edits save themselves.
+   *
+   * There was a save button and people did not press it — reasonably, since a
+   * text box that keeps your typing is what every other tool does. The cost of
+   * missing it was not just a lost edit: sending reads the stored message, so
+   * an unsaved change meant the rep watched their edited text on screen and
+   * posted the version before it. Silent, irreversible, and entirely our fault.
+   *
+   * Two seconds after typing stops, and on blur. The button stays, because a
+   * timer is not a promise and people want to see the word "Saved".
+   */
+  useEffect(() => {
+    if (!p?.runId || !dirty) return
+    const t = setTimeout(() => { void save() }, 2000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, dirty, p?.runId])
+
+  // Sending must never use a body older than what is on screen. The send path
+  // reads the stored draft, so it flushes through here first.
+  const flush = useRef<() => Promise<void>>(async () => {})
+  flush.current = async () => { if (dirty) await save() }
+
   async function send(override?: string, label = "") {
     const text = (override ?? message).trim()
     if (!p?.runId || !text || thinking) return
@@ -398,6 +422,7 @@ export function Detail({
             {p.draft?.body || draft ? (
               <div className="relative">
                 <Textarea value={draft} onChange={(e) => setDraft(e.target.value)}
+                  onBlur={() => { if (dirty) void save() }}
                   readOnly={Boolean(tone)}
                   className={`min-h-[260px] w-full resize-none rounded-none border-0
                              bg-transparent px-4 py-5 text-[15px] leading-[1.75] sm:px-6
@@ -439,13 +464,20 @@ export function Detail({
               </div>
             )}
 
+            {dirty && !saving && (
+              <p className="px-4 pb-2 text-[12px] text-[var(--ink-7)] sm:px-6">
+                Unsaved — saves on its own in a moment, or press the save button.
+              </p>
+            )}
+
             {savedNote && (
               <p className="px-4 pb-2 text-[12px] text-[var(--ink-6)] sm:px-6">{savedNote}</p>
             )}
 
             {/* Directly under the message, because that is what it sends. */}
             <div className="px-4 pb-5 pt-1 sm:px-6">
-              <SendBar p={p} onSent={onChanged} notify={notify} />
+              <SendBar p={p} onSent={onChanged} notify={notify}
+                beforeSend={() => flush.current()} />
             </div>
 
             {/* ------------------------- tone ----------------------- */}

@@ -116,6 +116,7 @@ export function SettingsDialog({
   // --- what the ranking has learned about which triggers matter ---------
   const [triggers, setTriggers] = useState<
     { category: string; drafted: number; sent: number; hand_picked: number
+      excluded: number; restored: number; dropped_examples: string[]
       weight: number; learned: boolean; examples: string[] }[]>([])
   const [triggerNote, setTriggerNote] = useState("")
   const [minEvidence, setMinEvidence] = useState(2)
@@ -439,15 +440,15 @@ export function SettingsDialog({
                 you write ABOUT — learned from hooks you sent or picked by hand,
                 never from drafts you simply left alone. */}
             <div className="border-t pt-3">
-              <p className="text-[13px] font-medium">Triggers you act on</p>
+              <p className="text-[13px] font-medium">What it has learned from you</p>
               <p className="mt-0.5 text-[12px] text-muted-foreground">
                 {triggerNote || "Learned from hooks you sent or picked by hand."}
               </p>
 
               {triggers.length === 0 ? (
                 <p className="py-6 text-center text-[13px] text-muted-foreground">
-                  Nothing yet. Send a message, or pick a different hook by hand,
-                  and the kinds you favour rise in the ranking.
+                  Nothing yet. Send a message, pick a different hook, or drop a
+                  fact you would never open with — each one moves the ranking.
                 </p>
               ) : (
                 <ul className="mt-2 space-y-1">
@@ -470,11 +471,16 @@ export function SettingsDialog({
                           <span className="shrink-0 text-[11px] text-muted-foreground">
                             {t.sent > 0 && `${t.sent} sent · `}
                             {t.hand_picked > 0 && `${t.hand_picked} picked · `}
+                            {t.excluded > 0 && `${t.excluded} dropped · `}
                             {t.drafted} drafted
                           </span>
+                          {/* Below 1.0 means you have rejected this kind more
+                              often than you have used it. Coloured differently
+                              so the two directions are not one number to squint at. */}
                           <span className={`w-12 shrink-0 text-right text-[12px] tabular-nums ${
-                            t.learned ? "font-medium text-primary"
-                                      : "text-muted-foreground"}`}>
+                            !t.learned ? "text-muted-foreground"
+                              : t.weight < 1 ? "font-medium text-amber-600 dark:text-amber-500"
+                                             : "font-medium text-primary"}`}>
                             {t.learned ? `\u00d7${t.weight}` : "—"}
                           </span>
                         </button>
@@ -482,11 +488,37 @@ export function SettingsDialog({
                         {open && (
                           <div className="border-t bg-muted/30 px-2.5 py-2">
                             <p className="mb-1.5 text-[11px] text-muted-foreground">
-                              {t.learned
-                                ? `Weighted \u00d7${t.weight} because you acted on these.`
-                                : `Not learned yet — needs ${minEvidence} point(s) of `
-                                  + "evidence, and a draft you left alone is worth none."}
+                              {!t.learned
+                                ? `Not learned yet — needs ${minEvidence} point(s) of `
+                                  + "evidence, and a draft you left alone is worth none."
+                                : t.weight < 1
+                                ? `Weighted \u00d7${t.weight} — you dropped this kind `
+                                  + `${t.excluded} time(s) by hand, so it now has to be `
+                                  + "clearly better than anything else to win."
+                                : `Weighted \u00d7${t.weight} because you acted on these.`}
                             </p>
+                            {t.restored > 0 && (
+                              <p className="mb-1.5 text-[11px] text-muted-foreground">
+                                Put back {t.restored} time(s) — a restore cancels a drop,
+                                because changing your mind is not a rejection.
+                              </p>
+                            )}
+                            {t.dropped_examples.length > 0 && (
+                              <>
+                                <p className="mb-1 text-[11px] font-medium text-amber-700
+                                              dark:text-amber-500">You dropped</p>
+                                <ul className="mb-2 space-y-1">
+                                  {t.dropped_examples.map((e, i) => (
+                                    <li key={i}
+                                      className="flex gap-1.5 text-[12px] leading-snug">
+                                      <span className="text-muted-foreground">&middot;</span>
+                                      <span className="text-foreground/60 line-through
+                                                       decoration-foreground/30">{e}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
                             {t.examples.length === 0 ? (
                               <p className="text-[12px] text-muted-foreground">
                                 No hooks recorded in this category yet.

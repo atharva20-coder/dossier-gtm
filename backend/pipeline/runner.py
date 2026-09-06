@@ -337,7 +337,8 @@ async def run(run_id: int, p: ProspectInput) -> None:
         jr = await judge.judge(kept, today=today, target_company=p.company,
                                name=p.name, role=p.role,
                          writer=writer, stakeholder=stakeholder, persona=persona,
-                         learned=judge.learned_weights(await db.hook_outcomes()))
+                         learned=judge.learned_weights(await db.hook_outcomes(),
+                                                       await db.fact_feedback_counts()))
         # Each verdict carries the fact's stable id so the UI can include or
         # exclude it by hand later without re-running any research.
         await stage("judge", "done", jr.chosen_reason,

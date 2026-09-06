@@ -388,6 +388,11 @@ export const api = {
         category: string; drafted: number; sent: number
         hand_picked: number; weight: number; learned: boolean
         examples: string[]
+        /** Dropped by hand — the only explicit "not this" the app receives. */
+        excluded: number
+        /** Put back after being dropped, which cancels the drop. */
+        restored: number
+        dropped_examples: string[]
       }[]
       min_evidence: number
       note: string

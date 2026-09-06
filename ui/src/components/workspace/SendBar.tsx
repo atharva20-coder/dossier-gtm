@@ -60,10 +60,13 @@ function when(iso: string): string {
  * — a greyed-out button with no reason is how people end up sending from the
  * wrong account.
  */
-export function SendBar({ p, onSent, notify }: {
+export function SendBar({ p, onSent, notify, beforeSend }: {
   p: Prospect
   onSent: (run: any) => void | Promise<void>
   notify: (m: string) => void
+  /** Persist anything still being edited. Sending reads the stored message,
+   *  so without this a rep can send the version before their own last edit. */
+  beforeSend?: () => Promise<void>
 }) {
   const [to, setTo] = useState(p.email ?? "")
   const [sending, setSending] = useState(false)
@@ -138,6 +141,9 @@ export function SendBar({ p, onSent, notify }: {
     if (!p.runId || sending) return
     setSending(true)
     try {
+      // Before anything leaves. An unsaved edit is still the message the
+      // person means to send, and this is the last moment it can be caught.
+      await beforeSend?.()
       const res = await api.sendMessage(p.runId, to.trim(), resend)
       await onSent(res.run)
       notify(`Sent to ${to.trim()}`)
