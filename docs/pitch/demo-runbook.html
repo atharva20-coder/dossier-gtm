@@ -235,6 +235,11 @@
     margin: 3rem 0 0.8rem;
   }
 
+  ul { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  li { margin-bottom: 0.5rem; }
+  li::marker { color: var(--accent); }
+  .note ul { margin-bottom: 0; }
+
   .foot {
     margin-top: 3rem;
     padding-top: 1.2rem;
@@ -250,65 +255,71 @@
 
   <p class="eyebrow">Dossier · live demo · rehearse before the interview</p>
   <h1>Four Runs to Rehearse</h1>
-  <p class="standfirst">One happy path and three edge cases, with the exact input, what the screen does, and what to say while it runs. Every output below was captured from a real run.</p>
+  <p class="standfirst">One that works and three that go wrong on purpose. Each has the exact input, what appears on screen, and what to say while it runs. Every output below is copied from a real run.</p>
 
   <div class="order">
-    <p><strong>Run them in this order.</strong> Confidence first, judgment second, honesty third, resilience last — each one answers the question the previous one raises.</p>
+    <p><strong>Run them in this order.</strong> Each one answers the question the previous one leaves hanging.</p>
     <ol>
-      <li>Happy path — a lead already researched, open before you start talking</li>
-      <li>Two people share a name → it stops and asks</li>
-      <li>Nothing real to say → it refuses to invent</li>
-      <li>Every optional key is wrong → it still finishes</li>
+      <li><strong>It works</strong> — a lead already finished, open before you start talking</li>
+      <li><strong>Two people share a name</strong> → it stops and asks</li>
+      <li><strong>Nothing real to say</strong> → it refuses to invent something</li>
+      <li><strong>Every key is broken</strong> → it finishes anyway</li>
     </ol>
+    <p><strong>Why that order.</strong> Run 1 buys credibility. Run 2 shows judgment. Run 3 shows honesty. Run 4 shows it survives the real world. Do 3 before 2 and “it refuses to guess” lands with nothing behind it.</p>
   </div>
 
   <!-- ============================================================= 1 -->
   <article class="run">
-    <header><h2>Happy path</h2><span class="tag happy">open this before you speak</span></header>
+    <header><h2>1 · It works</h2><span class="tag happy">open this before you speak</span></header>
     <div class="body">
-      <span class="label">Input · already run, so nothing loads live</span>
+      <span class="label">Input · already finished, so nothing loads live</span>
       <p class="field">Maheedhar Maram · Zamp · Founder's Office
 linkedin.com/in/maheedhar167</p>
 
       <div class="say">
         <span class="label">Say, before you click anything</span>
-        <p>“This one has already run, so you're seeing the finished state — I'll run a live one in a moment. Fifty-eight sources, thirty-nine of them about him rather than about Zamp.”</p>
+        <p>“This one's already run, so you're seeing the finished state — I'll run a live one in a minute. Fifty-eight pages read, thirty-nine of them about him rather than about Zamp.”</p>
       </div>
 
       <div class="shows">
-        <span class="label">Point at, in this order</span>
+        <span class="label">Point at these, in this order</span>
         <pre>1. the hook, and its source link      → click it, land on the real page
-2. the findings column                → "every fact it considered, kept or dropped"
-3. the research map button            → how it got there, node by node
-4. uncheck a fact → Rewrite           → the message rebuilds from what is left
-5. a tone chip (Shorter)              → same facts, different register</pre>
+2. the findings column                → "everything it looked at, kept or dropped"
+3. the research map button            → how it got there, step by step
+4. untick a fact → Rewrite            → the email rebuilds from what is left
+5. a tone chip (Shorter)              → same facts, different style</pre>
       </div>
 
       <div class="say">
         <span class="label">Say</span>
-        <p>“Forty minutes of a rep's research, in about a minute. But the number I care about is the second one — every claim in that message traces to a page I can open.”</p>
+        <p>“Forty minutes of a rep's research, in about a minute. But the number I care about is the second one — every claim in that email traces back to a page I can open.”</p>
+      </div>
+
+      <div class="note">
+        <span class="label">Why start here rather than with a live run</span>
+        <p>Because the first thirty seconds decide whether they're watching the tool or watching a loading bar. A finished run puts the reasoning on screen immediately. The live runs afterwards prove it wasn't staged — so you get both, in the right order.</p>
       </div>
     </div>
   </article>
 
   <!-- ============================================================= 2 -->
   <article class="run">
-    <header><h2>Two people share a name</h2><span class="tag">edge case · run live</span></header>
+    <header><h2>2 · Two people share a name</h2><span class="tag">run this live</span></header>
     <div class="body">
-      <span class="label">Input · type exactly this, leave company blank</span>
+      <span class="label">Input · type exactly this, and leave company blank</span>
       <p class="field">Name:    Michael Chen
 Company: (leave empty)
 Role:    (leave empty)</p>
 
       <div class="say">
         <span class="label">Say, before running</span>
-        <p>“The most expensive mistake this process can make isn't a bad sentence — it's researching the wrong person and emailing a real one about them. So here's a name deliberately given with no company.”</p>
+        <p>“The most expensive mistake this can make isn't a clumsy sentence. It's researching the wrong person and then emailing a real one about them. So here's a name given deliberately with no company.”</p>
       </div>
 
       <div class="shows">
-        <span class="label">What it actually returns</span>
+        <span class="label">What actually comes back</span>
         <pre>status: needs_disambiguation
-identity: 4 plausible matches — waiting for confirmation
+identity: 4 believable matches — waiting for you to confirm
 
   Adventist Healthcare  · Interventional Cardiologist
   Akin Gump             · Associate, Disputes &amp; Investigations
@@ -318,19 +329,24 @@ identity: 4 plausible matches — waiting for confirmation
 
       <div class="say">
         <span class="label">Say, pointing at the four</span>
-        <p>“It found four real people and stopped. It has not spent a research budget, and it has not guessed. The run parks here until someone picks — and picking costs one cheap pass, not a fresh start.”</p>
+        <p>“It found four real people and stopped. It hasn't spent a search budget and it hasn't guessed. It waits here until someone picks — and picking is cheap, it carries on rather than starting over.”</p>
       </div>
 
       <div class="note">
-        <span class="label">If they push</span>
-        <p>“Why not just take the highest-confidence one?” — Because the cost is asymmetric. A wrong pick produces a fluent, confident, completely wrong email to a real person. Stopping costs four seconds.</p>
+        <span class="label">Why it stops instead of picking the likeliest</span>
+        <p>Because the two outcomes cost wildly different amounts. Guessing right saves four seconds. Guessing wrong produces a beautifully researched email about a stranger, sent under a real name, to someone who spots it instantly. No confidence percentage captures that gap — so it has to be a rule, not a threshold.</p>
+      </div>
+
+      <div class="note">
+        <span class="label">If they push: “doesn't that jam a batch of 200?”</span>
+        <p>Only the unclear ones stop; the rest finish. And it's rare — give it a company name and identity resolves instantly at 100%, with no interruption at all.</p>
       </div>
     </div>
   </article>
 
   <!-- ============================================================= 3 -->
   <article class="run">
-    <header><h2>Nothing real to say</h2><span class="tag">edge case · run live</span></header>
+    <header><h2>3 · Nothing real to say</h2><span class="tag">run this live</span></header>
     <div class="body">
       <span class="label">Input · a real-sounding person with no public footprint</span>
       <p class="field">Name:    Harshad Vaidya
@@ -339,34 +355,39 @@ Role:    Operations Lead</p>
 
       <div class="say">
         <span class="label">Say, before running</span>
-        <p>“Every tool in this space will write you a personalised email about anyone. That's the problem — the model will happily invent a funding round. Watch what this does when there's genuinely nothing.”</p>
+        <p>“Every tool in this space will happily write you a personalised email about anyone. That's the problem — the AI will invent a funding round without blinking. Watch what this one does when there's genuinely nothing there.”</p>
       </div>
 
       <div class="shows">
-        <span class="label">What it actually returns</span>
-        <pre>research  44 sources — 21 person-level, 23 company-level
-extract   1 candidate fact; 15 facts about a namesake discarded
-          — the source never ties them to Kelphi Systems
-judge     no candidate cleared the eligibility gates
-draft     No specific public signal was found — this is a deliberately
-          generic draft, labelled as such
+        <span class="label">What actually comes back</span>
+        <pre>research  44 pages read — 21 about a person, 23 about a company
+extract   1 possible fact; 15 facts about someone with the same
+          name thrown out — no source tied them to Kelphi Systems
+judge     nothing cleared the bar
+draft     No specific public signal was found — this is a
+          deliberately generic draft, labelled as such
 
 status: no_signal_found</pre>
       </div>
 
       <div class="say">
-        <span class="label">Say — this is the strongest moment in the demo</span>
-        <p>“It read forty-four sources, found fifteen facts about a different Harshad Vaidya, and threw every one of them away because nothing tied that person to this company.”</p>
-        <p>“Then it wrote a generic message and <em>labelled it generic</em>. It would rather hand back an honest blank than a convincing lie. That's the whole design in one screen.”</p>
+        <span class="label">Say — the strongest moment in the whole demo</span>
+        <p>“It read forty-four pages, found fifteen facts about a different Harshad Vaidya, and threw away every one because nothing tied that person to this company.”</p>
+        <p>“Then it wrote a generic message and <em>labelled it generic</em>. It would rather hand you an honest blank than a convincing lie. That's the entire design in one screen.”</p>
+      </div>
+
+      <div class="note">
+        <span class="label">Why label it rather than just fail</span>
+        <p>Because a rep sometimes still wants to send something, and a hard failure just sends them off to write it themselves with less information. Labelling leaves the choice with the person while making sure their own tool can't mislead them. Same principle as showing sources, applied to the absence of any.</p>
       </div>
     </div>
   </article>
 
   <!-- ============================================================= 4 -->
   <article class="run">
-    <header><h2>Every optional key is wrong</h2><span class="tag">edge case · run live</span></header>
+    <header><h2>4 · Every key is broken</h2><span class="tag">run this live</span></header>
     <div class="body">
-      <span class="label">Setup · before the call, start the server with bad keys</span>
+      <span class="label">Setup · before the call, start the server with deliberately bad keys</span>
       <p class="field">HUNTER_API_KEY=sk-bad-key-000 \
 QEV_API_KEY=sk-bad-key-000 \
 SUPERCARL_API_KEY=sk-bad-000 \
@@ -374,14 +395,14 @@ uvicorn backend.main:app --port 8000</p>
 
       <div class="say">
         <span class="label">Say, before running</span>
-        <p>“Free tiers run out and keys expire — usually on the day you need them. So no provider here is required. Watch what happens when three of them are wrong at once.”</p>
+        <p>“Free plans run out and keys expire — usually on the day you need them. So nothing here is required. Watch what happens when three services fail at once.”</p>
       </div>
 
       <div class="shows">
-        <span class="label">What it actually returns · Outbound → Receipts</span>
+        <span class="label">What actually comes back · Outbound → Receipts</span>
         <pre>competitor_discovery  Found 9 competitors
 contact_search        Found 1 contacts across 1 competitors
-email_enrichment      1 of 1 have an address — 1 calculated from the domain
+email_enrichment      1 of 1 have an address — 1 worked out from the domain
        x1  Hunter: Hunter rejected the key — check it has not expired
        x1  Domain convention: derived first.last
        x1  Verification: rejected the key — check it has not expired
@@ -393,35 +414,49 @@ run status: completed</pre>
 
       <div class="say">
         <span class="label">Say</span>
-        <p>“It completed. The address is calculated from the company's naming convention instead of looked up, and it says so — on screen, and in the CSV a sequencer would import.”</p>
-        <p>“Three keys failed and the run didn't. The only thing that changed is the reason it gives you.”</p>
+        <p>“It finished. The address was worked out from the company's naming pattern rather than looked up, and it says so — on screen, and in the CSV a sequencer would import.”</p>
+        <p>“Three services failed and the run didn't. The only thing that changed is the reason it gives you.”</p>
+      </div>
+
+      <div class="note">
+        <span class="label">Why this run earns its demo time</span>
+        <p>Because it proves the tool survives contact with reality rather than a rehearsed happy path. It also came out of a real bug: an expired key was originally reported as “no match” — the one wording that stops someone fixing it. Breaking the keys deliberately is how I found that.</p>
       </div>
 
       <div class="note">
         <span class="label">Restart afterwards</span>
-        <p>Kill that server and start a normal one before anything else, or your remaining demos will all run degraded and you'll be explaining it twice.</p>
+        <p>Kill that server and start a normal one before anything else, or every demo after this runs degraded and you'll explain it twice.</p>
       </div>
     </div>
   </article>
 
   <!-- ============================================================ -->
-  <h3>Held in reserve</h3>
+  <h3>Held in reserve — don't run unless asked</h3>
 
-  <p>Don't run these unless asked — four is already a lot for one call.</p>
+  <p>Four is already a lot for one call. These are worth mentioning if a question opens the door.</p>
 
-  <p><strong>A colleague's fact, dropped.</strong> On a normal run the extract line reads <em>“1 fact about a different person at the company discarded”</em>. It fires on its own; point at it if you see it rather than staging it.</p>
+  <ul>
+    <li><strong>A colleague's fact, dropped.</strong> On a normal run the extract line reads <em>“1 fact about a different person at the company discarded”</em>. It fires by itself — point at it if you see it rather than staging it.</li>
+    <li><strong>Only old facts exist.</strong> It picks the best of what's left, up to two years back, and says plainly: <em>“nothing recent cleared the bar… read it before sending.”</em></li>
+    <li><strong>An address that would bounce.</strong> A worked-out address that fails verification is cleared rather than shipped, with the reason <em>“looks like a typo for …”</em>.</li>
+  </ul>
 
-  <p><strong>Only stale facts exist.</strong> The run picks the best of what remains, up to two years back, and says plainly: <em>“nothing recent cleared the bar… read it before sending.”</em></p>
+  <h3>Two things to do an hour before</h3>
 
-  <p><strong>An address that would bounce.</strong> A derived address verified as invalid is cleared rather than shipped, with the reason <em>“looks like a typo for …”</em>.</p>
+  <ul>
+    <li><strong>Run each of the four once.</strong> Live search results shift. The four Michael Chens may not be the same four next week — the <em>behaviour</em> will hold, the names may not. Don't quote them from memory.</li>
+    <li><strong>Have run 1 already open in a tab.</strong> Never let an interviewer watch a loading spinner in the first thirty seconds.</li>
+  </ul>
 
-  <h3>Two things to check an hour before</h3>
+  <h3>If something breaks live</h3>
 
-  <p><strong>Run each of these once.</strong> Live search results move; the four candidates for Michael Chen may not be the same four next week. The behaviour will hold — the specific names may not, so don't quote them from memory.</p>
+  <ul>
+    <li>Say what happened, and read the message off the screen.</li>
+    <li>A tool that reports its own failure clearly is the exact point you've been making for twenty minutes.</li>
+    <li>Don't apologise for it. Use it.</li>
+  </ul>
 
-  <p><strong>Have the happy path already open in a tab.</strong> Never let an interviewer watch a loading spinner in the first thirty seconds.</p>
-
-  <p class="foot">Every edge case here is something that broke first, then got a gate. That is the honest answer to “how did you choose these” — they chose themselves.</p>
+  <p class="foot">Every edge case here is something that broke first and then got a guard. That's the honest answer to “how did you choose these” — they chose themselves.</p>
 
 </div>
 </body>

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Decision Record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Public+Sans:wght@400;500;700&family=Source+Code+Pro:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:  #F5F3F1;
+    --card:   #FFFFFF;
+    --ink:    #1B1817;
+    --ink-2:  #35302E;
+    --muted:  #6A6360;
+    --faint:  #9C9490;
+    --rule:   #E4DFDC;
+    --soft:   #EDE9E6;
+    --accent: #8A2F3B;
+    --accent-bg: #F6E9EA;
+    --good:   #2A6146;
+    --good-bg: #E7F0EB;
+    --warn:   #8A5A12;
+    --warn-bg: #FAF0DE;
+
+    --display: "Crimson Pro", ui-serif, Georgia, serif;
+    --body: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Source Code Pro", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:  #131110;
+      --card:   #1B1918;
+      --ink:    #F0EDEB;
+      --ink-2:  #D2CCC8;
+      --muted:  #9B938E;
+      --faint:  #6E6763;
+      --rule:   #2A2624;
+      --soft:   #201D1C;
+      --accent: #DE8592;
+      --accent-bg: #2E1A1D;
+      --good:   #6BBE95;
+      --good-bg: #14271E;
+      --warn:   #DBA55C;
+      --warn-bg: #2A2013;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:  #131110;
+    --card:   #1B1918;
+    --ink:    #F0EDEB;
+    --ink-2:  #D2CCC8;
+    --muted:  #9B938E;
+    --faint:  #6E6763;
+    --rule:   #2A2624;
+    --soft:   #201D1C;
+    --accent: #DE8592;
+    --accent-bg: #2E1A1D;
+    --good:   #6BBE95;
+    --good-bg: #14271E;
+    --warn:   #DBA55C;
+    --warn-bg: #2A2013;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 15.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 51rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.3rem, 6vw, 3.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.7rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: var(--display);
+    font-size: 1.25rem;
+    line-height: 1.45;
+    color: var(--muted);
+    margin: 0 0 2rem;
+    max-width: 36rem;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.7rem;
+    color: var(--ink);
+    margin: 3.5rem 0 0.3rem;
+    text-wrap: balance;
+  }
+
+  .phase-note {
+    font-size: 0.92rem;
+    color: var(--muted);
+    margin: 0 0 1.4rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  /* --------------------------------------------------------- records */
+  .rec {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 9px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .ask {
+    font-family: var(--display);
+    font-size: 1.18rem;
+    font-weight: 600;
+    line-height: 1.32;
+    color: var(--ink);
+    margin: 0 0 0.7rem;
+  }
+
+  .ask::before {
+    content: "You asked";
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 400;
+    margin-bottom: 0.25rem;
+  }
+
+  .row { margin-bottom: 0.6rem; }
+  .row:last-child { margin-bottom: 0; }
+
+  .row > b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 400;
+    margin-bottom: 0.15rem;
+  }
+
+  .row p { margin: 0 0 0.45rem; }
+  .row p:last-child { margin-bottom: 0; }
+
+  .impact {
+    border-left: 3px solid var(--good);
+    background: var(--good-bg);
+    padding: 0.6rem 0.85rem;
+    border-radius: 0 5px 5px 0;
+    margin-top: 0.7rem;
+    font-size: 0.92rem;
+  }
+
+  .impact > b { color: var(--good); }
+
+  .mine {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 0.6rem 0.85rem;
+    border-radius: 0 5px 5px 0;
+    margin-top: 0.7rem;
+    font-size: 0.92rem;
+  }
+
+  .mine > b { color: var(--accent); }
+
+  strong { color: var(--ink); font-weight: 700; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--soft);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 11.3px;
+    line-height: 1.5;
+    background: var(--soft);
+    border-radius: 5px;
+    padding: 0.65rem 0.85rem;
+    overflow-x: auto;
+    margin: 0.6rem 0;
+    color: var(--ink-2);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .stat { background: var(--card); padding: 0.85rem 1rem; }
+
+  .stat b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .stat span {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 0.15rem;
+    line-height: 1.35;
+  }
+
+  .rec ul { margin: 0 0 0.5rem; padding-left: 1.15rem; }
+  .rec li { margin-bottom: 0.32rem; }
+  .rec li::marker { color: var(--accent); }
+
+  .foot {
+    margin-top: 3.5rem;
+    padding-top: 1.3rem;
+    border-top: 2px solid var(--ink);
+    font-family: var(--display);
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Dossier · every decision and what caused it</p>
+  <h1>The Decision Record</h1>
+  <p class="standfirst">What was asked for, why it mattered, what changed, and how it was proved — including the things that were wrong first.</p>
+
+  <div class="stats">
+    <div class="stat"><b>214</b><span>decisions written down</span></div>
+    <div class="stat"><b>16</b><span>commits, each naming its cause</span></div>
+    <div class="stat"><b>9</b><span>bugs found by running it, not reading it</span></div>
+    <div class="stat"><b>6</b><span>attempts at ranking before it was right</span></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.05rem">How to read this page</p>
+    <div class="row"><b>Each entry has four parts</b>
+      <p><strong>The ask</strong> — what was requested, in the words it was asked in. <strong>Why it mattered</strong> — the reason it was worth doing. <strong>What changed</strong> — the actual decision. <strong>Proof</strong> or <strong>what went wrong</strong> — how it was checked, or what it cost.</p></div>
+    <div class="row"><b>Why keep a record at all</b>
+      <p>Because a week later you remember the choice but not the reason, and the reason is the only part anyone can question. It's also why this page can quote specific numbers instead of impressions.</p></div>
+  </div>
+
+  <!-- ================================================== phase: interface -->
+  <h2>Making it usable</h2>
+  <p class="phase-note">It worked. It didn't yet behave like something you'd open twice.</p>
+
+  <div class="rec">
+    <p class="ask">Make it work on small screens.</p>
+    <div class="row"><b>Why it mattered</b><p>A four-panel layout is four screens on a phone — and an interviewer might well open it on one.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Below a certain width the panels become tabs, switched in JavaScript rather than CSS.</p>
+      <p><strong>Why not just hide them with CSS?</strong> Because two copies of every panel would both load. Every request fires twice, and the hidden copy quietly drifts out of sync with the visible one.</p></div>
+    <div class="impact"><b>Also fixed:</b> the page used a height unit that mobile browsers measure <em>including</em> the address bar that slides away. The chat box was sitting underneath it.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Add a dark theme with a switcher.</p>
+    <div class="row"><b>Why it mattered</b><p>Roughly 180 colours were written directly into the code, so the app could only ever be light.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Every colour became a named variable — one per shade that already existed, not a tidied-up set.</p>
+      <p><strong>Why keep the messy set?</strong> So light mode renders pixel-identical to the design it was matched against. Tidying would have changed the thing that already worked.</p>
+      <p><strong>Why not just invert the colours for dark?</strong> Because inverting collapses near-white and pure white into the same black, and the message stops reading as a card sitting on a page. Dark was recalculated instead.</p></div>
+    <div class="impact"><b>Caught while sweeping:</b> the focus ring defaulted to white — a bright halo round the selected persona on a dark sidebar. And white text on dark buttons had to flip, while the same white text on blue and green buttons had to stay.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">The persona window only opens on the second click.</p>
+    <div class="row"><b>Why it mattered</b><p>You reported it twice. The code was already correct — which meant the bug was somewhere else entirely.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>The server sent no caching instructions at all, so browsers made up their own rule and kept loading an old version of the app.</p>
+      <p><strong>Why that's a design bug, not a browser bug:</strong> saying nothing isn't neutral. If you don't state a caching rule, something else picks one for you.</p></div>
+    <div class="impact"><b>The same bug came back later and cost more:</b> API responses had no rule either, so re-reading a run straight after the AI rewrote it returned the version from <em>before</em> the rewrite. Everything under <code>/api/</code> is now marked never-cache.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Rebuild the dashboard like this reference.</p>
+    <div class="row"><b>Why it mattered</b><p>It was a table. The question a rep actually asks is “who do I work on today”, and a table doesn't answer that.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Stat tiles, an area chart, stacked bars, ranked categories, avatars — all hand-drawn.</p>
+      <p><strong>Why not a chart library?</strong> Three shapes at a few dozen lines each, against ~180KB of code and a second dependency that has to be kept in step with the theme. The library only wins if you need charts you haven't thought of yet.</p></div>
+    <div class="impact"><b>The colours were calculated, not picked.</b> The palette was checked for even steps, a single hue, and a pale end that still separates from the background — 2.11:1 in light, 2.25:1 in dark. Outcomes use one colour getting darker rather than three different colours, because the three outcomes are <em>ranked</em>, not merely different.</div>
+  </div>
+
+  <!-- ================================================== phase: sending -->
+  <h2>Letting it send</h2>
+  <p class="phase-note">The one action that reaches a real person and can't be taken back.</p>
+
+  <div class="rec">
+    <p class="ask">Add a real send button. Use Gmail and an app password.</p>
+    <div class="row"><b>Why it mattered</b><p>A tool that drafts but can't send is a demo. A tool that can send carelessly is a liability.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Sending happens on a separate thread, so a slow mail server can't freeze the rest of the app.</p>
+      <p>Every safety check lives in <strong>one function</strong> — blocked contact, unusable address, empty draft, already sent without confirming.</p>
+      <p><strong>Why one function and not a check per screen?</strong> Because the rules would drift apart. Two screens with slightly different rules is how the careful one gets bypassed.</p></div>
+    <div class="impact"><b>Signing in uses the sending mailbox's own credentials</b>, so whoever is logged in is demonstrably the person the emails come from. Both halves are compared in constant time, so the address can't be guessed by timing the response.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Send one to this address.</p>
+    <div class="row"><b>Why it mattered</b><p>Nothing had ever actually been sent. Everything up to that point was theory.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>One real message, through the real path, to the address you named.</p>
+      <p>The resend guard then refused a second attempt: <em>“Already sent… Confirm again to send another.”</em></p></div>
+    <div class="impact"><b>Proved on a real record, not a mock:</b> credentials, mail path, sent indicator, guard — all four worked. And re-running research deliberately does <em>not</em> clear the sent record, because looking someone up again must never erase the fact that they were already emailed.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">No campaign should be able to mail everyone.</p>
+    <div class="row"><b>Why it mattered</b><p>One button that reaches forty strangers is a different product with a much bigger blast radius.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>One person per request, everywhere. There is no bulk send, and the interface says so under the button.</p>
+      <p><strong>Why refuse rather than defer it:</strong> the moment one click reaches forty people, every other guard in the system becomes advisory.</p></div>
+  </div>
+
+  <!-- ================================================= phase: providers -->
+  <h2>Living on free plans</h2>
+  <p class="phase-note">Every service optional, every allowance visible, nothing spent by accident.</p>
+
+  <div class="rec">
+    <p class="ask">The app must work if keys are missing or expired.</p>
+    <div class="row"><b>Why it mattered</b><p>Free plans run out, usually on the day you need them.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Missing, wrong and out-of-credit now behave identically — the run completes, only the reason differs.</p>
+      <p>Checked by running the whole thing with three keys deliberately set to garbage.</p></div>
+    <div class="mine"><b>Two real problems found while doing it:</b>
+      <p>There were <strong>no time limits on any network call</strong> — the default was five minutes, so one unreachable server would have frozen a 40-contact campaign for hours.</p>
+      <p>And an expired key was being reported as <em>“no match”</em> — the one message that stops someone realising they need to fix the key.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Apollo is paid. Not using it. PDL either.</p>
+    <div class="row"><b>Why it mattered</b><p>The plan had assumed one of Apollo's endpoints was free. It isn't.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Both removed entirely rather than left in place waiting for a key.</p>
+      <p><strong>Why remove rather than leave as a fallback:</strong> a paid backup for something the free path already does isn't a fallback, it's a branch that never runs. Every run in the record had gone down the free path anyway.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">All the APIs are free and limited. Never spend on a page load.</p>
+    <div class="row"><b>Why it mattered</b><p>This turned out to be much worse than it sounded.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>The health check was making <strong>a real search and a real AI call</strong> on every page load, cached for five minutes. A tab left open all day was burning search credits to draw a status light.</p>
+      <p>It now answers from configuration alone. One “Check now” button in Setup is the only thing that spends anything.</p></div>
+    <div class="impact"><b>Measured:</b> four page loads → <strong>zero</strong> calls to any outside service. The app also counts its own searches, because the search provider offers no way to ask what's left, and warns before a campaign dies halfway through.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Here's a Hunter key.</p>
+    <div class="row"><b>Why it mattered</b><p>Testing it against the live service immediately exposed a bug in how the response was being read.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Hunter returns the result <em>nested inside</em> another field. The code was reading the top level, so it always found nothing.</p>
+      <p>Consequence: Hunter's own “valid” was thrown away, the credit was wasted, and a correct verified address fell through to a worked-out guess.</p></div>
+    <div class="impact"><b>And the verifier certified an address I made up.</b> Some domains accept all mail, so a verifier returns “valid” for a mailbox that doesn't exist. Trusting it would have marked a fabricated address as confirmed. It now also requires the domain <em>not</em> to be accept-all — and note that every field arrives as the <em>text</em> “true” or “false”, where the string “false” counts as true if you don't check carefully.</div>
+  </div>
+
+  <!-- ================================================== phase: outbound -->
+  <h2>Competitor outbound</h2>
+  <p class="phase-note">One instruction, from a company name to a set of drafted messages.</p>
+
+  <div class="rec">
+    <p class="ask">Build competitor outbound. Also — I built some of it myself.</p>
+    <div class="row"><b>Why it mattered</b><p>You had already written the database layer and the routes before mentioning it.</p></div>
+    <div class="mine"><b>What went wrong:</b>
+      <p>I wrote two files without checking they existed, and destroyed both.</p>
+      <p>I only noticed because one of your routes answered a request with an error message I hadn't written.</p>
+      <p>Both were recovered byte-for-byte from your editor's transcript, my duplicates deleted, and your database design kept over mine — it was the better fit.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Your architecture kept; the parts that couldn't run fixed.</p>
+      <p>Nothing imported on the older Python version, one file called two functions that don't exist, a dependency was never declared, and the verifier deleted good addresses whenever it wasn't configured.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Campaign contacts should be treated like leads.</p>
+    <div class="row"><b>Why it mattered</b><p>Only the first three became leads. The rest existed only inside the campaign and couldn't be opened or re-researched.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Every contact now gets a lead record.</p>
+      <p><strong>Why that's cheap:</strong> creating a record costs nothing; <em>researching</em> is what costs. So the rest arrive queued and can be run one at a time whenever they're worth it.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Don't limit research to three. Track credits. Make it faster.</p>
+    <div class="row"><b>What changed</b>
+      <p>A cap on <em>count</em> became a cap on <em>budget</em>, checked before each contact rather than once at the start.</p>
+      <p>A reserve is held back so a campaign already under way can finish.</p>
+      <p>Contacts are researched several at a time, capped at three.</p>
+      <p><strong>Why capped at all:</strong> unlimited concurrency would burn the whole month's search allowance in one campaign.</p></div>
+    <div class="impact"><b>Measured:</b> four contacts fully researched in <strong>98 seconds</strong>, against roughly four minutes one after another. Running out degrades rather than fails — contacts still found, addresses still worked out, only the deep research stops, and the receipt says which.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">The persona should always write the drafts.</p>
+    <div class="row"><b>Why it mattered</b><p>The opening line used the full persona. The template — the <em>larger</em> half of every message — used a stripped-down version with just a name and a character, dropping the writing instructions, the seniority stance and every learned rule.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Both halves now use the same description.</p>
+      <p>A persona whose instruction says <em>three sentences, direct, engineer to peer</em> had been producing five corporate ones.</p></div>
+  </div>
+
+  <!-- =================================================== phase: ranking -->
+  <h2>Choosing the right hook</h2>
+  <p class="phase-note">The longest thread, six attempts, and the one where being wrong repeatedly was itself the useful signal.</p>
+
+  <div class="rec">
+    <p class="ask">It picked the wrong hook for Maheedhar.</p>
+    <div class="row"><b>Why it mattered</b><p>It opened on a work anniversary rather than the company's move to AI agents. Refusing to accept that was the right call.</p></div>
+    <div class="row"><b>What changed, in order</b>
+      <pre>1  undated facts scored 0.35, beating dated ones      → cut to 0.22
+2  an undated fact inherited a stale twin's age
+3  relevance to what you sell became a multiplier
+4  "AI" was being dropped by a 3-letter minimum
+5  a third of dates were the run's own date            → distrusted
+6  the person-level bonus needed a real category, not "other"</pre></div>
+    <div class="mine"><b>What I got wrong:</b>
+      <p>All six were adjustments to the same maths, and each produced a <em>different</em> weak hook — an anniversary, then a 2014 exam result, then a former employer.</p>
+      <p>Four attempts in, the <em>number</em> of attempts was itself the evidence that maths was the wrong tool. Converging would have meant tuning. Jumping around meant the model was wrong.</p>
+      <p>I should have stopped at two.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Give more weight to posts and reposts, then his current job.</p>
+    <div class="row"><b>Why it mattered</b><p>This was the correction that mattered. Not another weight — an <em>ordering</em>.</p></div>
+    <div class="row"><b>What changed</b>
+      <pre>tier 0   what they said or did themselves
+tier 1   their current job, and that company now
+tier 2   anything else about them
+tier 3   a company that isn't theirs any more</pre>
+      <p>The tier beats the score. Inside a tier the score decides everything; across tiers it gets no vote at all.</p>
+      <p><strong>Why an ordering works where a score didn't:</strong> a score assumes every fact sits on one shared scale. They don't. “He posted last week” and “his old employer won an award” are different <em>kinds</em> of thing, and forcing them onto one number is exactly what let the award win.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Don't exclude anything. Learn to prioritise. Always make a collective call.</p>
+    <div class="row"><b>Why it mattered</b>
+      <p>Age was a hard cutoff, which threw away the thing that often says who a person <em>is</em>.</p>
+      <p>And scoring facts one at a time can't answer “of these eight, which is worth opening with”.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Age became a penalty that keeps shrinking and never reaches zero.</p>
+      <p><strong>Why a penalty rather than a cutoff:</strong> a cutoff has to name a day when a fact stops mattering, and no such day exists. A decaying penalty says “less useful over time” without ever saying “worthless”.</p>
+      <p>Career history is kept and handed to the writer as background, fenced off — current employer named, everything else labelled former.</p>
+      <p>Then the rules narrow it to eight, and <strong>one AI call decides among them</strong> — or declines, falling back to the ranked order.</p></div>
+    <div class="impact"><b>Result:</b> it overruled the top-scoring fact and chose <em>“Zamp transitioned completely towards AI agents”</em>, giving as its reason that the shift lines up with what the sender sells. Which is the fact this whole thread had been arguing for.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">A VP at one company ten years ago, now an SVP elsewhere — that matters.</p>
+    <div class="row"><b>Why it mattered</b>
+      <p>Three separate reasons, and the third is a correctness bug: they changed company, they're more senior now, and qualifying them against the <em>wrong</em> company is simply wrong information.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Career history is no longer discarded.</p>
+      <p>A filter meant to drop facts about other companies was deleting <em>any</em> fact whose company differed — including facts about the prospect themselves at a previous employer. So the case you named never even survived extraction.</p></div>
+    <div class="impact"><b>Checked end to end:</b> given Adobe and Oracle as history and Ramp as the current job, the draft names <strong>Ramp</strong> and neither of the others.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Make it learn the weights from what I actually send.</p>
+    <div class="row"><b>Why it mattered</b><p>The default weights are one team's opinion about which signals matter. A recruiter, an investor and a finance vendor want completely different things.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>Only <em>costly</em> actions count. A send is worth double a hand-pick.</p>
+      <p>A draft you ignored teaches <strong>nothing</strong>.</p>
+      <p><strong>Why ignoring must count for nothing:</strong> drafts get ignored because the day ended or the lead went cold, not because they were bad. Counting inaction as dislike would teach it that everything is bad, and it would drift back to the defaults.</p>
+      <p>It only ever promotes, never demotes — absence of evidence isn't evidence.</p></div>
+    <div class="impact"><b>Learned from your own history:</b> two hand-picked speaking hooks → ×1.2, rising to ×1.4 once campaign sends were counted too. On two facts of equal age the defaults pick the promotion <strong>0.3725 to 0.3353</strong>; with learning applied the talk wins <strong>0.4023 to 0.3725</strong> — the order flips.</div>
+  </div>
+
+  <!-- ==================================================== the settings -->
+  <h2>Where every setting lives, and what it changes</h2>
+  <p class="phase-note">Five tabs behind the persona avatar in the sidebar, or the gear at the bottom. Nothing here is decoration — each field is read at a specific moment, and this is where.</p>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Persona · <em>who's writing, and how</em></p>
+    <div class="row"><b>What you fill in</b><p>Avatar and name · Character · <strong>Who's writing</strong> (founder, CEO, CRO, VP, AE, SDR) · <strong>What the message is for</strong> (book a call, open a relationship, partnership, ask an opinion, re-engage, hiring, event) · What you sell · The problem it removes · Proof · What makes someone worth writing to · Writing instructions.</p></div>
+    <div class="row"><b>Where it gets used</b>
+      <pre>persona → the drafting prompt
+        → the campaign template prompt
+        → the relevance score when ranking facts</pre>
+      <p>Seniority and purpose aren't labels — each one carries a stance into the prompt. A founder can say “I built this”; an SDR can't. “Ask an opinion” produces a different closing line from “book a call”.</p></div>
+    <div class="impact"><b>The order in the prompt matters:</b> who's writing → what it's for → what you sell → how you write → what it's learned. Later instructions win, so a learned rule can override the base voice without rewriting it.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Learned · <em>what it's picked up from you</em></p>
+    <div class="row"><b>Two lists, two different things</b>
+      <p><strong>Rules from your edits</strong> — <em>how</em> you write. Written down after three consistent edits, corrected rather than stacked up, capped, and versioned so you can undo one.</p>
+      <p><strong>Signals you act on</strong> — <em>what</em> you write about. An accordion: open a row to see the actual hooks in that category.</p>
+      <p><strong>Why three edits, not one:</strong> one edit is a mood. Three is a preference.</p></div>
+    <div class="row"><b>Where it gets used</b>
+      <pre>edit rules → a "learned from their edits" block in the prompt
+signals    → a multiplier on the score of matching facts</pre></div>
+    <div class="impact"><b>This is the self-learning claim, made inspectable.</b> Every row shows the evidence behind it, so no multiplier has to be taken on faith.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Sender · <em>the identity messages come from</em></p>
+    <div class="row"><b>What you fill in</b><p>Your name, role and company · What you sell · The problem it removes · Proof · Goal of the email · Tone. Plus <strong>connected services</strong> — and the only button in the app that spends an allowance to answer “does this actually work”.</p></div>
+    <div class="row"><b>Where it gets used</b>
+      <pre>sender → the drafting prompt
+       → the relevance score
+       → the email signature and the reply-to address</pre>
+      <p><strong>Why both Persona and Sender are read:</strong> they're filled in at different times — the persona on day one, the sender config later. Reading only one leaves you blind half the time.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">ICP · <em>who's worth writing to at all</em></p>
+    <div class="row"><b>What you fill in</b><p>Target seniority and function · Countries · Industries · Company size · Revenue note.</p></div>
+    <div class="row"><b>Where it gets used</b>
+      <pre>ICP → a 0-100 fit score at the start of every run
+    → the priority order on the dashboard and lead list
+    → role groups when a campaign needs to find people</pre>
+      <p><strong>Why the score doesn't block anything:</strong> it orders the list rather than gating it. A lead is <em>hot</em> on a fresh job change, <em>high</em> on a strong fit plus a personal hook, and lower when only one of those holds. A perfect-fit lead with no angle isn't the one to start with.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Intent · <em>which signals matter to you</em></p>
+    <div class="row"><b>What you fill in</b><p>Personal signals (promotion, role change, looking for something, speaking, influence, personal award) and company signals (hiring, AI transformation, cost reduction, IPO, expansion, fundraise, product launch, partnership, award).</p></div>
+    <div class="row"><b>Where it gets used</b>
+      <pre>intent weights → the score of every single fact</pre>
+      <p><strong>Why an explicit setting always beats a learned one:</strong> a setting is a statement, an inference is a guess.</p>
+      <p>This is the single field that turns the tool into a recruiter's or an investor's. They need the same mechanism with a different ordering — configuration, not a rebuild.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Not in the app · <em>the environment</em></p>
+    <div class="row"><b>Why these aren't settings</b>
+      <p>The Gmail address and app password, the database address, and the service keys live outside the app and never in the database.</p>
+      <p><strong>Why:</strong> an app password is send access to a real mailbox. Anything the app can write into a database, some future bug can read back out. Putting it behind a form puts it one bug away from being leaked.</p></div>
+    <div class="row"><b>What the app does show</b><p>Whether each one is configured, and for the ones that report it, how much of the month is left — read from a local count, so asking costs nothing.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">How a message actually reaches someone</p>
+    <div class="row"><b>The whole path, both routes</b>
+      <pre>lead screen                    campaign
+  research a prospect            name a company
+  hook chosen                    competitors → their people
+  draft written                  one template per group
+      ↓                          + a custom opener per contact
+  edit it (this is what               ↓
+  teaches the persona)           open a contact
+      ↓                              ↓
+  address: on file, looked up, or worked out — labelled which
+      ↓
+  one safety check, shared by both screens
+      contact blocked? · address unusable?
+      domain accepts no mail? · draft empty? · already sent?
+      ↓
+  confirm, then send over Gmail · one person per request
+      ↓
+  time, address and message id saved on the record
+  the button is replaced by the record of the send</pre></div>
+    <div class="impact"><b>Or it never sends at all:</b> the CSV export carries exactly the columns a sequencer imports — address, where it came from, subject, body, group, and whether it's already gone out.</div>
+  </div>
+
+  <!-- =================================================== what went wrong -->
+  <h2>What I got wrong</h2>
+  <p class="phase-note">Kept in, because a record that only lists successes isn't a record.</p>
+
+  <div class="rec">
+    <p class="ask">Verification that verified nothing.</p>
+    <div class="row"><b>What happened</b>
+      <p>The type-checking command was succeeding <em>without checking a single file</em> — a configuration quirk meant it had nothing to check.</p>
+      <p>I had reported several passes on it. All meaningless. The correct command found a genuine error immediately.</p></div>
+    <div class="row"><b>The same shape, twice more</b>
+      <p>A self-test for the send guards only ran when Gmail happened to be configured, because the stub credentials were in the wrong place. On a machine without a key, every send guard passed unchecked.</p>
+      <p>And the database setup file had drifted from the code — it was missing <strong>all four persona tables</strong>, so a fresh production database would have come up without them.</p></div>
+    <div class="row"><b>Why this is the entry that matters</b>
+      <p>Because “my verification was fake” is the least flattering thing here, and it's the best evidence that the other numbers are real. Anyone can claim they test.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">A confident wrong answer, produced by my own fix.</p>
+    <div class="row"><b>What happened</b>
+      <p>Looking up a company by name matched <em>“Zamp”</em> to a helmet manufacturer's website, purely on overlapping letters.</p>
+      <p>It then produced four confident, top-graded email addresses at completely the wrong company.</p></div>
+    <div class="row"><b>What changed</b>
+      <p>The domain must now match the company name <em>exactly</em>. Directory sites are excluded outright. And the domain is taken from pages the research already read before any search is attempted.</p>
+      <p><strong>Why a wrong domain is worse than none:</strong> no domain shows you a message. A wrong one shows you an answer.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Destroying your work.</p>
+    <div class="row"><b>What happened</b>
+      <p>Two files overwritten because I wrote without checking.</p>
+      <p>Recovered — but only because your editor happened to keep a transcript. The project wasn't in version control at the time.</p></div>
+    <div class="row"><b>What it changed</b>
+      <p>It's a git repository now, with a secrets scan that caught an access key hardcoded in a test file before the first push.</p></div>
+  </div>
+
+  <p class="foot">Every decision here has a specific failure behind it rather than a principle. That's the honest version of an architecture: not the plan that survived, but the shape left behind after it didn't.</p>
+
+</div>
+</body>
+</html>
