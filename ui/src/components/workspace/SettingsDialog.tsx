@@ -204,6 +204,16 @@ export function SettingsDialog({
     if (describe.trim().length < 20 || generating) return
     setGenerating(true); setError("")
     try {
+      // Describing yourself while a persona is open is that persona being
+      // said better, not a request for a second one. Creating one each time left a
+      // rail full of near-duplicates with no way to tell which was writing.
+      if (editing) {
+        const p = await api.rebuildPersona(editing.id, describe)
+        await onPersonasChanged()
+        setDescribe(""); setMode("fields")
+        notify(`${p.emoji || ""} ${p.name} rewritten from your description`.trim())
+        return
+      }
       const p = await api.generatePersona(describe)
       // It used to create the persona, clear the box, and leave you looking at
       // the same empty form — so a working button read as a broken one. The
@@ -363,6 +373,7 @@ export function SettingsDialog({
                     Two or three lines is enough — it writes the rest. Say who you
                     are, what you sell and to whom, and how you write. It will
                     elaborate the voice, and it will not invent what you sell.
+                    Fields you do not mention keep what they already had.
                   </p>
                 </div>
                 {error && <p className="text-[12px] text-destructive">{error}</p>}
@@ -381,8 +392,12 @@ export function SettingsDialog({
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  This builds a new identity and starts writing as it. It leaves
-                  {editing ? ` ${editing.name}` : " anything you already have"} untouched.
+                  {editing
+                    ? `This rewrites ${editing.name} from what you write above — `
+                      + "same identity, new brief. What it has learned from your "
+                      + "edits is kept and applied on top. Use + in the rail to "
+                      + "make a separate persona instead."
+                    : "This builds a new identity and starts writing as it."}
                 </p>
               </>
             ) : (
@@ -992,7 +1007,7 @@ export function SettingsDialog({
                 <Button onClick={generatePersona}
                   disabled={describe.trim().length < 20 || generating}>
                   {generating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                  Build persona
+                  {editing ? "Rewrite this persona" : "Build persona"}
                 </Button>
               </div>
             ) : (

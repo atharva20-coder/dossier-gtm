@@ -679,6 +679,55 @@ async def generate_persona(body: PersonaFromDescription):
     return created
 
 
+@app.post("/api/personas/{persona_id}/rebuild")
+async def rebuild_persona(persona_id: int, body: PersonaFromDescription):
+    """Rewrite an existing persona from a fresh description of how they write.
+
+    Separate from generate, which creates. Describing yourself again is almost
+    never a request for a second identity — it is the same person saying it
+    better — and creating one each time left people with a rail full of near
+    duplicates and no idea which was writing.
+
+    What it has learned is kept. Those rules came from real edits and are still
+    true of the author; they go back to being applied on top of the new brief,
+    and get written into it again the next time something is learned.
+    """
+    persona = await db.get_persona(persona_id)
+    if not persona:
+        raise HTTPException(404, "Persona not found")
+    if len(body.description.strip()) < 20:
+        raise HTTPException(400, "Tell it a bit more about how you write.")
+    try:
+        g = await persona_stage.generate(body.description)
+    except Exception as e:
+        raise HTTPException(502, f"Could not rebuild the persona ({type(e).__name__}).")
+
+    fields = {"name": g.name, "character": g.character, "emoji": g.emoji,
+              "instructions": g.instructions}
+    # Only overwrite the commercial fields the new description actually spoke
+    # to. It refuses to invent them, and silently blanking what was there
+    # because this description happened not to mention it would lose real work.
+    for key, value in (("seniority", g.seniority), ("intent", g.intent),
+                       ("product", g.product), ("problem", g.problem),
+                       ("proof", g.proof), ("looking_for", g.looking_for)):
+        if (value or "").strip():
+            fields[key] = value
+
+    # Snapshot what is being replaced BEFORE replacing it. Recording only the
+    # new version leaves a rebuild recoverable purely by luck — whether some
+    # earlier revision happened to exist — and this overwrites work someone may
+    # have spent a while on.
+    if (persona.get("instructions") or "").strip():
+        await db.add_persona_revision(
+            persona_id, persona["instructions"],
+            f"Replaced when {persona.get('name') or 'this persona'} was rebuilt.", 0)
+    updated = await db.update_persona(persona_id, **fields)
+    await db.unfold_memories(persona_id)
+    await db.add_persona_revision(persona_id, g.instructions,
+                                  "Rebuilt from a new description.", 0)
+    return updated
+
+
 @app.get("/api/personas/{persona_id}/prompt")
 async def persona_prompt(persona_id: int):
     """The exact brief this persona hands the writer, assembled as it really is.

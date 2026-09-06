@@ -485,6 +485,14 @@ export const api = {
 
   personas: () => fetch("/api/personas").then(json<{ personas: Persona[] }>),
 
+  /** Rewrite an existing persona from a fresh description. Keeps what it
+   *  learned, and does not add another identity to the rail. */
+  rebuildPersona: (id: number, description: string) =>
+    fetch(`/api/personas/${id}/rebuild`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description }),
+    }).then(json<Persona>),
+
   /** Build a persona from someone describing how they write. */
   generatePersona: (description: string) =>
     fetch("/api/personas/generate", {

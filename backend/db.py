@@ -1155,6 +1155,20 @@ async def add_memory(persona_id: int, rule: str, learned_from: int,
     return _row(row)
 
 
+async def unfold_memories(persona_id: int) -> None:
+    """Put learned rules back in the appended block.
+
+    Used when the instructions are rewritten from scratch: a folded rule lives
+    inside text that no longer exists, so leaving it marked folded would delete
+    the lesson silently. Appended again, it still applies, and the next time
+    something is learned it gets written back in.
+    """
+    p = await pool()
+    await p.execute(
+        "UPDATE persona_memories SET folded=FALSE WHERE persona_id=$1 AND active",
+        persona_id)
+
+
 async def mark_memories_folded(ids: list[int]) -> None:
     """Note that these rules now live in the instructions themselves."""
     if not ids:
