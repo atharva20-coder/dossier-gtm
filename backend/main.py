@@ -1064,6 +1064,16 @@ async def save_draft_edit(run_id: int, edit: DraftEdit):
             "persona_changes": persona_changes}
 
 
+@app.get("/api/learned/feed")
+async def learning_feed(limit: int = 60):
+    """What the app has learned, newest first, for the notifications drawer.
+
+    Read from the same rows the ranking and the persona actually use, so the
+    panel cannot congratulate itself on a change that did not happen.
+    """
+    return {"events": await db.learning_feed(min(max(limit, 1), 200))}
+
+
 @app.get("/api/learned/triggers")
 async def learned_triggers():
     """Which kinds of hook this sender actually acts on.

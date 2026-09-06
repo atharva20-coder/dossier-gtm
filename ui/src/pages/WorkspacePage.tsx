@@ -8,6 +8,7 @@ import { Rail } from "@/components/workspace/Rail"
 import { Sidebar } from "@/components/workspace/Sidebar"
 import { FindingsList } from "@/components/workspace/FindingsList"
 import { Detail } from "@/components/workspace/Detail"
+import { LearningDrawer, useLearning } from "@/components/workspace/LearningDrawer"
 import { GraphDialog } from "@/components/workspace/GraphDialog"
 import {
   ResizableHandle, ResizablePanel, ResizablePanelGroup,
@@ -100,6 +101,9 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
     if (next?.runId) navigate(`/leads/${next.runId}`)
   }, [position, navigate])
   const persona = useMemo(() => personas.find((p) => p.is_selected) ?? null, [personas])
+
+  // What the app has learned, and whether the panel is open.
+  const learning = useLearning()
 
   const patch = useCallback((idx: number, fields: Partial<Prospect>) =>
     setProspects((prev) => prev.map((p) => (p.idx === idx ? { ...p, ...fields } : p))), [])
@@ -271,6 +275,9 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
       await api.regenerate(selected.runId, [...excluded], chosen)
       replace(selected.runId, await api.getRun(selected.runId))
       notify("Message rewritten from the facts you kept")
+      // Dropping or picking a fact moves the ranking, so say so immediately
+      // rather than on the next poll.
+      void learning.refresh()
     } catch (e: any) { setRegenError(e.message) } finally { setRegenerating(false) }
   }
 
@@ -364,12 +371,16 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
         if (selected) patch(selected.idx, {
           draft: { ...(selected.draft ?? { subject: "", note: "" }), body },
         })
-        if (learned) notify("Learned from your edit — future drafts will match your voice")
+        if (learned) {
+          notify("Learned from your edit — future drafts will match your voice")
+          void learning.refresh()
+        }
       }}
       onChanged={async (run?: any) => {
         if (!selected?.runId) return
         // SendBar and the assistant both return the run they just changed.
         replace(selected.runId, run ?? await api.getRun(selected.runId))
+        void learning.refresh()
       }}
       notify={notify} />
   )
@@ -388,12 +399,16 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
   return (
     <div className="flex h-dvh w-screen flex-col overflow-hidden bg-[var(--surface)]">
       <BudgetBanner />
+      <LearningDrawer events={learning.events} open={learning.open}
+        onClose={() => learning.show(false)}
+        onOpenLead={(id) => { learning.show(false); navigate(`/leads/${id}`) }} />
       <div className="group/panels flex min-h-0 flex-1">
         {/* The rail is a fixed strip of icons — there is nothing in it that
             benefits from more room, so it is the one column that does not
             resize. Everything to its right does. It survives on a phone
             because 52px of icons is the cheapest column on the screen. */}
         <Rail personas={personas}
+          learning={{ unread: learning.unread, onOpen: () => learning.show(true) }}
           onSelect={selectPersona}
           onCreate={() => {
             setEditingPersonaId(null); setSettingsTab("persona"); setSettingsOpen(true)

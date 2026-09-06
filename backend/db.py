@@ -385,6 +385,9 @@ CREATE TABLE IF NOT EXISTS persona_memories (
     learned_from  INTEGER NOT NULL DEFAULT 0,
     supersedes    BIGINT,
     active        BOOLEAN NOT NULL DEFAULT TRUE,
+    -- When it stopped being used. `active` alone says a rule was retired but
+    -- not when, and a timeline cannot show an event with no time.
+    retired_at    TIMESTAMPTZ,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS persona_memories_active_idx
@@ -668,6 +671,83 @@ async def fact_feedback_counts() -> dict[str, dict]:
         "included": int(r["included"]),
         "dropped_examples": [x for x in (r["dropped_examples"] or []) if x],
     } for r in rows}
+
+
+async def learning_feed(limit: int = 60) -> list[dict]:
+    """Everything the app has learned, newest first, as one timeline.
+
+    Assembled from the three places learning is already recorded rather than a
+    fourth log written alongside them. A separate log would be the thing that
+    drifts: it can be forgotten on a new code path, and then the drawer says
+    nothing happened while the ranking quietly moves.
+
+    Each row carries what changed and the evidence for it, because a panel that
+    announces "I learned something" without saying what is worse than silence.
+    """
+    p = await pool()
+    events: list[dict] = []
+
+    rules = await p.fetch(
+        """SELECT m.id, m.rule, m.learned_from, m.created_at, m.retired_at,
+                  m.active, m.supersedes, s.rule AS replaced,
+                  pr.name AS persona, pr.emoji
+           FROM persona_memories m
+           LEFT JOIN persona_memories s ON s.id = m.supersedes
+           LEFT JOIN personas pr ON pr.id = m.persona_id
+           ORDER BY m.id DESC LIMIT $1""", limit)
+    for r in rules:
+        who = f"{r['emoji'] or ''} {r['persona'] or ''}".strip()
+        events.append({
+            "at": r["created_at"], "kind": "rule",
+            "action": "replaced" if r["supersedes"] else "learned",
+            "title": "Replaced a rule" if r["supersedes"] else "Learned how you write",
+            "detail": r["rule"], "replaced": r["replaced"],
+            "why": f"from {r['learned_from']} edit(s)", "who": who,
+        })
+        if r["retired_at"] and not r["active"]:
+            events.append({
+                "at": r["retired_at"], "kind": "rule", "action": "dropped",
+                "title": "Dropped a rule", "detail": r["rule"], "replaced": None,
+                "why": "it no longer matched what you were writing", "who": who,
+            })
+
+    facts = await p.fetch(
+        """SELECT f.action, f.category, f.fact_text, f.via, f.created_at,
+                  f.run_id, r.name
+           FROM fact_feedback f LEFT JOIN runs r ON r.id = f.run_id
+           ORDER BY f.id DESC LIMIT $1""", limit)
+    WORDING = {
+        "excluded": ("You rejected this kind", "counts against {cat} in the ranking"),
+        "included": ("You put this back", "cancels having dropped {cat}"),
+        "chose": ("You picked this yourself", "counts for {cat} in the ranking"),
+    }
+    for r in facts:
+        title, why = WORDING.get(r["action"], ("Noted", ""))
+        events.append({
+            "at": r["created_at"], "kind": "fact", "action": r["action"],
+            "title": title, "detail": r["fact_text"],
+            "why": why.format(cat=(r["category"] or "this category").replace("_", " ")),
+            "who": r["name"] or "", "run_id": r["run_id"],
+            "via": r["via"], "category": r["category"],
+        })
+
+    edits = await p.fetch(
+        """SELECT d.created_at, d.run_id, r.name
+           FROM draft_revisions d LEFT JOIN runs r ON r.id = d.run_id
+           WHERE d.source = 'edit' ORDER BY d.id DESC LIMIT $1""", limit)
+    for r in edits:
+        events.append({
+            "at": r["created_at"], "kind": "edit", "action": "edit",
+            "title": "Kept your rewrite",
+            "detail": f"You rewrote the message for {r['name'] or 'a lead'}.",
+            "why": "held as evidence until a pattern appears across edits",
+            "who": r["name"] or "", "run_id": r["run_id"],
+        })
+
+    events.sort(key=lambda e: e["at"], reverse=True)
+    for e in events:
+        e["at"] = e["at"].isoformat() if hasattr(e["at"], "isoformat") else str(e["at"])
+    return events[:limit]
 
 
 async def add_chat_turn(run_id: int, you: str, reply: str,
@@ -962,7 +1042,7 @@ async def add_memory(persona_id: int, rule: str, learned_from: int,
         async with c.transaction():
             if supersedes:
                 await c.execute(
-                    "UPDATE persona_memories SET active=FALSE "
+                    "UPDATE persona_memories SET active=FALSE, retired_at=now() "
                     "WHERE id=$1 AND persona_id=$2", supersedes, persona_id)
             row = await c.fetchrow(
                 "INSERT INTO persona_memories (persona_id, rule, learned_from, supersedes) "
@@ -988,7 +1068,9 @@ async def all_memories(persona_id: int, limit: int = 50) -> list[dict]:
 async def forget_memory(memory_id: int) -> bool:
     """Retire one learned rule. The row stays; only the persona stops using it."""
     p = await pool()
-    r = await p.execute("UPDATE persona_memories SET active=FALSE WHERE id=$1", memory_id)
+    r = await p.execute(
+        "UPDATE persona_memories SET active=FALSE, retired_at=now() WHERE id=$1",
+        memory_id)
     return r.split()[-1] != "0"
 
 

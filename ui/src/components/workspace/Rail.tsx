@@ -6,7 +6,8 @@ import {
 import { Avatar } from "@/components/Avatar"
 import { type Persona } from "@/lib/api"
 import {
-  Activity, Download, LayoutDashboard, Monitor, Moon, Plus, Settings2, Sun, Users
+  Activity, Brain, Download, LayoutDashboard, Monitor, Moon, Plus, Settings2,
+  Sun, Users,
 } from "lucide-react"
 import { useTheme } from "@/lib/theme"
 
@@ -28,12 +29,14 @@ const THEMES = [
  * downstream of it.
  */
 export function Rail({
-  personas, onSelect, onCreate, onSetup,
+  personas, onSelect, onCreate, onSetup, learning,
 }: {
   personas: Persona[]
   onSelect: (p: Persona) => void
   onCreate: () => void
   onSetup: () => void
+  /** Opens the panel of what the app has learned, with its unread count. */
+  learning?: { unread: number; onOpen: () => void }
 }) {
   const [theme, setTheme] = useTheme()
   const at = Math.max(0, THEMES.findIndex((t) => t.key === theme))
@@ -118,6 +121,32 @@ export function Rail({
           </TooltipTrigger>
           <TooltipContent side="right">Setup — who you are and who you sell to</TooltipContent>
         </Tooltip>
+
+        {learning && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={learning.onOpen}
+                aria-label={`What it has learned${
+                  learning.unread ? `, ${learning.unread} new` : ""}`}
+                className="relative flex size-8 items-center justify-center rounded-[9px]
+                           text-[var(--ink-6)] transition hover:bg-[var(--surface-3)]
+                           hover:text-[var(--ink)]">
+                <Brain className="size-4" />
+                {learning.unread > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex min-w-[14px]
+                                   items-center justify-center rounded-full
+                                   bg-[var(--violet-fg)] px-1 text-[9px] font-medium
+                                   leading-[14px] text-white">
+                    {learning.unread > 9 ? "9+" : learning.unread}
+                  </span>
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              What it has learned{learning.unread ? ` — ${learning.unread} new` : ""}
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <Tooltip>
           <TooltipTrigger asChild>

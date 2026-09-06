@@ -348,6 +348,9 @@ CREATE TABLE IF NOT EXISTS persona_memories (
     learned_from  INTEGER NOT NULL DEFAULT 0,
     supersedes    BIGINT,
     active        BOOLEAN NOT NULL DEFAULT TRUE,
+    -- When it stopped being used. `active` alone says a rule was retired but
+    -- not when, and a timeline cannot show an event with no time.
+    retired_at    TIMESTAMPTZ,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS persona_memories_active_idx

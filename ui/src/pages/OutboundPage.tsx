@@ -9,6 +9,7 @@ import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Rail } from "@/components/workspace/Rail"
+import { LearningDrawer, useLearning } from "@/components/workspace/LearningDrawer"
 import { BudgetBanner } from "@/components/BudgetBanner"
 import { SettingsDialog } from "@/components/workspace/SettingsDialog"
 import { Avatar } from "@/components/Avatar"
@@ -86,6 +87,7 @@ function when(iso: string): string {
 export function OutboundPage() {
   const { runId } = useParams()
   const navigate = useNavigate()
+  const learning = useLearning()
   const selectedId = runId ? Number(runId) : null
 
   const [runs, setRuns] = useState<OutboundRun[]>([])
@@ -858,8 +860,12 @@ export function OutboundPage() {
   return (
     <div className="flex h-dvh w-screen flex-col overflow-hidden bg-[var(--surface)]">
       <BudgetBanner />
+      <LearningDrawer events={learning.events} open={learning.open}
+        onClose={() => learning.show(false)}
+        onOpenLead={(id) => { learning.show(false); navigate(`/leads/${id}`) }} />
       <div className="group/panels flex min-h-0 flex-1">
         <Rail personas={personas}
+          learning={{ unread: learning.unread, onOpen: () => learning.show(true) }}
           onSelect={async (p) => {
             setPersonas((prev) => prev.map((x) => ({ ...x, is_selected: x.id === p.id })))
             try { await api.selectPersona(p.id) } catch { /* the next load corrects it */ }

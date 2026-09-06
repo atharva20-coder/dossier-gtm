@@ -64,6 +64,21 @@ export interface PersonaMemory {
 }
 
 /** One turn of the assistant: what it said, and what it actually did. */
+/** One thing the app learned, and the evidence for it. */
+export interface LearnEvent {
+  at: string
+  kind: "rule" | "fact" | "edit"
+  action: "learned" | "replaced" | "dropped" | "excluded" | "included" | "chose" | "edit"
+  title: string
+  detail: string
+  why: string
+  who?: string
+  replaced?: string | null
+  run_id?: number | null
+  via?: string
+  category?: string
+}
+
 export interface ChatTurn {
   reply: string
   actions: { name: string; args: Record<string, any>; result: any }[]
@@ -382,6 +397,10 @@ export const api = {
     fetch(`/api/outbound/runs/${id}`, { method: "DELETE" }).then(json<{ ok: boolean }>),
 
   /** Which kinds of hook this sender actually acts on, and what was learned. */
+  /** What the app has learned, newest first, for the drawer. */
+  learningFeed: (limit = 60) =>
+    fetch(`/api/learned/feed?limit=${limit}`).then(json<{ events: LearnEvent[] }>),
+
   learnedTriggers: () =>
     fetch("/api/learned/triggers").then(json<{
       triggers: {
