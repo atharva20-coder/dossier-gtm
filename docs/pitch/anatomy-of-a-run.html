@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anatomy of a Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:     #F4F6F8;
+    --card:      #FFFFFF;
+    --ink:       #11161C;
+    --ink-2:     #2B343E;
+    --muted:     #5A6672;
+    --faint:     #8B96A1;
+    --rule:      #DFE5EA;
+    --rule-soft: #ECF0F3;
+    --accent:    #1F5FA8;
+    --accent-bg: #E6EEF7;
+    --kept:      #0F7B4F;
+    --kept-bg:   #E4F2EB;
+    --warn:      #8A5A0B;
+    --warn-bg:   #FBF2E1;
+
+    --display: "Fraunces", ui-serif, Georgia, serif;
+    --body: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0D1116;
+      --card:      #141A21;
+      --ink:       #EBF0F5;
+      --ink-2:     #C6D0DA;
+      --muted:     #8E9CA9;
+      --faint:     #66727E;
+      --rule:      #232C35;
+      --rule-soft: #1A222A;
+      --accent:    #6BA6E8;
+      --accent-bg: #142433;
+      --kept:      #4FBE8B;
+      --kept-bg:   #12281F;
+      --warn:      #DBA457;
+      --warn-bg:   #2A2113;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:     #0D1116;
+    --card:      #141A21;
+    --ink:       #EBF0F5;
+    --ink-2:     #C6D0DA;
+    --muted:     #8E9CA9;
+    --faint:     #66727E;
+    --rule:      #232C35;
+    --rule-soft: #1A222A;
+    --accent:    #6BA6E8;
+    --accent-bg: #142433;
+    --kept:      #4FBE8B;
+    --kept-bg:   #12281F;
+    --warn:      #DBA457;
+    --warn-bg:   #2A2113;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 52rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5.5vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.08rem;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0 0 2rem;
+    max-width: 38rem;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.42rem;
+    line-height: 1.22;
+    color: var(--ink);
+    margin: 3rem 0 0.3rem;
+    text-wrap: balance;
+  }
+
+  .sub { color: var(--muted); font-size: 0.94rem; margin: 0 0 1.1rem; }
+
+  p { margin: 0 0 0.95rem; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  /* ------------------------------------------------------------ verdict */
+  .verdict {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.35rem 1.5rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .who b {
+    font-family: var(--display);
+    font-size: 1.32rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .who span { color: var(--muted); font-size: 0.95rem; }
+
+  .pill {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.16rem 0.5rem;
+    border-radius: 4px;
+    background: var(--kept-bg);
+    color: var(--kept);
+  }
+
+  .hook {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 0.85rem 1.05rem;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .hook p { margin: 0; font-size: 1.04rem; color: var(--ink); }
+
+  .hook cite {
+    display: block;
+    margin-top: 0.45rem;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-style: normal;
+    color: var(--muted);
+    word-break: break-all;
+  }
+
+  /* -------------------------------------------------------------- data */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.4rem 0;
+  }
+
+  .stat { background: var(--card); padding: 0.85rem 0.95rem; }
+
+  .stat b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.24rem;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .stat span {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 0.15rem;
+    line-height: 1.35;
+  }
+
+  /* ----------------------------------------------------------- stages */
+  .stages { display: flex; flex-direction: column; gap: 1px; background: var(--rule);
+            border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 6.5rem 3.4rem 1fr;
+    gap: 0.75rem;
+    align-items: baseline;
+    background: var(--card);
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .stage b {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .stage em {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 12px;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stage span { color: var(--muted); }
+
+  @media (max-width: 36rem) {
+    .stage { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+
+  /* -------------------------------------------------------- evidence */
+  .scroll { overflow-x: auto; margin: 1.2rem 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 34rem; }
+
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 0.75rem 0.5rem 0;
+    white-space: nowrap;
+  }
+
+  td {
+    border-bottom: 1px solid var(--rule-soft);
+    padding: 0.6rem 0.75rem 0.6rem 0;
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+
+  tr:last-child td { border-bottom: 0; }
+
+  .score {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .mark {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .in { color: var(--kept); }
+  .out { color: var(--faint); }
+  .why { color: var(--muted); font-size: 0.85rem; }
+  tr.chosen td { background: var(--accent-bg); }
+  tr.chosen .mark { color: var(--accent); font-weight: 600; }
+
+  /* ------------------------------------------------------------ email */
+  .email {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.2rem 0;
+  }
+
+  .email header {
+    border-bottom: 1px solid var(--rule);
+    padding: 0.75rem 1.2rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .email header b { color: var(--ink); font-weight: 500; }
+
+  .email .msg {
+    padding: 1.2rem;
+    white-space: pre-wrap;
+    font-size: 1rem;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .note {
+    border-left: 3px solid var(--warn);
+    background: var(--warn-bg);
+    padding: 0.95rem 1.15rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1.2rem 0;
+    font-size: 0.95rem;
+  }
+
+  .note b { color: var(--warn); }
+  .note p:last-child { margin-bottom: 0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--rule-soft);
+    padding: 0.1em 0.36em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .foot {
+    margin-top: 3.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.9rem;
+    color: var(--faint);
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Dossier · run #198 · 6 September 2026</p>
+  <h1>Anatomy of a Run</h1>
+  <p class="standfirst">One prospect, start to finish: fifty-eight sources read, eighteen facts weighed, sixteen thrown away, and the reasoning for every one of them.</p>
+
+  <!-- ---------------------------------------------------------- verdict -->
+  <div class="verdict">
+    <div class="who">
+      <b>Maheedhar Maram</b>
+      <span>Founder's Office · Zamp</span>
+      <span class="pill">ICP 100</span>
+      <span class="pill">identity confirmed</span>
+    </div>
+    <div class="hook">
+      <p>Maheedhar Maram joined Zamp as part of the Founder's Office.</p>
+      <cite>in.linkedin.com/in/maheedhar167 — first-party</cite>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>42s</b><span>start to drafted email</span></div>
+    <div class="stat"><b>58</b><span>sources read</span></div>
+    <div class="stat"><b>39</b><span>about him, not Zamp</span></div>
+    <div class="stat"><b>18/18</b><span>facts verified against source text</span></div>
+  </div>
+
+  <!-- ----------------------------------------------------------- stages -->
+  <h2>What it did, and how long each part took</h2>
+  <p class="sub">Every stage writes itself to the database as it finishes, so this is the record, not a reconstruction.</p>
+
+  <div class="stages">
+    <div class="stage"><b>Profile</b><em>0.0s</em><span>Seniority and ICP fit from the title — 100/100</span></div>
+    <div class="stage"><b>Identity</b><em>0.0s</em><span>Company supplied, so no disambiguation was needed — confidence 100/100</span></div>
+    <div class="stage"><b>Research</b><em>19.0s</em><span>58 sources. His own profile and posts matched by LinkedIn URL — 411 words. Identity confirmed, so it followed 6 further threads about him, via JPMorgan Chase, Stellaris Venture Partners and McKinsey</span></div>
+    <div class="stage"><b>Extract</b><em>11.7s</em><span>18 candidate facts. One about a <strong>different person at Zamp</strong> discarded; one about a <strong>namesake</strong> discarded — the source never tied them to Zamp</span></div>
+    <div class="stage"><b>Ground</b><em>0.2s</em><span>18 of 18 verified word-for-word against the text they came from</span></div>
+    <div class="stage"><b>Judge</b><em>0.0s</em><span>Highest score 0.5232 — person-level, preferred because it is about him rather than his employer</span></div>
+    <div class="stage"><b>Draft</b><em>10.6s</em><span>Checked that the message carries the hook's specific detail. Matched to the sender's voice from 3 edited drafts</span></div>
+  </div>
+
+  <!-- --------------------------------------------------------- evidence -->
+  <h2>The eighteen facts, and why sixteen lost</h2>
+  <p class="sub">This is the part worth reading. A tool that only shows you its answer is asking to be trusted; this one shows the reasoning and lets you disagree with it.</p>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th>Score</th><th></th><th>Fact</th></tr>
+      </thead>
+      <tbody>
+        <tr class="chosen">
+          <td class="score">0.5232</td>
+          <td class="mark">chosen</td>
+          <td>Maheedhar Maram joined Zamp as part of the Founder's Office.
+            <div class="why">person-level role change, specific and safe, first-party LinkedIn</div></td>
+        </tr>
+        <tr>
+          <td class="score">0.3003</td><td class="mark in">eligible</td>
+          <td>Zamp transitioned completely towards AI agents.
+            <div class="why">company-level — outranked by a fact about him</div></td>
+        </tr>
+        <tr>
+          <td class="score">0.2618</td><td class="mark in">eligible</td>
+          <td>Zamp's AI employee product is already live at several F500 banks and healthcare firms.
+            <div class="why">company-level expansion</div></td>
+        </tr>
+        <tr>
+          <td class="score">0.2310</td><td class="mark in">eligible</td>
+          <td>Zamp is opening early access to its AI employee product for select companies.
+            <div class="why">company-level product launch</div></td>
+        </tr>
+        <tr>
+          <td class="score">0.2310</td><td class="mark in">eligible</td>
+          <td>Zamp enables finance teams to delegate complex processes reliably.
+            <div class="why">company-level, positioning rather than an event</div></td>
+        </tr>
+        <tr>
+          <td class="score">0.1347</td><td class="mark in">eligible</td>
+          <td>Zamp is headquartered in San Francisco.
+            <div class="why">true, specific, and no reason to write to anyone</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>Maheedhar Maram has been in the Founder's Office at Zamp since January 2023.
+            <div class="why">stale — roughly 45 months old</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>Maheedhar Maram is building Zamp.
+            <div class="why">too vague to write a specific line from</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>Published “Cuff-less PPG based continuous blood pressure monitoring”
+            <div class="why">stale — roughly 120 months old</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>Published “StayFit: A wearable application for gym-based power training”
+            <div class="why">stale — roughly 120 months old</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>Four further IEEE papers on biristors and impact-ionisation MOS devices
+            <div class="why">stale — 132 to 143 months old</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>A fact about a different person at Zamp
+            <div class="why">the subject was not him — third-party gate</div></td>
+        </tr>
+        <tr>
+          <td class="score">—</td><td class="mark out">dropped</td>
+          <td>A fact about a namesake
+            <div class="why">the source never tied that person to Zamp — wrong-person gate</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The six research papers are the clearest illustration. They are real, correctly attributed, and genuinely his — and every one is a decade old. A tool optimising for <em>interesting</em> would have opened with a paper on blood-pressure monitoring. This one dropped all six on age and wrote about the job he actually has.</p>
+
+  <p>Two more never reached the table at all. One fact belonged to a different person at Zamp; one belonged to a namesake the source never connected to the company. Both gates exist because both mistakes happened in testing, and an email built on either would have been confidently, unrecoverably wrong.</p>
+
+  <!-- ------------------------------------------------------------ email -->
+  <h2>What it wrote</h2>
+  <p class="sub">Three sentences, in a persona defined on day one and adjusted from three edited drafts since.</p>
+
+  <div class="email">
+    <header>
+      <b>To:</b> Maheedhar Maram &nbsp;·&nbsp; <b>Subject:</b> founder's office at zamp
+    </header>
+    <div class="msg">Hi Maheedhar,
+
+Joining the Founder's Office at Zamp puts you directly in charge of operational leverage, where manual account diligence quickly drains strategic bandwidth. Dossier generates deep, source-verified company intelligence in ninety seconds to keep research workflows lean without pulling focus from execution. Worth a ten-minute intro call next week?
+
+Best,
+Atharva Joshi
+Founder, Dossier</div>
+  </div>
+
+  <!-- ------------------------------------------------------------ flaw -->
+  <h2>Where this run is wrong</h2>
+
+  <div class="note">
+    <p><b>The winning fact has no date, and that is why it won.</b></p>
+    <p>“Has been in the Founder's Office since January 2023” was dropped as stale at 45 months. “Joined Zamp as part of the Founder's Office” — the same event, without a date attached — scored highest. The ranking penalised the honest version for being specific about time.</p>
+  </div>
+
+  <p>The deeper version of the same problem: ranking still optimises for the most <strong>interesting</strong> fact rather than the one most <strong>connected to what the sender sells</strong>. On this run, <em>“Zamp transitioned completely towards AI agents”</em> and <em>“already live at several F500 banks”</em> are better reasons to start a conversation about research tooling than a role change from 2023 — but they are company-level, and the ranking prefers person-level on principle.</p>
+
+  <p>That is the next change, and it is a small one: the seller's own product already reaches the drafting stage, and it needs to reach the ranking stage too.</p>
+
+  <p class="foot">Run #198 · every figure on this page read from the database after the fact, not typed by hand. Sources retrieved through site-scoped search across LinkedIn and X plus a person-profile provider; every claim string-checked against the retrieved text before it was allowed into the message.</p>
+
+</div>
+</body>
+</html>

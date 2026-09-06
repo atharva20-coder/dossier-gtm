@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Questions They Will Ask</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Petrona:wght@400;600&family=Manrope:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:  #F6F6F8;
+    --card:   #FFFFFF;
+    --ink:    #15161C;
+    --ink-2:  #313340;
+    --muted:  #62657A;
+    --faint:  #9497A8;
+    --rule:   #E2E2E9;
+    --soft:   #EEEEF3;
+    --accent: #3E3F8C;
+    --accent-bg: #E9E9F4;
+    --tech:   #1F6B63;
+    --tech-bg: #E4F0EE;
+    --warn:   #8C5510;
+    --warn-bg: #FAF0E2;
+
+    --display: "Petrona", ui-serif, Georgia, serif;
+    --body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --mono: "DM Mono", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:  #0E0F13;
+      --card:   #16171E;
+      --ink:    #EDEEF4;
+      --ink-2:  #CBCDD9;
+      --muted:  #9497AB;
+      --faint:  #6A6D80;
+      --rule:   #262833;
+      --soft:   #1C1E26;
+      --accent: #9FA0E8;
+      --accent-bg: #1D1E34;
+      --tech:   #5FBFB2;
+      --tech-bg: #122926;
+      --warn:   #DCA45C;
+      --warn-bg: #2A2013;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:  #0E0F13;
+    --card:   #16171E;
+    --ink:    #EDEEF4;
+    --ink-2:  #CBCDD9;
+    --muted:  #9497AB;
+    --faint:  #6A6D80;
+    --rule:   #262833;
+    --soft:   #1C1E26;
+    --accent: #9FA0E8;
+    --accent-bg: #1D1E34;
+    --tech:   #5FBFB2;
+    --tech-bg: #122926;
+    --warn:   #DCA45C;
+    --warn-bg: #2A2013;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 50rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5.5vw, 3.1rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.08rem;
+    color: var(--muted);
+    margin: 0 0 2rem;
+    max-width: 37rem;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.55rem;
+    color: var(--ink);
+    margin: 3rem 0 0.4rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--ink);
+    text-wrap: balance;
+  }
+
+  .section-note { font-size: 0.93rem; color: var(--muted); margin: 0.6rem 0 1.25rem; }
+
+  .qa {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .q {
+    font-family: var(--display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 0.7rem;
+    line-height: 1.3;
+  }
+
+  .qa p { margin: 0 0 0.75rem; }
+  .qa p:last-child { margin-bottom: 0; }
+
+  .lede {
+    border-left: 3px solid var(--accent);
+    padding-left: 0.85rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .tech .lede { border-left-color: var(--tech); }
+
+  strong { color: var(--ink); font-weight: 700; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--soft);
+    padding: 0.12em 0.38em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.5rem;
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+
+  .tech .tag { background: var(--tech-bg); color: var(--tech); }
+
+  .trap {
+    border-left: 3px solid var(--warn);
+    background: var(--warn-bg);
+    padding: 0.7rem 0.95rem;
+    border-radius: 0 5px 5px 0;
+    margin-top: 0.85rem;
+    font-size: 0.92rem;
+  }
+
+  .trap b { color: var(--warn); }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.5;
+    background: var(--soft);
+    border-radius: 6px;
+    padding: 0.75rem 0.9rem;
+    overflow-x: auto;
+    margin: 0.85rem 0;
+    color: var(--ink-2);
+  }
+
+  .foot {
+    margin-top: 3.5rem;
+    padding-top: 1.2rem;
+    border-top: 2px solid var(--ink);
+    font-family: var(--display);
+    font-size: 1.05rem;
+    color: var(--muted);
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Dossier · anticipated questions</p>
+  <h1>Questions They Will Ask</h1>
+  <p class="standfirst">The ones worth having an answer ready for, split by who is asking. The first line of each is the answer — everything after it is only if they keep pulling.</p>
+
+  <!-- =================================================== non-technical -->
+  <h2>From the business side</h2>
+  <p class="section-note">A buyer, a GTM lead, a founder. They are testing whether you understand the job, not the stack.</p>
+
+  <div class="qa">
+    <p class="q">Why wouldn't a rep just use ChatGPT for this?</p>
+    <p class="lede">Because it will invent the funding round, and it will do it in fluent English.</p>
+    <p>Ask a model to write a personalised email about someone and it will produce one — including details that are plausible, specific, and untrue. That email goes out under a real person's name. The whole system here is the machinery that stops that: it retrieves real pages, and every claim has to appear in the page before it is allowed into a message.</p>
+  </div>
+
+  <div class="qa">
+    <p class="q">How do I know it isn't making things up?</p>
+    <p class="lede">Every claim carries the page it came from, and you can click it.</p>
+    <p>Before a fact is allowed into a draft, the specific things it names — a company, a number, a job title — have to appear word for word in the text that was actually retrieved. It is deliberately a dumb string match, because a model can talk its way past a clever check and cannot talk its way past a literal one.</p>
+  </div>
+
+  <div class="qa">
+    <p class="q">What happens when there's nothing to find?</p>
+    <p class="lede">It says so, and writes a generic message labelled generic.</p>
+    <p>On one test it read 44 sources, found 15 facts about a different person with the same name, discarded all of them, and returned “no signal found”. Most tools will always produce something confident. This is the one behaviour I would not trade away — an honest blank is recoverable, a convincing lie is not.</p>
+  </div>
+
+  <div class="qa">
+    <p class="q">How is this different from Apollo, Clay, or Lavender?</p>
+    <p class="lede">They help you send more. This decides whether you should send at all, and to whom.</p>
+    <p>The list-building tools give you contacts; the writing tools give you sentences. Neither answers “is there a reason to contact this person this week”. That's the expensive judgment a rep makes forty times a day, and it's the one being automated here.</p>
+  </div>
+
+  <div class="qa">
+    <p class="q">Will a rep still be using it in week three?</p>
+    <p class="lede">Only if it stops needing copy-paste — which is why the export exists and the CRM write-back is next.</p>
+    <p>Be honest here. Tools like this die because reps live in Outreach and HubSpot, and a separate app producing drafts they have to move by hand gets abandoned. The CSV export has the columns a sequencer imports. Writing back into a CRM is the first thing I would build with real budget, ahead of any new feature.</p>
+    <div class="trap"><b>Trap:</b> don't answer this with enthusiasm. They are checking whether you know the failure mode. Naming it is the answer.</div>
+  </div>
+
+  <div class="qa">
+    <p class="q">Who else could use this?</p>
+    <p class="lede">A recruiter, an investor, a partnerships lead — the mechanic is the same, the weights are different.</p>
+    <p>A recruiter wants the same research inverted: the hook is why they'd want to move. An investor wants the funding signal that outbound teams deprioritise as saturated. The only thing that changes is which triggers matter, and that is configuration, not a rebuild.</p>
+  </div>
+
+  <div class="qa">
+    <p class="q">How would you know if it's working?</p>
+    <p class="lede">Reply rate against the same rep's own baseline — and before that, how often it declines.</p>
+    <p>The leading indicator is available immediately: what share of leads produce a real person-level hook rather than a company-level one or nothing. If that number is low the list is wrong, and no amount of writing quality fixes a bad list.</p>
+  </div>
+
+  <div class="qa">
+    <p class="q">What does it cost to run?</p>
+    <p class="lede">About fifteen searches a prospect, all on free tiers today.</p>
+    <p>Roughly sixty-five fully researched prospects a month within the free search allowance. The app counts its own usage and warns before the budget runs out, because a campaign that dies halfway is worse than one that never started.</p>
+  </div>
+
+  <!-- ======================================================= technical -->
+  <h2>From the technical side</h2>
+  <p class="section-note">An engineer or a technical founder. They are testing whether the decisions were made or inherited.</p>
+
+  <div class="qa tech">
+    <span class="tag">architecture</span>
+    <p class="q">Why build it rather than wire up n8n or Zapier?</p>
+    <p class="lede">Because the hard part isn't the plumbing, it's the judgment between steps.</p>
+    <p>A node graph is excellent at “call this, then that”. Almost none of this system is that. It is: does this fact belong to this person, does the source actually say it, which of eight candidates is worth opening with, what happens when a provider is out of quota. Those are decisions with reasons that need to be written down and shown to a user, not boxes with arrows.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">reliability</span>
+    <p class="q">How do you stop the model hallucinating?</p>
+    <p class="lede">Extraction declares the entities a fact names, and those are string-matched against the retrieved text. No match, no fact.</p>
+    <p>The check is deliberately not intelligent. A model asked “is this supported?” can be argued with; <code>"Accel" in source_text</code> cannot. It costs recall — a correctly-paraphrased fact sometimes fails — and that trade is the right way round when the output is an email to a stranger.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">design</span>
+    <p class="q">Why one model call at the end instead of just scoring the facts?</p>
+    <p class="lede">Because I tried scoring first, four times, and it kept picking the wrong thing.</p>
+    <p>Per-fact arithmetic ranked a work anniversary, then a decade-old exam result, then a role at a former employer above a live product launch. Each fix produced a different wrong answer, which was the evidence that the comparison is <em>between</em> facts rather than within them. Rules now narrow to a shortlist and one judgment picks from it — and it can decline, and any failure falls back to the ranked order.</p>
+    <pre>gates      → safety, specificity, wrong person, wrong company
+bands      → what they said &gt; what happened to them &gt; their employer
+scores     → order within a band
+one call   → chooses among the top 8, or declines</pre>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">data</span>
+    <p class="q">Why not embeddings or a vector store?</p>
+    <p class="lede">Nothing here is a similarity problem.</p>
+    <p>The questions are “is this the same person”, “does this string appear in that page”, “is this date older than the window”. Those are exact operations. A vector store would add infrastructure, a failure mode, and fuzziness to three questions that need to be answered precisely.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">infrastructure</span>
+    <p class="q">Why Postgres, and why does the connection setup look unusual?</p>
+    <p class="lede">Serverless functions open and discard connections constantly, so everything goes through a transaction-mode pooler with prepared statements off.</p>
+    <p>Transaction mode hands each transaction a different backend, so a prepared statement from one is missing on the next — an intermittent failure that only appears under real concurrency. The cost is roughly two round trips per query, which makes proximity the dominant performance factor: moving the database from Sydney to Mumbai took page loads from 4.5 seconds to 25 milliseconds.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">reliability</span>
+    <p class="q">What happens when a provider is down or out of quota?</p>
+    <p class="lede">The run finishes. Only the reason changes.</p>
+    <p>Every optional provider — email finder, verifier, profile lookup — degrades to the free path, and each failure is classified: no key, key rejected, out of quota, unreachable. All four behave identically and read differently, because “found nothing” and “never looked” lead to different actions. Every request has a twelve-second timeout: the default was five minutes, which would have stalled a forty-contact campaign for hours on one unreachable host.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">scale</span>
+    <p class="q">What breaks first at ten thousand leads?</p>
+    <p class="lede">The search quota, then wall-clock time — not the database.</p>
+    <p>Fifteen searches a lead makes 150,000, so the free tier is gone at around sixty-five. After that it is throughput: research runs concurrently but bounded at three, because the searches inside each run are already parallel and an unbounded fan-out is a self-inflicted rate limit. The database is doing almost nothing by comparison.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">product</span>
+    <p class="q">Why is there no “send all”?</p>
+    <p class="lede">Because it is the one action that reaches a real person and cannot be undone.</p>
+    <p>Sending is one contact per request, with the address shown before the button, a second confirmation, and a stored record so a resend has to be deliberate. Re-running research deliberately does not clear that record — nothing about researching someone again should erase the fact that they were already emailed.</p>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">testing</span>
+    <p class="q">How did you test something this non-deterministic?</p>
+    <p class="lede">By separating what is deterministic from what isn't, and testing the first part hard.</p>
+    <p>The model's output varies; the gates do not. Same-name detection, the grounding check, date parsing, ranking bands, address derivation, provider failure handling — all pure functions with checks. The parts that genuinely vary get judged by running them on real people and reading the output, which is also how the four ranking bugs were found.</p>
+    <div class="trap"><b>If they ask why tests aren't in the repo:</b> say plainly that they were written, used to find real bugs, and removed before submission to keep the deliverable lean — and that removing them was a judgment call you would reverse for anything ongoing.</div>
+  </div>
+
+  <div class="qa tech">
+    <span class="tag">honesty</span>
+    <p class="q">What's the weakest part?</p>
+    <p class="lede">Dates. Roughly a third of extracted facts carry no usable date, and some arrive stamped with today's.</p>
+    <p>Extraction stamps the run date on facts it cannot date, and because “today” scores maximum freshness, the facts it could <em>not</em> date were outranking the ones it could. A date on or after the run date is now treated as no date. It is a real fix and a workaround: the correct version is extraction returning a confidence on the date, which is a data-model change I did not have time for.</p>
+  </div>
+
+  <p class="foot">The strongest answer to any of these is a specific failure and what it changed. Every decision here has one behind it — reach for that before reaching for the general principle.</p>
+
+</div>
+</body>
+</html>

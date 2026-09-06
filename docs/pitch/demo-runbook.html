@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Four Runs to Rehearse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600&family=Karla:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:  #F4F4F2;
+    --card:   #FFFFFF;
+    --ink:    #16181B;
+    --ink-2:  #2F343A;
+    --muted:  #616A73;
+    --faint:  #939CA4;
+    --rule:   #E0E3E1;
+    --soft:   #ECEEEC;
+    --accent: #1D5C4F;
+    --accent-bg: #E5EFEB;
+    --say:    #6A3FA0;
+    --say-bg: #F0EAF8;
+    --warn:   #8F5A12;
+    --warn-bg:#FAF0DF;
+
+    --display: "Bitter", ui-serif, Georgia, serif;
+    --body: "Karla", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:  #101214;
+      --card:   #181B1E;
+      --ink:    #EEF1F3;
+      --ink-2:  #CFD5D9;
+      --muted:  #949DA5;
+      --faint:  #6B747C;
+      --rule:   #262B2F;
+      --soft:   #1D2124;
+      --accent: #58BFA4;
+      --accent-bg: #122A25;
+      --say:    #B79BE8;
+      --say-bg: #221A31;
+      --warn:   #DBA65A;
+      --warn-bg:#2A2013;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:  #101214;
+    --card:   #181B1E;
+    --ink:    #EEF1F3;
+    --ink-2:  #CFD5D9;
+    --muted:  #949DA5;
+    --faint:  #6B747C;
+    --rule:   #262B2F;
+    --soft:   #1D2124;
+    --accent: #58BFA4;
+    --accent-bg: #122A25;
+    --say:    #B79BE8;
+    --say-bg: #221A31;
+    --warn:   #DBA65A;
+    --warn-bg:#2A2013;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 50rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5.5vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.08rem;
+    color: var(--muted);
+    margin: 0 0 1.5rem;
+    max-width: 36rem;
+  }
+
+  .order {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .order p { margin: 0 0 0.5rem; font-size: 0.94rem; }
+  .order ol { margin: 0; padding-left: 1.3rem; }
+  .order li { margin-bottom: 0.25rem; font-size: 0.94rem; }
+  .order li::marker { color: var(--accent); font-family: var(--mono); font-size: 12px; }
+
+  .run {
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: var(--card);
+  }
+
+  .run > header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.8rem;
+  }
+
+  .run h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.28rem;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.5rem;
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+
+  .tag.happy { background: var(--soft); color: var(--muted); }
+
+  .body { padding: 1.15rem 1.25rem; }
+
+  .field {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--soft);
+    border-radius: 6px;
+    padding: 0.65rem 0.85rem;
+    margin: 0 0 1rem;
+    color: var(--ink);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .say {
+    border-left: 3px solid var(--say);
+    background: var(--say-bg);
+    padding: 0.8rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1rem 0;
+  }
+
+  .say .label { color: var(--say); }
+  .say p { margin: 0 0 0.6rem; font-size: 1rem; color: var(--ink); }
+  .say p:last-child { margin-bottom: 0; }
+
+  .shows {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+  }
+
+  .shows .label { color: var(--muted); }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 11.8px;
+    line-height: 1.55;
+    margin: 0;
+    overflow-x: auto;
+    color: var(--ink-2);
+  }
+
+  .note {
+    border-left: 3px solid var(--warn);
+    background: var(--warn-bg);
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1rem 0 0;
+    font-size: 0.92rem;
+  }
+
+  .note .label { color: var(--warn); }
+  .note p:last-child { margin-bottom: 0; }
+
+  p { margin: 0 0 0.9rem; }
+  strong { color: var(--ink); font-weight: 700; }
+
+  h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.35rem;
+    color: var(--ink);
+    margin: 3rem 0 0.8rem;
+  }
+
+  .foot {
+    margin-top: 3rem;
+    padding-top: 1.2rem;
+    border-top: 2px solid var(--ink);
+    font-family: var(--display);
+    color: var(--muted);
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Dossier · live demo · rehearse before the interview</p>
+  <h1>Four Runs to Rehearse</h1>
+  <p class="standfirst">One happy path and three edge cases, with the exact input, what the screen does, and what to say while it runs. Every output below was captured from a real run.</p>
+
+  <div class="order">
+    <p><strong>Run them in this order.</strong> Confidence first, judgment second, honesty third, resilience last — each one answers the question the previous one raises.</p>
+    <ol>
+      <li>Happy path — a lead already researched, open before you start talking</li>
+      <li>Two people share a name → it stops and asks</li>
+      <li>Nothing real to say → it refuses to invent</li>
+      <li>Every optional key is wrong → it still finishes</li>
+    </ol>
+  </div>
+
+  <!-- ============================================================= 1 -->
+  <article class="run">
+    <header><h2>Happy path</h2><span class="tag happy">open this before you speak</span></header>
+    <div class="body">
+      <span class="label">Input · already run, so nothing loads live</span>
+      <p class="field">Maheedhar Maram · Zamp · Founder's Office
+linkedin.com/in/maheedhar167</p>
+
+      <div class="say">
+        <span class="label">Say, before you click anything</span>
+        <p>“This one has already run, so you're seeing the finished state — I'll run a live one in a moment. Fifty-eight sources, thirty-nine of them about him rather than about Zamp.”</p>
+      </div>
+
+      <div class="shows">
+        <span class="label">Point at, in this order</span>
+        <pre>1. the hook, and its source link      → click it, land on the real page
+2. the findings column                → "every fact it considered, kept or dropped"
+3. the research map button            → how it got there, node by node
+4. uncheck a fact → Rewrite           → the message rebuilds from what is left
+5. a tone chip (Shorter)              → same facts, different register</pre>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“Forty minutes of a rep's research, in about a minute. But the number I care about is the second one — every claim in that message traces to a page I can open.”</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================= 2 -->
+  <article class="run">
+    <header><h2>Two people share a name</h2><span class="tag">edge case · run live</span></header>
+    <div class="body">
+      <span class="label">Input · type exactly this, leave company blank</span>
+      <p class="field">Name:    Michael Chen
+Company: (leave empty)
+Role:    (leave empty)</p>
+
+      <div class="say">
+        <span class="label">Say, before running</span>
+        <p>“The most expensive mistake this process can make isn't a bad sentence — it's researching the wrong person and emailing a real one about them. So here's a name deliberately given with no company.”</p>
+      </div>
+
+      <div class="shows">
+        <span class="label">What it actually returns</span>
+        <pre>status: needs_disambiguation
+identity: 4 plausible matches — waiting for confirmation
+
+  Adventist Healthcare  · Interventional Cardiologist
+  Akin Gump             · Associate, Disputes &amp; Investigations
+  (no company)          · Actor
+  (no company)          · Director of Operations</pre>
+      </div>
+
+      <div class="say">
+        <span class="label">Say, pointing at the four</span>
+        <p>“It found four real people and stopped. It has not spent a research budget, and it has not guessed. The run parks here until someone picks — and picking costs one cheap pass, not a fresh start.”</p>
+      </div>
+
+      <div class="note">
+        <span class="label">If they push</span>
+        <p>“Why not just take the highest-confidence one?” — Because the cost is asymmetric. A wrong pick produces a fluent, confident, completely wrong email to a real person. Stopping costs four seconds.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================= 3 -->
+  <article class="run">
+    <header><h2>Nothing real to say</h2><span class="tag">edge case · run live</span></header>
+    <div class="body">
+      <span class="label">Input · a real-sounding person with no public footprint</span>
+      <p class="field">Name:    Harshad Vaidya
+Company: Kelphi Systems
+Role:    Operations Lead</p>
+
+      <div class="say">
+        <span class="label">Say, before running</span>
+        <p>“Every tool in this space will write you a personalised email about anyone. That's the problem — the model will happily invent a funding round. Watch what this does when there's genuinely nothing.”</p>
+      </div>
+
+      <div class="shows">
+        <span class="label">What it actually returns</span>
+        <pre>research  44 sources — 21 person-level, 23 company-level
+extract   1 candidate fact; 15 facts about a namesake discarded
+          — the source never ties them to Kelphi Systems
+judge     no candidate cleared the eligibility gates
+draft     No specific public signal was found — this is a deliberately
+          generic draft, labelled as such
+
+status: no_signal_found</pre>
+      </div>
+
+      <div class="say">
+        <span class="label">Say — this is the strongest moment in the demo</span>
+        <p>“It read forty-four sources, found fifteen facts about a different Harshad Vaidya, and threw every one of them away because nothing tied that person to this company.”</p>
+        <p>“Then it wrote a generic message and <em>labelled it generic</em>. It would rather hand back an honest blank than a convincing lie. That's the whole design in one screen.”</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================= 4 -->
+  <article class="run">
+    <header><h2>Every optional key is wrong</h2><span class="tag">edge case · run live</span></header>
+    <div class="body">
+      <span class="label">Setup · before the call, start the server with bad keys</span>
+      <p class="field">HUNTER_API_KEY=sk-bad-key-000 \
+QEV_API_KEY=sk-bad-key-000 \
+SUPERCARL_API_KEY=sk-bad-000 \
+uvicorn backend.main:app --port 8000</p>
+
+      <div class="say">
+        <span class="label">Say, before running</span>
+        <p>“Free tiers run out and keys expire — usually on the day you need them. So no provider here is required. Watch what happens when three of them are wrong at once.”</p>
+      </div>
+
+      <div class="shows">
+        <span class="label">What it actually returns · Outbound → Receipts</span>
+        <pre>competitor_discovery  Found 9 competitors
+contact_search        Found 1 contacts across 1 competitors
+email_enrichment      1 of 1 have an address — 1 calculated from the domain
+       x1  Hunter: Hunter rejected the key — check it has not expired
+       x1  Domain convention: derived first.last
+       x1  Verification: rejected the key — check it has not expired
+drafting              1 added to Leads · 1 from the competitor angle
+campaign_creation     Created 1 campaigns
+
+run status: completed</pre>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“It completed. The address is calculated from the company's naming convention instead of looked up, and it says so — on screen, and in the CSV a sequencer would import.”</p>
+        <p>“Three keys failed and the run didn't. The only thing that changed is the reason it gives you.”</p>
+      </div>
+
+      <div class="note">
+        <span class="label">Restart afterwards</span>
+        <p>Kill that server and start a normal one before anything else, or your remaining demos will all run degraded and you'll be explaining it twice.</p>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <h3>Held in reserve</h3>
+
+  <p>Don't run these unless asked — four is already a lot for one call.</p>
+
+  <p><strong>A colleague's fact, dropped.</strong> On a normal run the extract line reads <em>“1 fact about a different person at the company discarded”</em>. It fires on its own; point at it if you see it rather than staging it.</p>
+
+  <p><strong>Only stale facts exist.</strong> The run picks the best of what remains, up to two years back, and says plainly: <em>“nothing recent cleared the bar… read it before sending.”</em></p>
+
+  <p><strong>An address that would bounce.</strong> A derived address verified as invalid is cleared rather than shipped, with the reason <em>“looks like a typo for …”</em>.</p>
+
+  <h3>Two things to check an hour before</h3>
+
+  <p><strong>Run each of these once.</strong> Live search results move; the four candidates for Michael Chen may not be the same four next week. The behaviour will hold — the specific names may not, so don't quote them from memory.</p>
+
+  <p><strong>Have the happy path already open in a tab.</strong> Never let an interviewer watch a loading spinner in the first thirty seconds.</p>
+
+  <p class="foot">Every edge case here is something that broke first, then got a gate. That is the honest answer to “how did you choose these” — they chose themselves.</p>
+
+</div>
+</body>
+</html>

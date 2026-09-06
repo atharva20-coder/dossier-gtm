@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What to Say at Zamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:      #F5F7F4;
+    --card:       #FFFFFF;
+    --ink:        #131A16;
+    --ink-2:      #2E3A33;
+    --muted:      #5B6660;
+    --faint:      #8A948E;
+    --rule:       #E1E6DF;
+    --rule-soft:  #EDF0EB;
+    --accent:     #136F4E;
+    --accent-bg:  #E7F1EA;
+    --warn:       #9A5B0B;
+    --warn-bg:    #FBF1E3;
+
+    --display: "Newsreader", ui-serif, Georgia, serif;
+    --body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0F1311;
+      --card:      #161C19;
+      --ink:       #EDF1EE;
+      --ink-2:     #CBD4CE;
+      --muted:     #93A099;
+      --faint:     #6B7A73;
+      --rule:      #26302B;
+      --rule-soft: #1D2622;
+      --accent:    #5FBF95;
+      --accent-bg: #163024;
+      --warn:      #E0A75C;
+      --warn-bg:   #2C2213;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:     #0F1311;
+    --card:      #161C19;
+    --ink:       #EDF1EE;
+    --ink-2:     #CBD4CE;
+    --muted:     #93A099;
+    --faint:     #6B7A73;
+    --rule:      #26302B;
+    --rule-soft: #1D2622;
+    --accent:    #5FBF95;
+    --accent-bg: #163024;
+    --warn:      #E0A75C;
+    --warn-bg:   #2C2213;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 47rem;
+    margin: 0 auto;
+    padding: 4.5rem 1.5rem 7rem;
+  }
+
+  /* ---------------------------------------------------------- masthead */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.5rem; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: var(--display);
+    font-size: 1.2rem;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+    max-width: 34rem;
+  }
+
+  /* ------------------------------------------------------------ steps */
+  .step { margin-top: 3.75rem; }
+
+  .step-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0 1rem;
+    align-items: baseline;
+  }
+
+  .num {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    padding-top: 0.42rem;
+    border-top: 2px solid var(--accent);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.72rem;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    margin: 0;
+    padding-top: 0.3rem;
+    text-wrap: balance;
+  }
+
+  .step-body { padding-left: 3.6rem; }
+  @media (max-width: 34rem) { .step-body { padding-left: 0; } }
+
+  h3 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.94rem;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p { margin: 0 0 1rem; }
+  .step-body > p:first-child { margin-top: 1.1rem; }
+
+  strong { color: var(--ink); font-weight: 600; }
+  em { font-style: italic; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin-bottom: 0.45rem; }
+  li::marker { color: var(--faint); }
+
+  /* ------------------------------------------------------- say / show */
+  .say, .show {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 1rem 1.15rem;
+    margin: 1.2rem 0;
+    border-radius: 0 5px 5px 0;
+  }
+
+  .show { border-left-color: var(--faint); background: var(--rule-soft); }
+
+  .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .show .label { color: var(--muted); }
+
+  .say p, .show p { margin: 0 0 0.7rem; }
+  .say p:last-child, .show p:last-child { margin-bottom: 0; }
+
+  .say p {
+    font-family: var(--display);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .show p { font-size: 0.95rem; color: var(--ink-2); }
+  .show ul { margin-bottom: 0; }
+  .show li { font-size: 0.95rem; }
+
+  .note {
+    border-left: 3px solid var(--warn);
+    background: var(--warn-bg);
+    padding: 0.9rem 1.15rem;
+    margin: 1.2rem 0;
+    border-radius: 0 5px 5px 0;
+    font-size: 0.95rem;
+  }
+
+  .note .label { color: var(--warn); }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* ------------------------------------------------------------ data */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+  }
+
+  .stat { background: var(--card); padding: 0.95rem 1rem; }
+
+  .stat b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.32rem;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat span {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    line-height: 1.35;
+  }
+
+  .scroll { overflow-x: auto; margin: 1.4rem 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    min-width: 30rem;
+  }
+
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 0.9rem 0.5rem 0;
+  }
+
+  td {
+    border-bottom: 1px solid var(--rule-soft);
+    padding: 0.62rem 0.9rem 0.62rem 0;
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+
+  td:first-child { color: var(--ink); font-weight: 500; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--rule-soft);
+    padding: 0.1em 0.36em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.95rem 1.1rem;
+    overflow-x: auto;
+    margin: 1.2rem 0;
+    color: var(--ink-2);
+  }
+
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .quiet { color: var(--faint); }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 3.25rem 0 0;
+  }
+
+  .close {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--ink);
+    font-family: var(--display);
+    font-size: 1.05rem;
+    color: var(--muted);
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Dossier · demo narrative</p>
+    <h1>What to Say at Zamp</h1>
+    <p class="standfirst">Two things make this different. Lead with those, and let the machinery come out in the questions.</p>
+  </header>
+
+  <div class="note" style="margin-bottom:2.5rem">
+    <span class="label">The brief from Zamp's GTM head</span>
+    <p><strong>Don't walk in and list features.</strong> Pitch the idea. There are two things that make this different from everything else in the category — say those, and let the mechanism come out in the questions.</p>
+    <p>Everything from step 05 onward in this document is an <em>answer</em>, not a script. Steps 01 to 04 are the pitch.</p>
+  </div>
+
+  <!-- ============================================================ 1 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">01</div>
+      <h2>The problem, from watching the job</h2>
+    </div>
+    <div class="step-body">
+      <p>Open here. Not with the product, not with the stack — with the thing you found when you looked at how GTM people actually spend a day.</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“I went and looked at where GTM teams actually lose their time, and it isn't writing. It's the research before it. Scrolling the web, LinkedIn, X — jotting things into a doc. Then later, opening that doc again and trying to write a message out of it.”</p>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“That's two separate costs. Finding the signal, and then re-reading your own notes to turn it into an email. Both take real effort, and the second one is why people stop doing the first.”</p>
+      </div>
+
+      <p>Then land the consequence, because it is the reason the category exists and fails:</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“So most people skip it. They put the company name in a template and send it at scale, and the reply rate tells them exactly what the prospect thought of it.”</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 2 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">02</div>
+      <h2>First thing that's different: it isn't a web search</h2>
+    </div>
+    <div class="step-body">
+      <p>This is the sentence to get right, because “AI researches your prospect” is what every tool in the category claims.</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“This isn't a web search with a nice wrapper. It goes to where a person actually leaves a trail — their LinkedIn, their posts on X — reads the pages, and validates every claim back against the source it came from. You get the complete view of the lead, not a summary of their company's homepage.”</p>
+      </div>
+
+      <p>Then the half people miss, which is about <em>who</em> you contact rather than what you send:</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“And it works the other way round too. Give it a company and it finds the handful of people there actually worth a conversation — instead of running a campaign at everyone in the org and hoping someone bites. Quality leads, not volume.”</p>
+      </div>
+
+      <p>Numbers, only if they want them. These are from the runs on this machine:</p>
+
+      <div class="stats">
+        <div class="stat"><b>1,114</b><span>sources read across all runs</span></div>
+        <div class="stat"><b>307</b><span>from LinkedIn or X — the two biggest by far</span></div>
+        <div class="stat"><b>58%</b><span>of chosen hooks came from LinkedIn or X</span></div>
+        <div class="stat"><b>12 / 24</b><span>hooks about the person, not their employer</span></div>
+      </div>
+
+      <div class="note">
+        <span class="label">Say it precisely</span>
+        <p>Don't say “I scrape LinkedIn” — you don't, and if they ask how you get past the login you'll be caught. Say: <em>site-scoped search across LinkedIn and X, plus a profile provider, and every claim validated against the retrieved text.</em> Accurate, and the stronger answer — validation is the hard part, scraping isn't.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 3 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">03</div>
+      <h2>Second thing: the persona starts at fifteen percent, not zero</h2>
+    </div>
+    <div class="step-body">
+      <p>This is the one nobody else has. Spend the most time here.</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“Once the right leads are identified, it does the full research on each — who they are, what they've been posting on LinkedIn and X recently — and drafts the message. But the interesting part isn't the drafting.”</p>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“You design your own persona on day one. So you don't start at zero — you start at maybe fifteen percent, and the agent writes as you from the first message rather than sounding like a language model.”</p>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“Then it closes the gap by watching you. Every time you edit a draft before it goes out, it looks at what you changed, and after a few consistent edits it writes that down as a rule and applies it from the next message on. You never train it. You just keep editing — which you were going to do anyway. And that's the point: you stay in the loop, nothing sends by itself.”</p>
+      </div>
+
+      <p>If they ask whether that's real or a prompt trick, this is what's actually stored:</p>
+
+      <div class="show">
+        <span class="label">Show · Settings → Learned</span>
+        <ul>
+          <li><strong>Rules it inferred from your edits</strong>, each with how many edits it took.</li>
+          <li>It waits for <strong>three consistent edits</strong> — one edit is a mood, three is a preference.</li>
+          <li>Rules are <strong>corrected, not piled up</strong>: a new rule that contradicts an old one replaces it, and the set is capped.</li>
+          <li>A second list: <strong>which kinds of trigger you actually act on</strong>, learned from what you sent and hand-picked — not from drafts you left alone.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 4 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">04</div>
+      <h2>The GTM thinking underneath it</h2>
+    </div>
+    <div class="step-body">
+      <p>If they want to know how you decided what to build, this is the answer. Four levers, in order of impact on whether a meeting gets booked:</p>
+
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Lever</th><th>Why it ranks there</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Targeting</td><td>A perfect email to the wrong person fails every time</td></tr>
+            <tr><td>Timing</td><td>Is there a reason to reach out <em>this week</em>?</td></tr>
+            <tr><td>Offer relevance</td><td>Does what I sell connect to what they're dealing with?</td></tr>
+            <tr><td>Personalisation</td><td>The craft of the sentence — fourth, not first</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“Personalisation is fourth on that list. Everyone builds for fourth. The research is what gets you the first three.”</p>
+      </div>
+
+      <p>And triggers are not equal. A new exec hired into the relevant function is the strongest signal there is — new leaders change vendors in their first ninety days. A job posting for roles next to your pain is next, and badly under-used. A funding round is high intent but saturated: everyone emails them that week. An award signals nothing about need.</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“Most tools treat a hiring post and a ‘best places to work' award as the same kind of signal. One is evidence of a problem. The other is a press release.”</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 9 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">05</div>
+      <h2>The build, in plain steps</h2>
+    </div>
+    <div class="step-body">
+      <p>Walk the pipeline once, out loud, before touching the screen. Seven steps.</p>
+
+      <div class="show">
+        <span class="label">The pipeline</span>
+        <ul>
+          <li><strong>Resolve who they are.</strong> Two plausible people with the same name? It stops and asks, rather than researching a stranger.</li>
+          <li><strong>Search outward.</strong> Tavily, anchored to the confirmed person — LinkedIn, X, press, podcasts.</li>
+          <li><strong>Traverse.</strong> Follow threads the way a human would, but every query stays anchored to their name, so it can't drift onto their employer's competitors.</li>
+          <li><strong>Extract candidate facts</strong> from the retrieved text.</li>
+          <li><strong>Ground each one.</strong> The entities a fact claims must appear verbatim in the source. Deliberately dumb and deterministic — the model can't talk its way past a string match.</li>
+          <li><strong>Judge.</strong> Score on recency, specificity, safety, and fit to what the writer sells. Pick one hook.</li>
+          <li><strong>Draft</strong> in a saved persona's voice, then check the message actually used the hook's specific detail.</li>
+        </ul>
+      </div>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“Every stage is written to the database as it happens, so if it breaks halfway you get a readable record instead of a spinner — and the screen shows you the reasoning, not just the answer.”</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 5 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">06</div>
+      <h2>The demo, in order</h2>
+    </div>
+    <div class="step-body">
+      <p>Have a finished lead open before you start talking. Never make them watch a loading state.</p>
+
+      <div class="show">
+        <span class="label">Show · lead screen</span>
+        <ul>
+          <li>The <strong>hook</strong> first, and the source link under it. Click through to the real page.</li>
+          <li>The <strong>findings</strong> column — say “this is every fact it considered, and why each one was kept or dropped.”</li>
+          <li>Open the <strong>research map</strong>. This is the moment that lands: it shows how it got there, node by node.</li>
+          <li>Uncheck a fact and press <strong>Rewrite</strong>. The message rebuilds from what's left. <em>“The judge is a rule engine. Rules are wrong sometimes, so you can overrule it.”</em></li>
+          <li>Press a <strong>tone chip</strong> — Casual, Shorter. Same facts, different register.</li>
+        </ul>
+      </div>
+
+      <div class="show">
+        <span class="label">Show · competitor outbound</span>
+        <ul>
+          <li>Type <code>ramp.com</code>. It finds who competes with Ramp, then the decision-makers at each, each one citing the page that named them.</li>
+          <li>Point at the <strong>receipts</strong> tab — every provider's outcome, counted.</li>
+          <li>Open a contact and show the assembled message. Then <strong>“open as lead”</strong> — the campaign contact <em>is</em> a fully researched lead.</li>
+        </ul>
+      </div>
+
+      <p>The number to say out loud, because it's the whole argument:</p>
+
+      <div class="stats">
+        <div class="stat"><b>40 min</b><span>a rep researching one prospect by hand</span></div>
+        <div class="stat"><b>~60 s</b><span>the same research here</span></div>
+        <div class="stat"><b>50</b><span>sources read for one lead</span></div>
+        <div class="stat"><b>0</b><span>facts without a source behind them</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 6 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">07</div>
+      <h2>The three things that prove it's real</h2>
+    </div>
+    <div class="step-body">
+      <p>Anyone can demo a happy path. These are what to volunteer <em>before</em> you're asked, because each one is a bug found and fixed in the open.</p>
+
+      <h3>It refuses to guess who someone is</h3>
+      <p>A namesake's podcast appearance got picked as a hook for the wrong person. So there's a gate: a fact about someone who merely shares the name is dropped, and if two people are genuinely plausible the run stops and asks.</p>
+
+      <h3>It won't take credit for someone else's news</h3>
+      <p>An intern's award at the same company was nearly used as a hook. Now every extracted fact has to name whose it is, and one about a third party is dropped at every level.</p>
+
+      <h3>It never dresses a guess up as a fact</h3>
+      <p>When an address is calculated from a company's naming convention rather than looked up, it says <code>derived</code> — on screen, in the tooltip, and in the CSV a sequencer imports.</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“The verifier returned ‘valid' for an address I invented, because that domain accepts all mail. If I'd trusted it, the tool would have certified a fabricated address as confirmed. It now detects that and refuses to claim it.”</p>
+      </div>
+
+      <div class="note">
+        <span class="label">Handle carefully</span>
+        <p>Don't oversell the address finding. It's a free-tier email finder plus arithmetic, and it says so. Claiming verified data you don't have is exactly the failure the rest of the tool exists to avoid — and they'll spot it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 7 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">08</div>
+      <h2>When they push back</h2>
+    </div>
+    <div class="step-body">
+
+      <h3>“Why wouldn't a rep just use ChatGPT?”</h3>
+      <p>Because it will invent the funding round. The whole system is the machinery that stops that: retrieval, verbatim grounding, and a refusal to write when there's nothing real to say.</p>
+
+      <h3>“Does this actually get used in week three?”</h3>
+      <p>Be honest: most tools like this don't, because reps live in Outreach and HubSpot and copy-pasting forty drafts is worse than not having the tool. That's why there's a CSV export with the columns a sequencer imports — and why the next thing I'd build is the CRM write-back, not more features.</p>
+
+      <h3>“What would you do with real budget?”</h3>
+      <p>A paid enrichment provider for verified contact data, and job-posting and exec-hire feeds — the two highest-intent triggers, which are the ones public search is worst at surfacing.</p>
+
+      <h3>“What's it cost to run?”</h3>
+      <p>Everything here is on free tiers, and I made the app respect them: nothing spends an allowance on a page load, only when a person asks for work. Every provider is optional — no key, wrong key, or out of quota all degrade to the same result, and the run tells you which happened.</p>
+
+      <div class="note">
+        <span class="label">If it breaks live</span>
+        <p>Say what happened and read the receipt off the screen. A tool that reports its own failure clearly is the point you've been making for twenty minutes — don't apologise for it, use it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 8 -->
+  <section class="step">
+    <div class="step-head">
+      <div class="num">09</div>
+      <h2>Close on the honest limitation</h2>
+    </div>
+    <div class="step-body">
+      <p>End on judgment, not features. It's the strongest note available and it can't be faked.</p>
+
+      <div class="say">
+        <span class="label">Say</span>
+        <p>“The thing I'd fix first isn't in the interface. It's that ranking still leans toward the most interesting fact rather than the one that best connects to what you sell. I know exactly where that change goes, and it's a small change with a large effect on quality. That's what I'd do on day one.”</p>
+      </div>
+    </div>
+  </section>
+
+  <hr>
+
+  <p class="close">Read the problem before the product. Show the reasoning, not just the answer. Volunteer the flaw before it's found.</p>
+
+</div>
+</body>
+</html>
