@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Questions They Will Ask</title>
+<title>Questions About Your Thinking</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Petrona:wght@400;600&family=Manrope:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
@@ -20,8 +20,6 @@
     --soft:   #EEEEF3;
     --accent: #3E3F8C;
     --accent-bg: #E9E9F4;
-    --tech:   #1F6B63;
-    --tech-bg: #E4F0EE;
     --warn:   #8C5510;
     --warn-bg: #FAF0E2;
 
@@ -42,8 +40,6 @@
       --soft:   #1C1E26;
       --accent: #9FA0E8;
       --accent-bg: #1D1E34;
-      --tech:   #5FBFB2;
-      --tech-bg: #122926;
       --warn:   #DCA45C;
       --warn-bg: #2A2013;
     }
@@ -60,8 +56,6 @@
     --soft:   #1C1E26;
     --accent: #9FA0E8;
     --accent-bg: #1D1E34;
-    --tech:   #5FBFB2;
-    --tech-bg: #122926;
     --warn:   #DCA45C;
     --warn-bg: #2A2013;
   }
@@ -103,22 +97,34 @@
   .standfirst {
     font-size: 1.08rem;
     color: var(--muted);
-    margin: 0 0 2rem;
-    max-width: 37rem;
+    margin: 0 0 1.5rem;
+    max-width: 38rem;
   }
+
+  .frame {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 2.5rem;
+    font-size: 0.95rem;
+  }
+
+  .frame p { margin: 0 0 0.6rem; }
+  .frame p:last-child { margin: 0; }
 
   h2 {
     font-family: var(--display);
     font-weight: 600;
-    font-size: 1.55rem;
+    font-size: 1.5rem;
     color: var(--ink);
-    margin: 3rem 0 0.4rem;
+    margin: 3rem 0 0.35rem;
     padding-bottom: 0.5rem;
     border-bottom: 2px solid var(--ink);
     text-wrap: balance;
   }
 
-  .section-note { font-size: 0.93rem; color: var(--muted); margin: 0.6rem 0 1.25rem; }
+  .section-note { font-size: 0.92rem; color: var(--muted); margin: 0.6rem 0 1.25rem; }
 
   .qa {
     background: var(--card);
@@ -130,7 +136,7 @@
 
   .q {
     font-family: var(--display);
-    font-size: 1.2rem;
+    font-size: 1.22rem;
     font-weight: 600;
     color: var(--ink);
     margin: 0 0 0.7rem;
@@ -147,9 +153,18 @@
     font-weight: 500;
   }
 
-  .tech .lede { border-left-color: var(--tech); }
+  .tests {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
 
   strong { color: var(--ink); font-weight: 700; }
+  em { font-style: italic; }
 
   code {
     font-family: var(--mono);
@@ -159,21 +174,6 @@
     border-radius: 3px;
     color: var(--ink);
   }
-
-  .tag {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 0.18rem 0.5rem;
-    border-radius: 4px;
-    background: var(--accent-bg);
-    color: var(--accent);
-    margin-bottom: 0.6rem;
-  }
-
-  .tech .tag { background: var(--tech-bg); color: var(--tech); }
 
   .trap {
     border-left: 3px solid var(--warn);
@@ -186,24 +186,12 @@
 
   .trap b { color: var(--warn); }
 
-  pre {
-    font-family: var(--mono);
-    font-size: 11.5px;
-    line-height: 1.5;
-    background: var(--soft);
-    border-radius: 6px;
-    padding: 0.75rem 0.9rem;
-    overflow-x: auto;
-    margin: 0.85rem 0;
-    color: var(--ink-2);
-  }
-
   .foot {
     margin-top: 3.5rem;
     padding-top: 1.2rem;
     border-top: 2px solid var(--ink);
     font-family: var(--display);
-    font-size: 1.05rem;
+    font-size: 1.08rem;
     color: var(--muted);
   }
 </style>
@@ -212,143 +200,147 @@
 <body>
 <div class="wrap">
 
-  <p class="eyebrow">Dossier · anticipated questions</p>
-  <h1>Questions They Will Ask</h1>
-  <p class="standfirst">The ones worth having an answer ready for, split by who is asking. The first line of each is the answer — everything after it is only if they keep pulling.</p>
+  <p class="eyebrow">Dossier · the debrief</p>
+  <h1>Questions About Your Thinking</h1>
+  <p class="standfirst">The brief says they grade the judgment behind your choices, and that the debrief is a conversation about your thinking rather than a second test. These are the questions that actually asks.</p>
 
-  <!-- =================================================== non-technical -->
-  <h2>From the business side</h2>
-  <p class="section-note">A buyer, a GTM lead, a founder. They are testing whether you understand the job, not the stack.</p>
-
-  <div class="qa">
-    <p class="q">Why wouldn't a rep just use ChatGPT for this?</p>
-    <p class="lede">Because it will invent the funding round, and it will do it in fluent English.</p>
-    <p>Ask a model to write a personalised email about someone and it will produce one — including details that are plausible, specific, and untrue. That email goes out under a real person's name. The whole system here is the machinery that stops that: it retrieves real pages, and every claim has to appear in the page before it is allowed into a message.</p>
+  <div class="frame">
+    <p><strong>What they said they care about:</strong> whether the process works, <em>the judgment behind your design choices</em>, and how you explain it to a non-technical buyer. Also: “the ones who do well aren't the ones who build the most — they're the ones who make the best choices about what to build.”</p>
+    <p>So almost every question will be a version of <em>why did you choose that</em>. The strongest answer names the alternative you rejected and what it would have cost. An answer with no rejected option in it sounds like you only thought of one thing.</p>
   </div>
 
-  <div class="qa">
-    <p class="q">How do I know it isn't making things up?</p>
-    <p class="lede">Every claim carries the page it came from, and you can click it.</p>
-    <p>Before a fact is allowed into a draft, the specific things it names — a company, a number, a job title — have to appear word for word in the text that was actually retrieved. It is deliberately a dumb string match, because a model can talk its way past a clever check and cannot talk its way past a literal one.</p>
-  </div>
+  <!-- ==================================================== framing -->
+  <h2>How you framed the problem</h2>
+  <p class="section-note">The first and most revealing questions. They are checking whether you solved the brief or the real problem behind it.</p>
 
   <div class="qa">
-    <p class="q">What happens when there's nothing to find?</p>
-    <p class="lede">It says so, and writes a generic message labelled generic.</p>
-    <p>On one test it read 44 sources, found 15 facts about a different person with the same name, discarded all of them, and returned “no signal found”. Most tools will always produce something confident. This is the one behaviour I would not trade away — an honest blank is recoverable, a convincing lie is not.</p>
+    <span class="tests">tests · did you read past the brief</span>
+    <p class="q">Why did you pick PS-3?</p>
+    <p class="lede">Because the bottleneck in it isn't writing, and every tool in that space is built as if it were.</p>
+    <p>The brief describes an SDR who can't spend twenty minutes a prospect. The obvious reading is “make the writing faster”. But writing is the cheap half — the expensive half is finding a reason to write at all, and then re-reading your own notes to turn it into a sentence. I picked it because the obvious solution and the correct one are different, which is where there's something to prove.</p>
   </div>
 
   <div class="qa">
-    <p class="q">How is this different from Apollo, Clay, or Lavender?</p>
-    <p class="lede">They help you send more. This decides whether you should send at all, and to whom.</p>
-    <p>The list-building tools give you contacts; the writing tools give you sentences. Neither answers “is there a reason to contact this person this week”. That's the expensive judgment a rep makes forty times a day, and it's the one being automated here.</p>
+    <span class="tests">tests · do you know what you're optimising</span>
+    <p class="q">What does “good” look like for a hook? How did you decide?</p>
+    <p class="lede">Recent, about the person rather than their employer, and connected to what the sender sells. In that order.</p>
+    <p>I started with just recent and specific, and it produced hooks that were true and useless — a decade-old research paper, a headquarters address. The missing dimension was the sender: the system was optimising for the most <em>interesting</em> fact about a person rather than the one that gives you a reason to write. Once the sender's product and problem feed into ranking, the same fact set produces a different, better answer.</p>
+    <div class="trap"><b>Follow-up to expect:</b> “How do you know it's better?” Be honest — you can't measure reply rate on a case study. What you can measure is the share of runs producing a person-level hook rather than a company-level one, and that's the leading indicator worth watching.</div>
   </div>
 
   <div class="qa">
-    <p class="q">Will a rep still be using it in week three?</p>
-    <p class="lede">Only if it stops needing copy-paste — which is why the export exists and the CRM write-back is next.</p>
-    <p>Be honest here. Tools like this die because reps live in Outreach and HubSpot, and a separate app producing drafts they have to move by hand gets abandoned. The CSV export has the columns a sequencer imports. Writing back into a CRM is the first thing I would build with real budget, ahead of any new feature.</p>
-    <div class="trap"><b>Trap:</b> don't answer this with enthusiasm. They are checking whether you know the failure mode. Naming it is the answer.</div>
+    <span class="tests">tests · scope judgment</span>
+    <p class="q">What did you decide not to build?</p>
+    <p class="lede">A sequencer, a CRM connector, and bulk sending — the last one deliberately, not for lack of time.</p>
+    <p>The first two are the right next things and both are integration work rather than judgment work: they'd have eaten the week and demonstrated nothing about how the process decides. Bulk send I left out on principle. A campaign that can mail forty strangers on one click is a different product with a different blast radius, and the guardrail is worth more than the feature.</p>
+  </div>
+
+  <!-- ================================================== edge cases -->
+  <h2>Why those edge cases</h2>
+  <p class="section-note">The brief says the edge cases you choose tell them how well you understand the problem. Expect this to be pressed.</p>
+
+  <div class="qa">
+    <span class="tests">tests · do you know where it really breaks</span>
+    <p class="q">Why these edge cases and not others?</p>
+    <p class="lede">Because each one is a way of being confidently wrong, and confidently wrong is the only failure that reaches a real person.</p>
+    <p>A slow run is annoying. A crash is visible. But an email about the wrong Michael Chen, or congratulating someone on a colleague's award, is fluent, plausible, and lands in a stranger's inbox under a real name. I picked the failures that <em>look like success</em>, because those are the ones nobody catches.</p>
+    <p>They also weren't chosen in advance. Every one is something that actually happened while building — a namesake's podcast got picked as a hook, an intern's award nearly went out to an executive. They chose themselves.</p>
   </div>
 
   <div class="qa">
-    <p class="q">Who else could use this?</p>
-    <p class="lede">A recruiter, an investor, a partnerships lead — the mechanic is the same, the weights are different.</p>
-    <p>A recruiter wants the same research inverted: the hook is why they'd want to move. An investor wants the funding signal that outbound teams deprioritise as saturated. The only thing that changes is which triggers matter, and that is configuration, not a rebuild.</p>
+    <span class="tests">tests · do you understand cost asymmetry</span>
+    <p class="q">When two people share a name, why stop and ask instead of picking the most likely?</p>
+    <p class="lede">Because the two outcomes cost wildly different amounts and the confidence score doesn't know that.</p>
+    <p>Guessing right saves four seconds. Guessing wrong produces a well-researched email about a stranger, sent under your name, to someone who can tell immediately. That asymmetry doesn't show up in a confidence number, so it has to be a rule. The same logic decides what happens when nothing is found — it writes a generic message and labels it generic, rather than inventing something to say.</p>
   </div>
 
   <div class="qa">
-    <p class="q">How would you know if it's working?</p>
-    <p class="lede">Reply rate against the same rep's own baseline — and before that, how often it declines.</p>
-    <p>The leading indicator is available immediately: what share of leads produce a real person-level hook rather than a company-level one or nothing. If that number is low the list is wrong, and no amount of writing quality fixes a bad list.</p>
+    <span class="tests">tests · can you reason about a limit you can't remove</span>
+    <p class="q">What happens when the research is just wrong?</p>
+    <p class="lede">Sometimes it will be, and the design assumes that rather than pretending otherwise.</p>
+    <p>Every claim is checked back against the retrieved page, which stops invention but not misinterpretation — a real sentence can still be read wrongly. So the human stays in the loop by construction: every fact is shown with its source, any of them can be excluded and the message rebuilt, and nothing sends by itself. The system is designed to be <em>corrected</em>, not trusted.</p>
+  </div>
+
+  <!-- ================================================== changed mind -->
+  <h2>Where you changed your mind</h2>
+  <p class="section-note">The highest-signal question in the whole interview, and the one candidates most often have no answer to.</p>
+
+  <div class="qa">
+    <span class="tests">tests · can you tell when you're wrong</span>
+    <p class="q">Walk me through a decision you reversed.</p>
+    <p class="lede">Ranking. I tried to solve it with arithmetic four times before accepting the arithmetic was the wrong instrument.</p>
+    <p>Facts get scored on recency, source quality, relevance. Each fix produced a <em>different</em> wrong answer — a work anniversary, then a decade-old exam result, then a role at a company he'd left. Four attempts in, the number of attempts was the evidence: a multiplier lets a well-evidenced trivial fact climb past a plainly better one, because the comparison is between facts, not within them.</p>
+    <p>So I replaced it with an explicit ordering — what they said themselves, then their current job, then anything else, then a former employer — where the band beats the score outright. And then one final judgment across the shortlist, because “of these eight, which is worth opening with” isn't an arithmetic question.</p>
+    <div class="trap"><b>Say the number.</b> “Four attempts” is the part that shows judgment. Saying “I iterated on the ranking” conveys nothing.</div>
   </div>
 
   <div class="qa">
-    <p class="q">What does it cost to run?</p>
-    <p class="lede">About fifteen searches a prospect, all on free tiers today.</p>
-    <p>Roughly sixty-five fully researched prospects a month within the free search allowance. The app counts its own usage and warns before the budget runs out, because a campaign that dies halfway is worse than one that never started.</p>
+    <span class="tests">tests · do you revisit assumptions</span>
+    <p class="q">What did you learn about the problem that you didn't know at the start?</p>
+    <p class="lede">That most facts have no usable date, which quietly breaks the thing recency-based ranking rests on.</p>
+    <p>I'd assumed dates would be there. About a third of extracted facts have none, and worse, some arrive stamped with today's date because the extractor defaults to “now” when it can't find one — and today scores maximum freshness. So the facts it could <em>not</em> date were outranking the ones it could. The fix was to distrust any date on or after the run date, and to rank undated facts on how well evidenced they are instead.</p>
   </div>
 
-  <!-- ======================================================= technical -->
-  <h2>From the technical side</h2>
-  <p class="section-note">An engineer or a technical founder. They are testing whether the decisions were made or inherited.</p>
-
-  <div class="qa tech">
-    <span class="tag">architecture</span>
-    <p class="q">Why build it rather than wire up n8n or Zapier?</p>
-    <p class="lede">Because the hard part isn't the plumbing, it's the judgment between steps.</p>
-    <p>A node graph is excellent at “call this, then that”. Almost none of this system is that. It is: does this fact belong to this person, does the source actually say it, which of eight candidates is worth opening with, what happens when a provider is out of quota. Those are decisions with reasons that need to be written down and shown to a user, not boxes with arrows.</p>
+  <div class="qa">
+    <span class="tests">tests · intellectual honesty</span>
+    <p class="q">What's the assumption you're least sure about?</p>
+    <p class="lede">That a person-level hook is always better than a company-level one.</p>
+    <p>It's baked into the ordering and I believe it, but I've seen counter-examples in my own output: for someone whose company just moved its whole product onto AI agents, that company fact is a far better opener than anything personal. The current design treats the tier as a hard ordering. A more honest version would let a strong-enough company signal cross the band boundary, and I don't yet know where that threshold sits.</p>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">reliability</span>
-    <p class="q">How do you stop the model hallucinating?</p>
-    <p class="lede">Extraction declares the entities a fact names, and those are string-matched against the retrieved text. No match, no fact.</p>
-    <p>The check is deliberately not intelligent. A model asked “is this supported?” can be argued with; <code>"Accel" in source_text</code> cannot. It costs recall — a correctly-paraphrased fact sometimes fails — and that trade is the right way round when the output is an email to a stranger.</p>
+  <!-- ================================================== explaining -->
+  <h2>Explaining it to someone non-technical</h2>
+  <p class="section-note">Graded explicitly. They may literally ask you to do it in the room.</p>
+
+  <div class="qa">
+    <span class="tests">tests · can you drop the jargon</span>
+    <p class="q">Explain what this does to an SDR who's never used an AI tool.</p>
+    <p class="lede">“Give it a name and a company. It does the reading you don't have time for, then writes the email — and shows you the page every claim came from.”</p>
+    <p>Then the one rule: it isn't allowed to make anything up. If it can't point at a page, the claim doesn't survive. Everything else in the build is machinery to enforce that sentence.</p>
+    <div class="trap"><b>Don't say:</b> pipeline, grounding, extraction, provenance, multiplier. If you use one, you've failed the question — and the question is being asked on purpose.</div>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">design</span>
-    <p class="q">Why one model call at the end instead of just scoring the facts?</p>
-    <p class="lede">Because I tried scoring first, four times, and it kept picking the wrong thing.</p>
-    <p>Per-fact arithmetic ranked a work anniversary, then a decade-old exam result, then a role at a former employer above a live product launch. Each fix produced a different wrong answer, which was the evidence that the comparison is <em>between</em> facts rather than within them. Rules now narrow to a shortlist and one judgment picks from it — and it can decline, and any failure falls back to the ranked order.</p>
-    <pre>gates      → safety, specificity, wrong person, wrong company
-bands      → what they said &gt; what happened to them &gt; their employer
-scores     → order within a band
-one call   → chooses among the top 8, or declines</pre>
+  <div class="qa">
+    <span class="tests">tests · commercial realism</span>
+    <p class="q">Why wouldn't a rep just do this themselves? They're better at it.</p>
+    <p class="lede">They are better at it. They just don't do it — that's the whole problem.</p>
+    <p>A rep researching properly beats this every time on one prospect. But they have two hundred, so they don't research at all, they template it, and the reply rate reflects that. This isn't competing with a rep doing their best work. It's competing with the version of the email they actually send on a Thursday afternoon.</p>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">data</span>
-    <p class="q">Why not embeddings or a vector store?</p>
-    <p class="lede">Nothing here is a similarity problem.</p>
-    <p>The questions are “is this the same person”, “does this string appear in that page”, “is this date older than the window”. Those are exact operations. A vector store would add infrastructure, a failure mode, and fuzziness to three questions that need to be answered precisely.</p>
+  <div class="qa">
+    <span class="tests">tests · do you know how tools like this die</span>
+    <p class="q">Would a rep still be using this in week three?</p>
+    <p class="lede">Not as it stands — because it lives outside the tools they already work in.</p>
+    <p>That's the documented failure mode for this category: enthusiastic in week one, abandoned by week three, because reps live in Outreach and HubSpot and copying drafts across by hand is worse than not having the tool. The CSV export is the stopgap. Writing back into the CRM is the first thing I'd build with real budget, ahead of any new capability.</p>
+    <div class="trap"><b>Trap:</b> this is a test of self-awareness, not optimism. Answering “yes, they'd love it” fails it.</div>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">infrastructure</span>
-    <p class="q">Why Postgres, and why does the connection setup look unusual?</p>
-    <p class="lede">Serverless functions open and discard connections constantly, so everything goes through a transaction-mode pooler with prepared statements off.</p>
-    <p>Transaction mode hands each transaction a different backend, so a prepared statement from one is missing on the next — an intermittent failure that only appears under real concurrency. The cost is roughly two round trips per query, which makes proximity the dominant performance factor: moving the database from Sydney to Mumbai took page loads from 4.5 seconds to 25 milliseconds.</p>
+  <!-- ================================================== forward -->
+  <h2>What you'd do next</h2>
+  <p class="section-note">They're checking whether you can prioritise when everything is possible.</p>
+
+  <div class="qa">
+    <span class="tests">tests · prioritisation</span>
+    <p class="q">Another week. What do you build?</p>
+    <p class="lede">Follow-ups, then CRM write-back. Not more research.</p>
+    <p>Research quality is the part that's already good enough to judge. What's missing is what happens <em>after</em> the first message: a second and third touch that know what the first one said and how long ago, and a way for the result to land where the rep already works. One reply comes from persistence far more often than from a better opening line.</p>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">reliability</span>
-    <p class="q">What happens when a provider is down or out of quota?</p>
-    <p class="lede">The run finishes. Only the reason changes.</p>
-    <p>Every optional provider — email finder, verifier, profile lookup — degrades to the free path, and each failure is classified: no key, key rejected, out of quota, unreachable. All four behave identically and read differently, because “found nothing” and “never looked” lead to different actions. Every request has a twelve-second timeout: the default was five minutes, which would have stalled a forty-contact campaign for hours on one unreachable host.</p>
+  <div class="qa">
+    <span class="tests">tests · scale thinking</span>
+    <p class="q">I give you two hundred prospects tomorrow. What happens?</p>
+    <p class="lede">It runs, and the search quota is what stops it — not the code.</p>
+    <p>About fifteen searches a prospect, so two hundred is three thousand, which is beyond the free tier. Runs are already concurrent but bounded, and the app counts its own usage and stops cleanly with a reason rather than dying halfway. At that volume the interesting question stops being “can it draft two hundred” and becomes “which twenty are worth a human's attention today” — which is the prioritisation the ICP score and hook strength already produce, and which I'd make the main screen.</p>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">scale</span>
-    <p class="q">What breaks first at ten thousand leads?</p>
-    <p class="lede">The search quota, then wall-clock time — not the database.</p>
-    <p>Fifteen searches a lead makes 150,000, so the free tier is gone at around sixty-five. After that it is throughput: research runs concurrently but bounded at three, because the searches inside each run are already parallel and an unbounded fan-out is a self-inflicted rate limit. The database is doing almost nothing by comparison.</p>
+  <div class="qa">
+    <span class="tests">tests · where you spent the week</span>
+    <p class="q">Where did most of your time go, and was that right?</p>
+    <p class="lede">Deciding which fact to open with — far more than on research or writing. And yes, though I'd get there faster now.</p>
+    <p>Retrieval was largely solved in a day. Writing is a prompt. The hard, ambiguous part — worth the time — was judgment: which of thirty facts deserves the first sentence, and how to be right about that for a person you know nothing about. What I'd change is stopping sooner when a tuning approach kept producing different wrong answers.</p>
   </div>
 
-  <div class="qa tech">
-    <span class="tag">product</span>
-    <p class="q">Why is there no “send all”?</p>
-    <p class="lede">Because it is the one action that reaches a real person and cannot be undone.</p>
-    <p>Sending is one contact per request, with the address shown before the button, a second confirmation, and a stored record so a resend has to be deliberate. Re-running research deliberately does not clear that record — nothing about researching someone again should erase the fact that they were already emailed.</p>
-  </div>
-
-  <div class="qa tech">
-    <span class="tag">testing</span>
-    <p class="q">How did you test something this non-deterministic?</p>
-    <p class="lede">By separating what is deterministic from what isn't, and testing the first part hard.</p>
-    <p>The model's output varies; the gates do not. Same-name detection, the grounding check, date parsing, ranking bands, address derivation, provider failure handling — all pure functions with checks. The parts that genuinely vary get judged by running them on real people and reading the output, which is also how the four ranking bugs were found.</p>
-    <div class="trap"><b>If they ask why tests aren't in the repo:</b> say plainly that they were written, used to find real bugs, and removed before submission to keep the deliverable lean — and that removing them was a judgment call you would reverse for anything ongoing.</div>
-  </div>
-
-  <div class="qa tech">
-    <span class="tag">honesty</span>
-    <p class="q">What's the weakest part?</p>
-    <p class="lede">Dates. Roughly a third of extracted facts carry no usable date, and some arrive stamped with today's.</p>
-    <p>Extraction stamps the run date on facts it cannot date, and because “today” scores maximum freshness, the facts it could <em>not</em> date were outranking the ones it could. A date on or after the run date is now treated as no date. It is a real fix and a workaround: the correct version is extraction returning a confidence on the date, which is a data-model change I did not have time for.</p>
-  </div>
-
-  <p class="foot">The strongest answer to any of these is a specific failure and what it changed. Every decision here has one behind it — reach for that before reaching for the general principle.</p>
+  <p class="foot">Nearly every answer here has a specific failure or a rejected alternative in it. That's not decoration — it's the difference between describing what you built and showing how you decided.</p>
 
 </div>
 </body>
