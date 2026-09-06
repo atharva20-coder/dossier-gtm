@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Decision Record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Public+Sans:wght@400;500;700&family=Source+Code+Pro:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:  #F5F3F1;
+    --card:   #FFFFFF;
+    --ink:    #1B1817;
+    --ink-2:  #35302E;
+    --muted:  #6A6360;
+    --faint:  #9C9490;
+    --rule:   #E4DFDC;
+    --soft:   #EDE9E6;
+    --accent: #8A2F3B;
+    --accent-bg: #F6E9EA;
+    --good:   #2A6146;
+    --good-bg: #E7F0EB;
+    --warn:   #8A5A12;
+    --warn-bg: #FAF0DE;
+
+    --display: "Crimson Pro", ui-serif, Georgia, serif;
+    --body: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Source Code Pro", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:  #131110;
+      --card:   #1B1918;
+      --ink:    #F0EDEB;
+      --ink-2:  #D2CCC8;
+      --muted:  #9B938E;
+      --faint:  #6E6763;
+      --rule:   #2A2624;
+      --soft:   #201D1C;
+      --accent: #DE8592;
+      --accent-bg: #2E1A1D;
+      --good:   #6BBE95;
+      --good-bg: #14271E;
+      --warn:   #DBA55C;
+      --warn-bg: #2A2013;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:  #131110;
+    --card:   #1B1918;
+    --ink:    #F0EDEB;
+    --ink-2:  #D2CCC8;
+    --muted:  #9B938E;
+    --faint:  #6E6763;
+    --rule:   #2A2624;
+    --soft:   #201D1C;
+    --accent: #DE8592;
+    --accent-bg: #2E1A1D;
+    --good:   #6BBE95;
+    --good-bg: #14271E;
+    --warn:   #DBA55C;
+    --warn-bg: #2A2013;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 15.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 51rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.85rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.3rem, 6vw, 3.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.7rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: var(--display);
+    font-size: 1.25rem;
+    line-height: 1.45;
+    color: var(--muted);
+    margin: 0 0 2rem;
+    max-width: 36rem;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.7rem;
+    color: var(--ink);
+    margin: 3.5rem 0 0.3rem;
+    text-wrap: balance;
+  }
+
+  .phase-note {
+    font-size: 0.92rem;
+    color: var(--muted);
+    margin: 0 0 1.4rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  /* --------------------------------------------------------- records */
+  .rec {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 9px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .ask {
+    font-family: var(--display);
+    font-size: 1.18rem;
+    font-weight: 600;
+    line-height: 1.32;
+    color: var(--ink);
+    margin: 0 0 0.7rem;
+  }
+
+  .ask::before {
+    content: "You asked";
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 400;
+    margin-bottom: 0.25rem;
+  }
+
+  .row { margin-bottom: 0.6rem; }
+  .row:last-child { margin-bottom: 0; }
+
+  .row > b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 400;
+    margin-bottom: 0.15rem;
+  }
+
+  .row p { margin: 0 0 0.45rem; }
+  .row p:last-child { margin-bottom: 0; }
+
+  .impact {
+    border-left: 3px solid var(--good);
+    background: var(--good-bg);
+    padding: 0.6rem 0.85rem;
+    border-radius: 0 5px 5px 0;
+    margin-top: 0.7rem;
+    font-size: 0.92rem;
+  }
+
+  .impact > b { color: var(--good); }
+
+  .mine {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 0.6rem 0.85rem;
+    border-radius: 0 5px 5px 0;
+    margin-top: 0.7rem;
+    font-size: 0.92rem;
+  }
+
+  .mine > b { color: var(--accent); }
+
+  strong { color: var(--ink); font-weight: 700; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--soft);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 11.3px;
+    line-height: 1.5;
+    background: var(--soft);
+    border-radius: 5px;
+    padding: 0.65rem 0.85rem;
+    overflow-x: auto;
+    margin: 0.6rem 0;
+    color: var(--ink-2);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .stat { background: var(--card); padding: 0.85rem 1rem; }
+
+  .stat b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .stat span {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 0.15rem;
+    line-height: 1.35;
+  }
+
+  .foot {
+    margin-top: 3.5rem;
+    padding-top: 1.3rem;
+    border-top: 2px solid var(--ink);
+    font-family: var(--display);
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Dossier · every decision and what caused it</p>
+  <h1>The Decision Record</h1>
+  <p class="standfirst">What was asked for, why it mattered, what changed, and how it was proved. Including the things that were got wrong first.</p>
+
+  <div class="stats">
+    <div class="stat"><b>214</b><span>decisions recorded in the repo</span></div>
+    <div class="stat"><b>16</b><span>commits, each naming its cause</span></div>
+    <div class="stat"><b>9</b><span>bugs found by testing, not review</span></div>
+    <div class="stat"><b>6</b><span>attempts at ranking before it was right</span></div>
+  </div>
+
+  <!-- ================================================== phase: interface -->
+  <h2>Making it usable</h2>
+  <p class="phase-note">The build worked. It did not yet behave like a product someone would open twice.</p>
+
+  <div class="rec">
+    <p class="ask">Make it work on small screens.</p>
+    <div class="row"><b>Why it mattered</b><p>A four-pane layout is four screens on a phone, and an interviewer may open it on one.</p></div>
+    <div class="row"><b>What changed</b><p>Below 1024px the panes become tabs — chosen in JavaScript, not CSS. Two copies behind <code>hidden lg:*</code> would mount every pane twice, firing every request twice and letting the hidden copy drift out of sync.</p></div>
+    <div class="impact"><b>Also fixed:</b> <code>h-screen</code> → <code>h-dvh</code>, because mobile browsers count their collapsing address bar in <code>vh</code> and the chat box was sitting underneath it.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Add a dark theme with a switcher.</p>
+    <div class="row"><b>Why it mattered</b><p>Roughly 180 hardcoded hex values meant the app could only ever be light.</p></div>
+    <div class="row"><b>What changed</b><p>Each shade became a role-named variable — one per shade that existed, not a tidied semantic scale, so light mode renders byte-identical to the design it was matched against. Dark was recomputed rather than inverted: a straight inversion collapses <code>#FAFAFA</code> and <code>#FFFFFF</code> into one flat black and the message stops reading as a card.</p></div>
+    <div class="impact"><b>Caught in the sweep:</b> <code>ring-offset</code> defaults to white — a bright halo around the selected persona on a dark rail — and <code>text-white</code> on ink-filled buttons had to flip while the same class on blue and green buttons had to stay.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">The persona modal only opens on the second click.</p>
+    <div class="row"><b>Why it mattered</b><p>You reported it twice. The code was already correct, which meant the bug was somewhere else.</p></div>
+    <div class="row"><b>What changed</b><p>The server sent <em>no</em> <code>Cache-Control</code> on <code>index.html</code>, so browsers cached it heuristically and kept loading a bundle that had been replaced.</p></div>
+    <div class="impact"><b>The same class of bug returned later</b> and cost more: API responses had no cache header either, so a run re-read straight after the assistant rewrote it came back as the copy from <em>before</em> the rewrite. Now <code>no-store</code> on everything under <code>/api/</code>.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Rebuild the dashboard like this reference.</p>
+    <div class="row"><b>Why it mattered</b><p>It was a table. The question a rep asks is "who do I work today", which a table does not answer.</p></div>
+    <div class="row"><b>What changed</b><p>Stat tiles, an area chart, stacked bars, ranked categories, avatars. Hand-drawn SVG rather than a chart library — three forms of a few dozen lines each against ~180KB of runtime and a second dependency to keep in step with the theme.</p></div>
+    <div class="impact"><b>Colour was computed, not chosen.</b> The palette was run through a validator: ordinal ramp, one hue, monotone lightness, pale end clearing the surface at 2.11:1 light and 2.25:1 dark. Outcomes use an ordinal ramp rather than categorical hues because the three outcomes are <em>ranked</em>, not merely different.</div>
+  </div>
+
+  <!-- ================================================== phase: sending -->
+  <h2>Letting it send</h2>
+  <p class="phase-note">The one action that reaches a real person and cannot be undone.</p>
+
+  <div class="rec">
+    <p class="ask">Add a real send button. Use Gmail and an app password.</p>
+    <div class="row"><b>Why it mattered</b><p>A tool that drafts but cannot send is a demo. A tool that can send carelessly is a liability.</p></div>
+    <div class="row"><b>What changed</b><p>SMTP over STARTTLS in a thread, so a blocking socket cannot stall the event loop. Every guard lives in one function so the rules cannot differ by screen: blocked relationship, unparseable address, empty draft, already-sent-without-confirmation.</p></div>
+    <div class="impact"><b>Login became the mailbox.</b> Signing in with the sending account's own credential means whoever is signed in is demonstrably the person the messages come from — compared in constant time on both halves so the address is not enumerable.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Send one to this address.</p>
+    <div class="row"><b>Why it mattered</b><p>Nothing had ever actually been sent. Everything up to that point was theory.</p></div>
+    <div class="row"><b>What changed</b><p>One real message, through the production path, to the address you named. The resend guard then refused a second attempt with <em>"Already sent… Confirm again to send another."</em></p></div>
+    <div class="impact"><b>Proved on a real record</b>, not a mock: credential, SMTP path, sent indicator, and the guard all worked. <code>reset_run</code> deliberately does not clear that record — re-running research must never erase the fact that someone was emailed.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">No campaign should be able to mail everyone.</p>
+    <div class="row"><b>Why it mattered</b><p>A campaign that can mail forty strangers from one button is a different product with a different blast radius.</p></div>
+    <div class="row"><b>What changed</b><p>One contact per request, everywhere. There is no bulk send and the interface says so under the button.</p></div>
+  </div>
+
+  <!-- ================================================= phase: providers -->
+  <h2>Living on free tiers</h2>
+  <p class="phase-note">Every provider optional, every allowance visible, nothing spent by accident.</p>
+
+  <div class="rec">
+    <p class="ask">The app must work if keys are missing or expired.</p>
+    <div class="row"><b>Why it mattered</b><p>Free tiers run out, usually on the day you need them.</p></div>
+    <div class="row"><b>What changed</b><p>Absent, wrong and out-of-quota now behave identically — the run completes, only the reason differs. Verified by running the whole pipeline with three keys deliberately set to garbage.</p></div>
+    <div class="mine"><b>Two real problems found doing it:</b> no HTTP timeouts anywhere — aiohttp defaults to <strong>five minutes</strong>, so one unreachable host would have stalled a forty-contact campaign for hours. And an expired key was reported as <em>"no match"</em>, which is the one message that stops someone fixing it.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Apollo is paid. Not using it. PDL either.</p>
+    <div class="row"><b>Why it mattered</b><p>The plan assumed Apollo's <code>api_search</code> was credit-free. It is not.</p></div>
+    <div class="row"><b>What changed</b><p>Both removed entirely rather than left behind a key. A paid dependency for something the free path already does is not a fallback, it is a branch that never executes — every run in the repo had gone through the search path anyway.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">All the APIs are free and limited. Never spend on a page load.</p>
+    <div class="row"><b>Why it mattered</b><p>This was worse than it looked.</p></div>
+    <div class="row"><b>What changed</b><p><code>/api/health</code> was making <strong>a real Tavily search and a real Gemini call</strong>, cached five minutes. A tab left open all day was spending search credits to draw a status badge. It now answers from configuration alone; a single "Check now" button in Setup is the only thing that spends.</p></div>
+    <div class="impact"><b>Measured:</b> four page loads → <strong>zero</strong> provider calls. The app also counts its own Tavily searches, because Tavily exposes no endpoint to ask what is left, and warns before a campaign dies halfway.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Here is a Hunter key.</p>
+    <div class="row"><b>Why it mattered</b><p>Testing it against the live API immediately exposed a bug in how it was read.</p></div>
+    <div class="row"><b>What changed</b><p>Hunter returns <code>status</code> nested under <code>verification</code>, not at the top level. The code read the top level, so it was always <code>None</code> — Hunter's own "valid" was discarded, the paid credit wasted, and a correct verified address fell through to a calculated guess.</p></div>
+    <div class="impact"><b>And the verifier caught a fabricated address:</b> QuickEmailVerification returns "valid" for an invented mailbox at an accept-all domain. Trusting it would have certified a made-up address as confirmed. Verification now also requires <code>safe_to_send</code> and not <code>accept_all</code> — and every field arrives as the <em>string</em> "true"/"false", where <code>bool("false")</code> is <code>True</code>.</div>
+  </div>
+
+  <!-- ================================================== phase: outbound -->
+  <h2>Competitor outbound</h2>
+  <p class="phase-note">One instruction, from a company to a set of drafted messages.</p>
+
+  <div class="rec">
+    <p class="ask">Build competitor outbound. Also — I built some of it myself.</p>
+    <div class="row"><b>Why it mattered</b><p>You had written the schema, the DB layer and the routes before saying so.</p></div>
+    <div class="mine"><b>What went wrong:</b> I wrote two files with <code>cat &gt;</code> without checking they existed, and destroyed <code>outbound.py</code> and <code>competitors.py</code>. I only noticed when your route answered a request with an error string I had not written. Both were recovered byte-exact from your IDE's transcript log, my duplicates deleted, and your schema adopted over mine — it was the better fit.</div>
+    <div class="row"><b>What changed</b><p>Your architecture kept; the parts that could not run fixed. Nothing imported on Python 3.9, <code>competitors.py</code> called two functions that do not exist, <code>aiohttp</code> was never declared as a dependency, and the verifier deleted good addresses whenever it was unconfigured.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Campaign contacts should be treated like leads.</p>
+    <div class="row"><b>Why it mattered</b><p>Only the first three became leads. The rest existed solely inside the campaign and could not be opened or re-researched.</p></div>
+    <div class="row"><b>What changed</b><p>Every contact gets a lead row. Creating one is free; researching is what costs, so the rest arrive queued and can be run individually whenever they are worth it.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Don't limit research to three. Track credits. Make it faster.</p>
+    <div class="row"><b>What changed</b><p>The count-based cap became a budget-based one, checked before each contact rather than once at the start, with a reserve held back so a campaign already under way can finish. Contacts research concurrently, bounded at three.</p></div>
+    <div class="impact"><b>Measured:</b> four contacts fully researched in <strong>98 seconds</strong> against roughly four minutes in series. Running out degrades rather than fails — contacts still found, addresses still worked out, only the deep research stops, and the receipt says which.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">The persona should always write the drafts.</p>
+    <div class="row"><b>Why it mattered</b><p>The opener used the full persona brief. The template — the larger half of every message — reduced it to name and character, dropping the writing instructions, the seniority stance and every learned rule.</p></div>
+    <div class="row"><b>What changed</b><p>Both halves now use the same brief. A persona whose instruction says <em>three sentences, direct, engineer-to-peer</em> previously produced five corporate ones.</p></div>
+  </div>
+
+  <!-- =================================================== phase: ranking -->
+  <h2>Choosing the right hook</h2>
+  <p class="phase-note">The longest thread, six attempts, and the one where being wrong repeatedly was the useful signal.</p>
+
+  <div class="rec">
+    <p class="ask">It picked the wrong hook for Maheedhar.</p>
+    <div class="row"><b>Why it mattered</b><p>It opened on a work anniversary rather than the company's move to AI agents — and refusing to accept that was right.</p></div>
+    <div class="row"><b>What changed, in order</b>
+      <pre>1  undated facts scored 0.35, beating dated ones → 0.22
+2  an undated fact inherits a stale twin's age
+3  relevance to what you sell became a multiplier
+4  "AI" was being dropped by a 3-character token floor
+5  a third of dates were the run's own date — distrusted
+6  the person-tier boost required a real trigger, not "other"</pre></div>
+    <div class="mine"><b>What I got wrong:</b> all six of those were multiplier tuning, and each produced a <em>different</em> weak hook — anniversary, then a 2014 exam result, then a former employer. Four attempts in, the number of attempts was itself the evidence that arithmetic was the wrong instrument. I should have stopped at two.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Give more weight to posts and reposts, then his current job.</p>
+    <div class="row"><b>Why it mattered</b><p>This was the correction. Not another weight — an ordering.</p></div>
+    <div class="row"><b>What changed</b>
+      <pre>band 0   what they said or did themselves
+band 1   their current job, and that company now
+band 2   anything else about them
+band 3   a company that is not theirs any more</pre>
+      <p>Bands beat scores. Within a band the score decides everything; across bands it gets no vote — so no amount of corroboration lets a former employer outrank a post from last week.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Don't exclude anything. Learn to prioritise. Always make a collective call.</p>
+    <div class="row"><b>Why it mattered</b><p>Age was a hard gate, which threw away the only thing that often says who a person is. And scoring facts one at a time cannot answer "of these eight, which is worth opening with".</p></div>
+    <div class="row"><b>What changed</b><p>Age became a penalty that keeps falling and never reaches zero. Career history is kept and passed to the drafter as background, fenced off, with the current employer named and the rest labelled former. Then the rules narrow to a shortlist of eight and <strong>one judgment decides among them</strong> — or declines, falling back to the ranked order.</p></div>
+    <div class="impact"><b>Result:</b> it overrode the arithmetic's top choice and picked <em>"Zamp transitioned completely towards AI agents"</em>, giving as its reason that the shift aligns with what the sender sells. The fact this whole thread had been arguing for.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">A VP at one company ten years ago, now an SVP elsewhere — that matters.</p>
+    <div class="row"><b>Why it mattered</b><p>Three separate reasons, and the third is a correctness bug: they changed company, they are more senior now, and qualifying them against the wrong company is simply wrong information.</p></div>
+    <div class="row"><b>What changed</b><p>Career history is no longer discarded. <code>drop_wrong_company</code> was deleting it outright — any fact whose subject company differed, including a person-level fact about the prospect at a former employer — so the case you named never survived extraction.</p></div>
+    <div class="impact"><b>Verified end to end:</b> given Adobe and Oracle as history and Ramp as current, the draft names <strong>Ramp</strong> and neither of the others.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Make it learn the weights from what I actually send.</p>
+    <div class="row"><b>Why it mattered</b><p>The weight table is one team's opinion about which triggers matter. A recruiter, an investor and an AP vendor want different things.</p></div>
+    <div class="row"><b>What changed</b><p>Only costly acts count. A send is worth double; hand-picking a hook counts; a draft left alone teaches <em>nothing</em>, because not acting is not a preference and counting it would just re-learn the defaults. Promotion only — it never demotes on absence of evidence.</p></div>
+    <div class="impact"><b>Learned from your own history:</b> two hand-picked <code>speaking</code> hooks → ×1.2, rising to ×1.4 once campaign sends were counted too. On two facts of equal age the taxonomy picks the promotion 0.3725 to 0.3353; with learning applied the talk wins 0.4023 to 0.3725.</div>
+  </div>
+
+  <!-- ==================================================== the settings -->
+  <h2>Where every setting lives, and what it changes</h2>
+  <p class="phase-note">Five tabs behind the persona avatar in the rail, or the gear at the bottom of it. Nothing here is decoration — each field is read at a specific point in the pipeline, and this is where.</p>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Persona · <em>who is writing, and how</em></p>
+    <div class="row"><b>Fields</b><p>Avatar and name · Character · <strong>Who is writing</strong> (founder, CEO, CRO, VP, AE, SDR) · <strong>What the message is for</strong> (book a call, open a relationship, partnership, ask a perspective, re-engage, hiring, event) · What they sell · The problem it removes · Proof · What makes someone worth writing to · Writing instructions.</p></div>
+    <div class="row"><b>Where it is read</b>
+      <pre>persona → draft._persona_block() → the drafting prompt
+                                  → the campaign template prompt
+       → judge.offer_terms()      → the relevance multiplier</pre>
+      <p>Seniority and intent are not labels — each carries a stance into the prompt. A founder may say "I built this"; an SDR may not. "Ask a perspective" produces a different ask from "book a call".</p></div>
+    <div class="impact"><b>The order in the prompt is load-bearing:</b> who is writing → what it is for → what they sell → how they write → what has been learned. Later instructions win, so a learned rule can override the base voice without rewriting it.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Learned · <em>what it has picked up from you</em></p>
+    <div class="row"><b>Two lists, two different things</b><p><strong>Rules from your edits</strong> — how you write. Inferred after three consistent edits, corrected rather than piled up, capped, and versioned so you can undo one.</p>
+      <p><strong>Triggers you act on</strong> — what you write about. An accordion: open a row to see the actual hooks in that category. A send counts double a hand-pick; a draft you left alone counts nothing.</p></div>
+    <div class="row"><b>Where it is read</b>
+      <pre>memories → the LEARNED FROM THEIR EDITS block in the prompt
+triggers → judge.learned_weights() → intent weight multiplier</pre></div>
+    <div class="impact"><b>This is the self-learning claim, made inspectable.</b> Every row shows its evidence, so the multiplier is never a number to take on faith.</div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Sender · <em>the identity messages come from</em></p>
+    <div class="row"><b>Fields</b><p>Your name, role and company · What you sell · The problem it removes · Proof · Goal of the email · Tone. Plus <strong>Connected services</strong> and the only button in the app that spends an allowance to answer "does this work".</p></div>
+    <div class="row"><b>Where it is read</b>
+      <pre>writer → draft._writer_block()   → the drafting prompt
+       → judge.offer_terms()     → relevance
+       → the email signature and the Reply-To</pre>
+      <p>Persona and Sender are both read because they are filled in at different times — the persona on day one, the sender config later — and reading only one is blind half the time.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">ICP · <em>who is worth writing to at all</em></p>
+    <div class="row"><b>Fields</b><p>Target seniority and function · Geographies · Industries · Headcount range · Revenue note.</p></div>
+    <div class="row"><b>Where it is read</b>
+      <pre>icp → profile stage → icp_score (0-100)
+                    → priority band on the dashboard and the lead list
+    → contacts.find() when a campaign needs role groups</pre>
+      <p>The score does not block a run. It orders the list: a lead is <em>hot</em> on a fresh job change, <em>high</em> on a strong ICP score with a person-level hook, and lower when only one of those holds. A perfect-fit lead with no angle is not the one to start with.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Intent · <em>which triggers matter to you</em></p>
+    <div class="row"><b>Fields</b><p>Person-level intents (promotion, role change, looking for, speaking, influencer, personal award) and company-level ones (hiring, AI transformation, cost reduction, IPO, expansion, fundraise, product launch, partnership, award).</p></div>
+    <div class="row"><b>Where it is read</b>
+      <pre>intent_weights → judge.intent_weight() → the score of every fact</pre>
+      <p>An explicit weight here always beats the learned one — a setting is a statement, an inference is a guess. This is the single field that turns the tool into a recruiter's or an investor's: they need the same mechanic with a different ordering, which is configuration rather than a rebuild.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">Not in the interface · <em>the environment</em></p>
+    <div class="row"><b>Why these are not settings</b><p>The Gmail address and app password, the database URL, and the provider keys live in the environment and never in the database. An app password is mail-send access to a real mailbox; putting it behind a form in the app is putting it one bug away from being read back.</p></div>
+    <div class="row"><b>What the app does show</b><p>Whether each is configured, and for the ones that report it, how much of the month is left — read from a local count so asking costs nothing.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask" style="font-size:1.1rem">How a message actually reaches someone</p>
+    <div class="row"><b>The full path</b>
+      <pre>lead screen                    campaign
+  research a prospect            name a company
+  hook chosen                    competitors → their people
+  draft written                  one template per segment
+      ↓                          + an opener per contact
+  edit it (this teaches              ↓
+  the persona)                   open a contact
+      ↓                              ↓
+  address: on file, found, or derived — labelled which
+      ↓
+  mailer.check_async()  ← the single gate, both screens
+      relationship blocked? · address unparseable?
+      domain accepts no mail? · draft empty? · already sent?
+      ↓
+  confirm, then Gmail over SMTP · one contact per request
+      ↓
+  sent_at / sent_to / message-id stored on the row
+  the button is replaced by the record</pre></div>
+    <div class="impact"><b>Or it never sends at all:</b> the CSV export carries the same columns a sequencer imports — address, its provenance, subject, body, segment, and whether it has already gone out.</div>
+  </div>
+
+  <!-- =================================================== what went wrong -->
+  <h2>What I got wrong</h2>
+  <p class="phase-note">Kept in because a record that only lists successes is not a record.</p>
+
+  <div class="rec">
+    <p class="ask">Verification that verified nothing.</p>
+    <div class="row"><b>What happened</b><p><code>npx tsc --noEmit</code> was exiting 0 unconditionally — the root config has <code>files: []</code> with project references, so it checked <em>nothing</em>. I had reported several passes on it. The correct command is <code>tsc -b</code>, and under it a genuine error surfaced immediately.</p></div>
+    <div class="row"><b>The same shape, twice more</b><p><code>mailer._demo()</code> only ran its guards when Gmail happened to be configured — the credential stub was in <code>__main__</code> rather than in the function — so on a machine without a key every send guard silently passed unchecked. And <code>supabase/schema.sql</code> had drifted from the code: it was missing <strong>all four persona tables</strong>, so a fresh production database would have come up without them.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">A confident wrong answer, generated by my own fix.</p>
+    <div class="row"><b>What happened</b><p>Resolving a company by name matched <em>"Zamp"</em> to <code>zamp-racing.com</code> — a helmet manufacturer — and then derived four confident A-grade email addresses at the wrong company. Token overlap was the cause.</p></div>
+    <div class="row"><b>What changed</b><p>The domain root must now equal the company slug exactly, directory sites are excluded outright, and the domain is taken from pages the lead's own research read before any search is attempted. A wrong domain is worse than none: no domain shows a message, a wrong one shows an answer.</p></div>
+  </div>
+
+  <div class="rec">
+    <p class="ask">Destroying your work.</p>
+    <div class="row"><b>What happened</b><p>Two files overwritten because I wrote without checking. Recovered, but only because your IDE happened to keep a transcript — this repo was not under version control at the time.</p></div>
+    <div class="row"><b>What it changed</b><p>It is now a git repository with the secrets scan that found your access key hardcoded in a header before the first push.</p></div>
+  </div>
+
+  <p class="foot">Every decision here has a specific failure behind it rather than a principle. That is the honest version of an architecture: not the plan that survived, but the shape left behind after it didn't.</p>
+
+</div>
+</body>
+</html>
