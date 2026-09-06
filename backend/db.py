@@ -90,6 +90,15 @@ CREATE TABLE IF NOT EXISTS runs (
     -- one — and there is then no way to tell that switching identity has left
     -- this lead behind. The name is stored alongside the id because an
     -- identity can be deleted and the draft it wrote still has an author.
+    -- Which persona this lead BELONGS to, as distinct from persona_id, which
+    -- names whoever wrote the draft that is on it now.
+    --
+    -- The same person is worth writing to for different reasons by different
+    -- voices: a founder opening a conversation and a recruiter approaching the
+    -- same engineer are two pieces of work, and merging them into one lead
+    -- means one of them overwrites the other's message. So the rail is a
+    -- filter as well as a selector.
+    owner_persona_id BIGINT,
     persona_id    BIGINT,
     drafted_by    TEXT NOT NULL DEFAULT '',
     -- Which version of that persona's brief wrote this draft, so a message
@@ -135,6 +144,10 @@ CREATE TABLE IF NOT EXISTS fact_feedback (
     id         BIGSERIAL PRIMARY KEY,
     run_id     BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
     fact_id    TEXT NOT NULL,
+    -- Which voice was writing when this judgement was made. What counts as a
+    -- good reason to write differs by who is asking: a recruiter and an
+    -- investor reject opposite things.
+    persona_id BIGINT,
     action     TEXT NOT NULL,          -- chose | excluded | included
     category   TEXT NOT NULL DEFAULT '',
     level      TEXT NOT NULL DEFAULT '',
@@ -170,8 +183,14 @@ CREATE TABLE IF NOT EXISTS app_config (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Edits are evidence about ONE voice, not about writing in general.
+--
+-- These were global, so a formal CRO persona learned from edits made to a
+-- blunt founder one and the two slowly converged on something neither person
+-- would send. Scoped to the persona that wrote the draft being edited.
 CREATE TABLE IF NOT EXISTS style_examples (
     id         BIGSERIAL PRIMARY KEY,
+    persona_id BIGINT,
     run_id     BIGINT,
     prospect   TEXT,
     original   TEXT NOT NULL,
@@ -234,6 +253,13 @@ CREATE TABLE IF NOT EXISTS outbound_runs (
     -- currency: these providers bill in free-tier quota, and a cap in dollars
     -- the app cannot observe would be theatre.
     config         JSONB NOT NULL DEFAULT '{}'::jsonb,
+    -- Which voice this campaign belongs to. A campaign is a piece of one
+    -- persona's work in exactly the way a lead is: the leads it creates are
+    -- owned by that persona, its messages are written in that voice, and what
+    -- it teaches belongs to it. Listing every persona's campaigns together
+    -- would make the rail a selector everywhere except the one screen that
+    -- generates the most work.
+    persona_id     BIGINT,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -564,15 +590,15 @@ async def reap_stale_runs(force: bool = False) -> int:
     return int(n.split()[-1])
 
 
-async def create_run(batch_id: str, p_: dict) -> int:
+async def create_run(batch_id: str, p_: dict, owner_persona_id: int | None = None) -> int:
     p = await pool()
     return int(await p.fetchval(
         """INSERT INTO runs (batch_id, name, company, role, location, url,
-                            relationship, email, status)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'queued') RETURNING id""",
+                            relationship, email, status, owner_persona_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'queued',$9) RETURNING id""",
         batch_id, p_.get("name", ""), p_.get("company", ""), p_.get("role", ""),
         p_.get("location", ""), p_.get("url", ""), p_.get("relationship", ""),
-        p_.get("email", ""),
+        p_.get("email", ""), owner_persona_id,
     ))
 
 
@@ -669,7 +695,8 @@ async def draft_revisions(run_id: int, limit: int = 30) -> list[dict]:
 
 
 async def record_fact_feedback(run_id: int, action: str, fact: dict,
-                               via: str = "", reason: str = "") -> int | None:
+                               via: str = "", reason: str = "",
+                               persona_id: int | None = None) -> int | None:
     """Remember that the user deliberately chose, dropped or restored a fact.
 
     Every one of these costs the user something — they read the evidence and
@@ -684,11 +711,12 @@ async def record_fact_feedback(run_id: int, action: str, fact: dict,
         p = await pool()
         return await p.fetchval(
             """INSERT INTO fact_feedback
-                   (run_id, fact_id, action, category, level, fact_text, via, reason)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id""",
+                   (run_id, fact_id, action, category, level, fact_text, via,
+                    reason, persona_id)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id""",
             run_id, str(fact.get("fact_id") or ""), action,
             str(fact.get("category") or ""), str(fact.get("level") or ""),
-            str(fact.get("text") or "")[:500], via, (reason or "")[:400])
+            str(fact.get("text") or "")[:500], via, (reason or "")[:400], persona_id)
     except Exception:
         log.exception("could not record fact feedback")
         return None
@@ -717,7 +745,7 @@ async def attach_fact_reason(run_id: int, fact_id: str, reason: str) -> bool:
         return False
 
 
-async def fact_feedback_counts() -> dict[str, dict]:
+async def fact_feedback_counts(persona_id: int | None = None) -> dict[str, dict]:
     """Per category: how often it was chosen by hand, and how often dropped.
 
     Both directions matter and they are not the same signal. Choosing says
@@ -737,7 +765,8 @@ async def fact_feedback_counts() -> dict[str, dict]:
                   FILTER (WHERE coalesce(reason,'') <> ''))[1:3] AS reasons
         FROM fact_feedback
         WHERE coalesce(category,'') <> ''
-        GROUP BY category""")
+          AND ($1::bigint IS NULL OR persona_id = $1 OR persona_id IS NULL)
+        GROUP BY category""", persona_id)
     return {r["category"]: {
         "chose": int(r["chose"]), "excluded": int(r["excluded"]),
         "included": int(r["included"]),
@@ -1309,7 +1338,7 @@ async def provider_month(provider: str) -> dict:
     return {"month": int(r["month"]), "today": int(r["today"])}
 
 
-async def hook_outcomes() -> dict[str, dict]:
+async def hook_outcomes(persona_id: int | None = None) -> dict[str, dict]:
     """What the user has actually done with each kind of hook.
 
     Only acts that cost the user something count as evidence. Sending is the
@@ -1326,23 +1355,34 @@ async def hook_outcomes() -> dict[str, dict]:
                -- strongest signal the app has was invisible to the thing it
                -- was supposed to teach.
                count(*) FILTER (WHERE r.sent_at IS NOT NULL
-                                   OR c.sent_at IS NOT NULL)     AS sent,
+                                   OR EXISTS (SELECT 1 FROM outbound_contacts oc
+                                              WHERE oc.lead_run_id = r.id
+                                                AND oc.sent_at IS NOT NULL))
+                                                                 AS sent,
                count(*) FILTER (WHERE coalesce(r.fact_overrides->>'chosen','') <> '')
                                                                  AS hand_picked,
                (array_agg(r.chosen_hook ORDER BY
-                          (r.sent_at IS NOT NULL OR c.sent_at IS NOT NULL) DESC,
-                          r.id DESC))[1:4]                       AS examples
+                          (r.sent_at IS NOT NULL) DESC, r.id DESC))[1:4]
+                                                                 AS examples
+        -- No join to outbound_contacts. A lead with two campaign contacts
+        -- appeared twice and was counted twice, so one prospect could look like
+        -- two pieces of evidence about what this sender favours. Sending is
+        -- asked as a question about the row, not joined to it.
         FROM runs r
-        LEFT JOIN outbound_contacts c ON c.lead_run_id = r.id
         WHERE r.chosen_hook IS NOT NULL AND coalesce(r.hook_category,'') <> ''
-        GROUP BY r.hook_category""")
+          -- Scoped to the voice that wrote them. What a founder sends and what
+          -- a recruiter sends are different preferences, and averaging the two
+          -- teaches neither of them anything true.
+          AND ($1::bigint IS NULL OR r.persona_id = $1 OR r.persona_id IS NULL)
+        GROUP BY r.hook_category""", persona_id)
     return {r["category"]: {"drafted": int(r["drafted"]), "sent": int(r["sent"]),
                             "hand_picked": int(r["hand_picked"]),
                             "examples": [x for x in (r["examples"] or []) if x]}
             for r in rows}
 
 
-async def latest_leads(limit: int = 200) -> list[dict]:
+async def latest_leads(limit: int = 200,
+                       persona_id: int | None = None) -> list[dict]:
     """One row per lead — the run worth showing — across every batch.
 
     A "batch" is just which upload a prospect arrived in. Nobody thinks in
@@ -1355,15 +1395,27 @@ async def latest_leads(limit: int = 200) -> list[dict]:
     visible on the lead itself; it just does not erase work already done.
     """
     p = await pool()
+    # Deduplicated per voice, not globally. The same person approached by two
+    # personas is two pieces of work — collapsing them would mean one voice's
+    # message quietly replacing the other's.
+    #
+    # Leads with no owner are shown to everyone: they were created before the
+    # rail became a filter, and hiding someone's existing work behind a
+    # distinction that did not exist when they made it is not a migration.
     rows = await p.fetch(
         """
-        SELECT DISTINCT ON (lower(name), lower(coalesce(company, '')))
+        SELECT DISTINCT ON (lower(name), lower(coalesce(company, '')),
+                            coalesce(owner_persona_id, 0))
                *
         FROM runs
+        WHERE $1::bigint IS NULL
+           OR owner_persona_id = $1
+           OR owner_persona_id IS NULL
         ORDER BY lower(name), lower(coalesce(company, '')),
+                 coalesce(owner_persona_id, 0),
                  (chosen_hook IS NOT NULL OR draft_body IS NOT NULL) DESC,
                  id DESC
-        """)
+        """, persona_id)
     ordered = sorted((_row(r) for r in rows), key=lambda r: r["id"], reverse=True)
     return ordered[:limit]
 
@@ -1458,7 +1510,8 @@ async def get_config(key: str) -> dict:
 
 # -------------------------------------------------------------- style learning
 async def add_style_example(run_id: int | None, prospect: str,
-                            original: str, edited: str) -> None:
+                            original: str, edited: str,
+                            persona_id: int | None = None) -> None:
     """Record a draft the user rewrote.
 
     Rep edit distance is the highest-signal free quality metric available, and
@@ -1468,18 +1521,33 @@ async def add_style_example(run_id: int | None, prospect: str,
         return
     p = await pool()
     await p.execute(
-        "INSERT INTO style_examples (run_id, prospect, original, edited) "
-        "VALUES ($1,$2,$3,$4)",
-        run_id, prospect, original, edited,
+        "INSERT INTO style_examples (run_id, prospect, original, edited, persona_id) "
+        "VALUES ($1,$2,$3,$4,$5)",
+        run_id, prospect, original, edited, persona_id,
     )
 
 
-async def recent_style_examples(limit: int = 3) -> list[dict]:
+async def recent_style_examples(limit: int = 3,
+                                persona_id: int | None = None) -> list[dict]:
+    """Recent edits, for the persona that will be writing.
+
+    Rows recorded before personas were scoped carry no id; they are included
+    for everyone rather than discarded, because they are still real examples of
+    how this user writes and throwing them away would lose the history.
+    """
     p = await pool()
+    if persona_id:
+        return [_row(r) for r in await p.fetch(
+            "SELECT * FROM style_examples WHERE persona_id = $1 OR persona_id IS NULL "
+            "ORDER BY id DESC LIMIT $2", persona_id, limit)]
     return [_row(r) for r in await p.fetch(
         "SELECT * FROM style_examples ORDER BY id DESC LIMIT $1", limit)]
 
 
-async def style_stats() -> dict:
+async def style_stats(persona_id: int | None = None) -> dict:
     p = await pool()
+    if persona_id:
+        return {"examples": int(await p.fetchval(
+            "SELECT count(*) FROM style_examples "
+            "WHERE persona_id = $1 OR persona_id IS NULL", persona_id))}
     return {"examples": int(await p.fetchval("SELECT count(*) FROM style_examples"))}

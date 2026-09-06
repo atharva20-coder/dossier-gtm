@@ -401,7 +401,11 @@ async def create_run(req: RunRequest):
     # Create the row and return immediately. The client needs the id before the
     # work starts, because that id is how it polls for progress while the
     # separate /execute request is still open.
-    run_id = await db.create_run(req.batch_id or str(uuid.uuid4())[:8], p.model_dump())
+    # Owned by whoever is writing when it is added, so the rail filters to the
+    # work that voice is doing.
+    owner = ((await db.get_selected_persona()) or {}).get("id")
+    run_id = await db.create_run(req.batch_id or str(uuid.uuid4())[:8],
+                                 p.model_dump(), owner_persona_id=owner)
     return {"run_id": run_id}
 
 
@@ -430,6 +434,7 @@ async def create_runs(req: BulkRuns):
                                  f"{config.MAX_ROWS_PER_UPLOAD}-row cap.")
 
     batch_id = req.batch_id or str(uuid.uuid4())[:8]
+    owner = ((await db.get_selected_persona()) or {}).get("id")
     out = []
     for raw in req.prospects:
         p = ProspectInput(name=normalize.clean_name(raw.name),
@@ -438,7 +443,8 @@ async def create_runs(req: BulkRuns):
                           relationship=raw.relationship)
         if not p.name:
             continue
-        out.append({"run_id": await db.create_run(batch_id, p.model_dump()),
+        out.append({"run_id": await db.create_run(batch_id, p.model_dump(),
+                                                  owner_persona_id=owner),
                     **p.model_dump()})
     return {"batch_id": batch_id, "runs": out}
 
@@ -554,7 +560,8 @@ async def list_runs(batch_id: str = ""):
     # doing it here costs one UPDATE and keeps the stats honest.
     await db.reap_stale_runs()
     runs = await db.list_runs(batch_id=batch_id) if batch_id else await db.list_runs()
-    return {"runs": runs, "stats": await db.stats(), "style": await db.style_stats()}
+    return {"runs": runs, "stats": await db.stats(), "style": await db.style_stats(
+        ((await db.get_selected_persona()) or {}).get("id"))}
 
 
 def _priority(run: dict) -> str:
@@ -599,7 +606,8 @@ async def leads():
     # "outbound-<id>" — so the origin is surfaced rather than stored twice.
     rows = [{**r, "priority": _priority(r),
              "from_campaign": str(r.get("batch_id") or "").startswith("outbound-")}
-            for r in await db.latest_leads()]
+            for r in await db.latest_leads(
+                persona_id=((await db.get_selected_persona()) or {}).get("id"))]
     return {"batch_id": rows[0]["batch_id"] if rows else "", "runs": rows}
 
 
@@ -631,7 +639,8 @@ async def get_config():
     return {
         "writer": (await db.get_config("writer")) or WriterConfig().model_dump(),
         "icp": (await db.get_config("icp")) or ICPConfig().model_dump(),
-        "style_examples": await db.style_stats(),
+        "style_examples": await db.style_stats(
+            ((await db.get_selected_persona()) or {}).get("id")),
     }
 
 
@@ -1011,16 +1020,21 @@ async def regenerate(run_id: int, choice: HookChoice):
     for fid in excluded - before_excluded:
         if fid in by_id:
             await db.record_fact_feedback(
-                run_id, "excluded", {"fact_id": fid, **by_id[fid].model_dump()}, "findings")
+                run_id, "excluded", {"fact_id": fid, **by_id[fid].model_dump()},
+                "findings", persona_id=pid)
     for fid in before_excluded - excluded:
         if fid in by_id:
             await db.record_fact_feedback(
-                run_id, "included", {"fact_id": fid, **by_id[fid].model_dump()}, "findings")
+                run_id, "included", {"fact_id": fid, **by_id[fid].model_dump()},
+                "findings", persona_id=pid)
     if choice.chosen and choice.chosen != before_chosen and choice.chosen in by_id:
         await db.record_fact_feedback(
             run_id, "chose",
-            {"fact_id": choice.chosen, **by_id[choice.chosen].model_dump()}, "findings")
+            {"fact_id": choice.chosen, **by_id[choice.chosen].model_dump()},
+            "findings", persona_id=pid)
 
+    persona_now = await db.get_selected_persona()
+    pid = (persona_now or {}).get("id")
     writer = WriterConfig(**(await db.get_config("writer") or {}))
     stakeholder = StakeholderProfile(
         **(_stage_payload(run, "profile").get("stakeholder") or {}))
@@ -1040,16 +1054,17 @@ async def regenerate(run_id: int, choice: HookChoice):
                                name=p.name, role=p.role,
                          stakeholder=stakeholder,
                          persona=await db.get_selected_persona(),
-                         learned=judge.learned_weights(await db.hook_outcomes(),
-                                                       await db.fact_feedback_counts()))
+                         learned=judge.learned_weights(
+                             await db.hook_outcomes(pid),
+                             await db.fact_feedback_counts(pid)))
         hook, reason = jr.chosen, jr.chosen_reason
 
     style = [StyleExample(original=e["original"], edited=e["edited"],
                           prospect=e.get("prospect", ""), created_at=e.get("created_at", ""))
-             for e in await db.recent_style_examples(3)]
-    # Read the persona here rather than anywhere earlier: an edit made seconds
-    # ago has to be in force on the very next draft, and nothing is cached.
-    persona = await db.get_selected_persona()
+             for e in await db.recent_style_examples(3, pid)]
+    # Read fresh at the top of this request rather than cached anywhere: an
+    # edit made seconds ago has to be in force on the very next draft.
+    persona = persona_now
     d = await draft.write(p, hook, writer=writer, stakeholder=stakeholder,
                           style_examples=style, persona=persona)
 
@@ -1137,7 +1152,10 @@ async def save_draft_edit(run_id: int, edit: DraftEdit):
 
     persona_changes: list = []
     if learned:
-        await db.add_style_example(run_id, run.get("name", ""), original, edited)
+        # Filed against the voice that wrote it. Global examples meant a formal
+        # persona learned from edits made to a blunt one.
+        await db.add_style_example(run_id, run.get("name", ""), original, edited,
+                                   persona_id=run.get("persona_id"))
         # The same edit is evidence about how this person writes.
         persona_changes = await persona_stage.note_edit(run_id, original, edited)
         await db.add_draft_revision(
@@ -1147,7 +1165,7 @@ async def save_draft_edit(run_id: int, edit: DraftEdit):
     await db.update_run(run_id, draft_body=edited)
 
     return {"ok": True, "learned": learned,
-            "style_examples": (await db.style_stats())["examples"],
+            "style_examples": (await db.style_stats(run.get("persona_id")))["examples"],
             "persona_changes": persona_changes}
 
 
@@ -1170,8 +1188,11 @@ async def learned_triggers():
     much evidence, so it can be disagreed with — and overridden outright by
     setting an explicit weight, which always wins.
     """
-    outcomes = await db.hook_outcomes()
-    feedback = await db.fact_feedback_counts()
+    # Shown for whoever is writing. A rail of personas that all learn the same
+    # thing is one persona with several avatars.
+    active = await db.get_selected_persona()
+    outcomes = await db.hook_outcomes((active or {}).get("id"))
+    feedback = await db.fact_feedback_counts((active or {}).get("id"))
     learned = judge.learned_weights(outcomes, feedback)
 
     # Every category anyone has acted on, in either direction. Built from both
@@ -1200,6 +1221,8 @@ async def learned_triggers():
     rows.sort(key=lambda r: (-abs(r["weight"] - 1.0),
                              -(r["sent"] * 2 + r["hand_picked"] + r["excluded"])))
     return {"triggers": rows,
+            "persona": f"{(active or {}).get('emoji') or ''} "
+                       f"{(active or {}).get('name') or ''}".strip(),
             "min_evidence": config.LEARN_MIN_EVIDENCE,
             "note": ("A send counts double a hand-pick, and dropping a fact by hand "
                      "counts against its category. Leaving a draft alone teaches "
@@ -1224,13 +1247,18 @@ async def create_outbound_run_api(req: OutboundRequest):
         config_dict["target_titles"] = icp.get("seniorities", ["VP", "Director"])
         
     from . import outbound_db
-    run_id = await outbound_db.create_outbound_run(req.target_company, config_dict)
+    # Owned by whoever is writing, like a lead. The campaign's messages come out
+    # in this voice and everything it learns belongs to it.
+    run_id = await outbound_db.create_outbound_run(
+        req.target_company, config_dict,
+        persona_id=((await db.get_selected_persona()) or {}).get("id"))
     return {"run_id": run_id}
 
 @app.get("/api/outbound/runs")
 async def list_outbound_runs_api():
     from . import outbound_db
-    runs = await outbound_db.list_outbound_runs()
+    runs = await outbound_db.list_outbound_runs(
+        persona_id=((await db.get_selected_persona()) or {}).get("id"))
     return {"runs": runs}
 
 @app.get("/api/outbound/runs/{run_id}")

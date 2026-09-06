@@ -9,14 +9,15 @@ from typing import Any
 
 from . import db
 
-async def create_outbound_run(target_company: str, config: dict) -> int:
+async def create_outbound_run(target_company: str, config: dict,
+                              persona_id: int | None = None) -> int:
     pool = await db.pool()
     query = """
-        INSERT INTO outbound_runs (target_company, config)
-        VALUES ($1, $2)
+        INSERT INTO outbound_runs (target_company, config, persona_id)
+        VALUES ($1, $2, $3)
         RETURNING id
     """
-    return await pool.fetchval(query, target_company, json.dumps(config))
+    return await pool.fetchval(query, target_company, json.dumps(config), persona_id)
 
 async def get_outbound_run(run_id: int) -> dict[str, Any] | None:
     pool = await db.pool()
@@ -30,7 +31,7 @@ async def get_outbound_run(run_id: int) -> dict[str, Any] | None:
         d["config"] = json.loads(d["config"])
     return d
 
-async def list_outbound_runs() -> list[dict[str, Any]]:
+async def list_outbound_runs(persona_id: int | None = None) -> list[dict[str, Any]]:
     pool = await db.pool()
     # The counts come from the same query rather than a request per row: the
     # list pane shows them for every run, and fetching them separately is one
@@ -41,7 +42,11 @@ async def list_outbound_runs() -> list[dict[str, Any]]:
                    AS contact_count,
                (SELECT count(*) FROM outbound_campaigns k WHERE k.run_id = r.id)
                    AS campaign_count
-        FROM outbound_runs r ORDER BY r.id DESC LIMIT 50""")
+        FROM outbound_runs r
+        -- Campaigns run before this was scoped have no persona and stay
+        -- visible to everyone: that is history, not somebody else's work.
+        WHERE $1::bigint IS NULL OR r.persona_id = $1 OR r.persona_id IS NULL
+        ORDER BY r.id DESC LIMIT 50""", persona_id)
     out = []
     for row in rows:
         d = dict(row)

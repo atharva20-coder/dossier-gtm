@@ -216,8 +216,9 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                 stakeholder=stakeholder, persona=persona,
                 name=prospect.name, role=prospect.role,
                 learned=judge_stage.learned_weights(
-                    await db.hook_outcomes(),
-                    await db.fact_feedback_counts()))).chosen
+                    await db.hook_outcomes((persona or {}).get("id")),
+                    await db.fact_feedback_counts(
+                        (persona or {}).get("id"))))).chosen
 
         d = await draft_stage.write(prospect, hook, writer=writer,
                                     stakeholder=stakeholder, persona=persona)
@@ -273,7 +274,8 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                     run_id,
                     {"exclude_fact": "excluded", "include_fact": "included",
                      "choose_hook": "chose"}[name],
-                    row, "assistant")
+                    row, "assistant",
+                    persona_id=(await db.get_selected_persona() or {}).get("id"))
             await rebuild()
             return {"ok": True, "hook_now": run.get("chosen_hook")}
 

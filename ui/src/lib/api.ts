@@ -150,6 +150,9 @@ export interface Prospect {
   draftedBy: string
   /** Which version of that persona's brief wrote the current draft. */
   personaVersion: string
+  /** The voice this lead belongs to. Null means it predates the rail becoming
+   *  a filter, so every persona sees it. */
+  ownerPersonaId: number | null
   personaId: number | null
   /** Where a message would go, and the record of it having gone. */
   email: string
@@ -170,6 +173,8 @@ export interface OutboundRun {
   created_at: string
   contact_count?: number
   campaign_count?: number
+  /** The voice this campaign belongs to. Null predates the rail being a filter. */
+  persona_id?: number | null
 }
 
 export interface OutboundStage {

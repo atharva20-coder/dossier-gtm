@@ -53,6 +53,15 @@ CREATE TABLE IF NOT EXISTS runs (
     -- one — and there is then no way to tell that switching identity has left
     -- this lead behind. The name is stored alongside the id because an
     -- identity can be deleted and the draft it wrote still has an author.
+    -- Which persona this lead BELONGS to, as distinct from persona_id, which
+    -- names whoever wrote the draft that is on it now.
+    --
+    -- The same person is worth writing to for different reasons by different
+    -- voices: a founder opening a conversation and a recruiter approaching the
+    -- same engineer are two pieces of work, and merging them into one lead
+    -- means one of them overwrites the other's message. So the rail is a
+    -- filter as well as a selector.
+    owner_persona_id BIGINT,
     persona_id    BIGINT,
     drafted_by    TEXT NOT NULL DEFAULT '',
     -- Which version of that persona's brief wrote this draft, so a message
@@ -98,6 +107,10 @@ CREATE TABLE IF NOT EXISTS fact_feedback (
     id         BIGSERIAL PRIMARY KEY,
     run_id     BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
     fact_id    TEXT NOT NULL,
+    -- Which voice was writing when this judgement was made. What counts as a
+    -- good reason to write differs by who is asking: a recruiter and an
+    -- investor reject opposite things.
+    persona_id BIGINT,
     action     TEXT NOT NULL,          -- chose | excluded | included
     category   TEXT NOT NULL DEFAULT '',
     level      TEXT NOT NULL DEFAULT '',
@@ -133,8 +146,14 @@ CREATE TABLE IF NOT EXISTS app_config (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Edits are evidence about ONE voice, not about writing in general.
+--
+-- These were global, so a formal CRO persona learned from edits made to a
+-- blunt founder one and the two slowly converged on something neither person
+-- would send. Scoped to the persona that wrote the draft being edited.
 CREATE TABLE IF NOT EXISTS style_examples (
     id         BIGSERIAL PRIMARY KEY,
+    persona_id BIGINT,
     run_id     BIGINT,
     prospect   TEXT,
     original   TEXT NOT NULL,
@@ -197,6 +216,13 @@ CREATE TABLE IF NOT EXISTS outbound_runs (
     -- currency: these providers bill in free-tier quota, and a cap in dollars
     -- the app cannot observe would be theatre.
     config         JSONB NOT NULL DEFAULT '{}'::jsonb,
+    -- Which voice this campaign belongs to. A campaign is a piece of one
+    -- persona's work in exactly the way a lead is: the leads it creates are
+    -- owned by that persona, its messages are written in that voice, and what
+    -- it teaches belongs to it. Listing every persona's campaigns together
+    -- would make the rail a selector everywhere except the one screen that
+    -- generates the most work.
+    persona_id     BIGINT,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

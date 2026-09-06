@@ -116,11 +116,13 @@ async def run(run_id: int, p: ProspectInput) -> None:
 
         writer = WriterConfig(**(await db.get_config("writer") or {}))
         persona = await db.get_selected_persona()
+        # Learning belongs to the voice that did it, not to the app.
+        pid = (persona or {}).get("id")
         icp = ICPConfig(**(await db.get_config("icp") or {}))
         style_examples = [
             StyleExample(original=e["original"], edited=e["edited"],
                          prospect=e.get("prospect", ""), created_at=e.get("created_at", ""))
-            for e in await db.recent_style_examples(3)
+            for e in await db.recent_style_examples(3, (persona or {}).get('id'))
         ]
 
         # ---------- Targeting: who is this, and are they worth researching? --
@@ -337,8 +339,9 @@ async def run(run_id: int, p: ProspectInput) -> None:
         jr = await judge.judge(kept, today=today, target_company=p.company,
                                name=p.name, role=p.role,
                          writer=writer, stakeholder=stakeholder, persona=persona,
-                         learned=judge.learned_weights(await db.hook_outcomes(),
-                                                       await db.fact_feedback_counts()))
+                         learned=judge.learned_weights(
+                             await db.hook_outcomes(pid),
+                             await db.fact_feedback_counts(pid)))
         # Each verdict carries the fact's stable id so the UI can include or
         # exclude it by hand later without re-running any research.
         await stage("judge", "done", jr.chosen_reason,

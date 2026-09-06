@@ -871,7 +871,13 @@ export function OutboundPage() {
           learning={{ unread: learning.unread, onOpen: () => learning.show(true) }}
           onSelect={async (p) => {
             setPersonas((prev) => prev.map((x) => ({ ...x, is_selected: x.id === p.id })))
+            // Narrowed from what is loaded before the request goes out, for
+            // the same reason as the leads list: the rail should answer
+            // instantly, and every campaign already carries its owner.
+            setRuns((prev) => prev.filter(
+              (r) => r.persona_id == null || r.persona_id === p.id))
             try { await api.selectPersona(p.id) } catch { /* the next load corrects it */ }
+            try { setRuns((await api.outboundRuns()).runs) } catch { /* keep */ }
           }}
           onCreate={() => {
             setEditingPersonaId(null); setSettingsTab("persona"); setSettingsOpen(true)

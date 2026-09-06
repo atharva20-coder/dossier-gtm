@@ -174,7 +174,7 @@ async def run_outbound_pipeline(run_id: int):
         
         writer_cfg = WriterConfig(**(await db.get_config("writer") or {}))
         persona = await db.get_selected_persona()
-        style_examples = await db.recent_style_examples(3)
+        style_examples = await db.recent_style_examples(3, (persona or {}).get('id'))
         
         drafted_count = 0
         db_contacts = await outbound_db.get_outbound_contacts(run_id)
@@ -214,7 +214,7 @@ async def run_outbound_pipeline(run_id: int):
                     "name": contact["name"], "company": contact["company"],
                     "role": contact["role"], "url": contact["linkedin_url"],
                     "email": contact.get("email") or "",
-                })
+                }, owner_persona_id=(persona or {}).get("id"))
                 await pool.execute(
                     "UPDATE outbound_contacts SET lead_run_id=$1 WHERE id=$2",
                     lead_id, contact["id"])

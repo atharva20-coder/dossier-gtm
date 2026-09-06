@@ -303,6 +303,47 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
     // Nothing is rewritten here. The open lead marks itself as written by
     // someone else and offers Redraft, which is the same action asked for at
     // the moment it is actually wanted.
+    //
+    // The list does reload, because the rail is a filter too: leads belong to
+    // the voice that added them, so the same person can be approached by a
+    // founder and by a recruiter without either one overwriting the other's
+    // message. Without this the filter would be applied on the server and
+    // invisible on screen until a refresh.
+    const open = prospectsRef.current.find((x) => x.runId === selectedId)
+
+    // Narrow the list on the spot from what is already loaded, rather than
+    // showing the previous voice's leads until a request comes back. Every
+    // lead carries its owner, so rows that certainly do not belong can go
+    // immediately; the fetch below adds the ones this voice has that are not
+    // on screen yet. Switching identity is the cheapest action in the app and
+    // should feel like it.
+    setProspects((prev) => prev.filter(
+      (x) => x.ownerPersonaId == null || x.ownerPersonaId === p.id))
+
+    try {
+      const b = await api.leads()
+      batchId.current = b.batch_id
+      const next = (b.runs ?? []).map((r: any, i: number) => fromRun(r, i + 1))
+      setProspects(next)
+
+      // The findings and the message have to follow. The lead that was open
+      // may not belong to this voice at all, and leaving it on screen means
+      // three panes describing work the rail says you are not looking at.
+      //
+      // Follow the PERSON where possible rather than the row: approaching the
+      // same prospect as someone else is the reason to switch in the first
+      // place, so if this voice already has that person, land on theirs.
+      if (open) {
+        const same = next.find((x) =>
+          x.runId !== open.runId
+          && x.name.toLowerCase() === open.name.toLowerCase()
+          && (x.company || "").toLowerCase() === (open.company || "").toLowerCase())
+        const kept = next.find((x) => x.runId === open.runId)
+        if (same?.runId) navigate(`/leads/${same.runId}`)
+        else if (!kept) { navigate("/"); if (!wide) setPane("leads") }
+      }
+    } catch { /* the current list is still true of the previous voice */ }
+    void learning.refresh()
   }
 
   const unresearched = prospects.filter((p) => p.status === "idle").length
