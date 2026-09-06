@@ -217,3 +217,13 @@ RELEVANCE_MAX = float(os.getenv("RELEVANCE_MAX", "1.9"))
 # 0.45 sits between the true twin (0.556 on the run that exposed this) and
 # the nearest false positive (0.286) — margin on both sides, not a tuned edge.
 TWIN_SIMILARITY = float(os.getenv("TWIN_SIMILARITY", "0.45"))
+# Age is a penalty, not a gate: an old fact keeps a small non-zero value so
+# it stays a candidate and loses to anything fresher, rather than vanishing
+# and leaving a run with nothing to say.
+STALE_FLOOR = float(os.getenv("STALE_FLOOR", "0.02"))
+# A post or talk from the last few weeks beats a static role fact: it proves
+# someone read something rather than skimmed a profile.
+ACTIVITY_BOOST = float(os.getenv("ACTIVITY_BOOST", "1.45"))
+# When nothing recent qualifies, how far back a last-resort hook may reach.
+# Last year reads as thin; a decade ago reads as automated.
+LAST_RESORT_MULTIPLE = float(os.getenv("LAST_RESORT_MULTIPLE", "4"))

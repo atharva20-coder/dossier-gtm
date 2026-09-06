@@ -130,16 +130,35 @@ def collapse_syndicated(facts: list[ExtractedFact], threshold: float = 0.82) -> 
     return kept, collapsed
 
 
-def drop_wrong_company(facts: list[ExtractedFact], company: str) -> tuple[list[ExtractedFact], list[ExtractedFact]]:
-    """Discard facts about a DIFFERENT company that happened to appear in the
-    same article — the classic competitor-comparison trap."""
+def drop_wrong_company(facts: list[ExtractedFact], company: str,
+                       person: str = "") -> tuple[list[ExtractedFact], list[ExtractedFact]]:
+    """Discard facts about a DIFFERENT company that appeared in the same article.
+
+    The classic competitor-comparison trap — an article about the prospect's
+    employer that also describes a rival, whose news then gets attributed here.
+
+    A PERSON-LEVEL fact about the prospect is exempt, however different the
+    company on it. "Dana Rao was VP of Finance Operations at Adobe" carries
+    Adobe as its subject company and is still a fact about the person being
+    researched: it is their career history, and it is what tells you a new SVP
+    has done the job before. Dropping it here deleted every former employer
+    before anything downstream could use them — the person axis is guarded by
+    `drop_third_party_people` and `drop_wrong_person`, so this gate does not
+    need to police it too.
+    """
     from .normalize import company_key
+    from .extract import _name_key  # noqa: F401 — same module, kept explicit
 
     if not company:
         return facts, []
     target = company_key(company)
+    who = _name_key(person) if person else ""
     keep, dropped = [], []
     for f in facts:
+        # Their own history, at whatever company it happened.
+        if f.level == "person" and who and _name_key(f.subject_person or "") == who:
+            keep.append(f)
+            continue
         subj = company_key(f.subject_company or "")
         if not subj or subj == target or subj in target or target in subj:
             keep.append(f)
@@ -343,7 +362,7 @@ async def extract(p: ProspectInput, hits: list[SearchHit], today: str) -> tuple[
     if failures and not facts:
         raise failures[0]
 
-    facts, dropped = drop_wrong_company(facts, p.company)
+    facts, dropped = drop_wrong_company(facts, p.company, p.name)
     facts, third_party = drop_third_party_people(p, facts)
     facts, wrong_person = drop_wrong_person(p, facts, hits)
     facts, collapsed = collapse_syndicated(facts)

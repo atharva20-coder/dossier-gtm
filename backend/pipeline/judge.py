@@ -101,7 +101,11 @@ def outreach_value(age: int | None) -> float:
     if age <= config.FACT_RECENCY_MAX_DAYS:
         span = config.FACT_RECENCY_MAX_DAYS - config.OUTREACH_DECAY_DAYS
         return 0.5 - 0.4 * ((age - config.OUTREACH_DECAY_DAYS) / max(span, 1))
-    return 0.0
+    # Past the window it keeps falling rather than dropping to zero, so an old
+    # fact stays a candidate and loses to anything fresher instead of vanishing.
+    # Halves every year beyond, and never quite reaches nothing.
+    years_over = (age - config.FACT_RECENCY_MAX_DAYS) / 365.0
+    return max(config.STALE_FLOOR, 0.10 * (0.5 ** years_over))
 
 
 # Words that appear in every offer and every fact, and so separate nothing.
@@ -180,6 +184,29 @@ def relevance(fact: ExtractedFact, offer: set[str]) -> tuple[float, int]:
     return min(1.0 + config.RELEVANCE_STEP * hits, config.RELEVANCE_MAX), hits
 
 
+# What a person themselves said or did recently, as opposed to something that
+# happened to them or to their employer.
+ACTIVITY_CATEGORIES = {"influencer", "speaking", "looking_for"}
+
+
+def activity_boost(fact: ExtractedFact, age: int | None) -> float:
+    """Recent activity is the best hook there is, and only while it is recent.
+
+    "I saw what you posted last week" is a different message from "I saw that
+    you joined three years ago" — one proves someone read something, the other
+    proves someone read a profile. So a post or a talk is worth more than a
+    static role fact WHEN IT IS FRESH, and worth no more than anything else once
+    it is not. The boost is on the freshness, not on the category.
+    """
+    if fact.category not in ACTIVITY_CATEGORIES or age is None:
+        return 1.0
+    if age <= config.OUTREACH_PEAK_DAYS:
+        return config.ACTIVITY_BOOST
+    if age <= config.OUTREACH_DECAY_DAYS:
+        return 1.0 + (config.ACTIVITY_BOOST - 1.0) * 0.4
+    return 1.0
+
+
 def intent_weight(category: str, writer: WriterConfig | None) -> float:
     """Weight for an intent category.
 
@@ -230,6 +257,9 @@ def score_fact(
     # Relevance to the offer, applied before every other multiplier so that a
     # fact with nothing to do with what the sender sells cannot win on charm.
     score *= relevance(fact, offer or set())[0]
+
+    # Something they said or did in the last few weeks.
+    score *= activity_boost(fact, age)
 
     # A person-level hook ("you were on that podcast", "you just moved into this
     # role") is what makes a message feel written FOR someone. A company-level
@@ -305,51 +335,56 @@ def judge(
         if f.category in config.BLOCKED_CATEGORIES or f.category in BLOCKED_INTENTS:
             verdicts.append(FactVerdict(
                 fact=f, eligible=False,
-                reason=f"excluded — '{f.category}' is a reputationally sensitive category",
+                reason=f"never used — '{f.category}' is a reputationally sensitive category",
                 score=0.0))
             continue
 
-        # Gate 2 — factual recency.
-        if age is not None and age > config.FACT_RECENCY_MAX_DAYS:
-            months = round(age / 30)
-            why = (f"excluded — undated, but it restates a fact dated roughly "
-                   f"{months} months ago" if borrowed
-                   else f"excluded — stale, roughly {months} months old")
-            # Too old to open with is not the same as worthless. Where someone
-            # has worked, and in what roles, is who they are — it just belongs
-            # in the background of a message rather than its first line.
-            if f.category in CAREER_CATEGORIES and f.level == "person":
-                background.append(f)
-                why += " — kept as career background, never as the opening line"
-            verdicts.append(FactVerdict(fact=f, eligible=False, reason=why, score=0.0))
-            continue
+        # Age is a penalty, not a gate.
+        #
+        # It used to be a hard exclusion, and that threw away real signal: an
+        # old fact is often the only thing that says who someone is, and a run
+        # with nothing left to say falls back to a generic message — which is
+        # worse than an honest older reference. Everything stays a candidate;
+        # recency decides the ranking, and a stale fact only wins when nothing
+        # fresher exists.
+        stale = age is not None and age > config.FACT_RECENCY_MAX_DAYS
+        if stale and f.category in CAREER_CATEGORIES and f.level == "person":
+            background.append(f)
 
         # Gate 3 — specificity.
         if not is_specific(f):
             verdicts.append(FactVerdict(
                 fact=f, eligible=False,
-                reason="excluded — too vague to write a specific line from",
+                reason="ranked last — too vague to write a specific line from",
                 score=0.0))
             continue
 
         score = score_fact(f, age, writer, offer)
         fit, hits = relevance(f, offer)
 
-        # Gate 4 — outreach value floor. Technically true, practically dead.
+        # Not a gate on truth — a gate on being the OPENING LINE. The fact stays
+        # in the list with its score and its reason; it just loses. Nothing is
+        # thrown away, because an old fact is often the only thing that says who
+        # someone is, and it still reaches the draft as background.
         if score <= 0.05:
             verdicts.append(FactVerdict(
                 fact=f, eligible=False,
-                reason="excluded — still accurate but past its useful outreach window",
+                reason="not the hook — still accurate, but outranked by anything more recent",
                 score=score))
             continue
 
         tier = f.level if f.level in ("person", "company") else tier_of(f.category)
-        age_txt = "date unknown" if age is None else f"{age}d old"
+        months = None if age is None else round(age / 30)
+        age_txt = ("date unknown" if age is None
+                   else f"{months} months old — too old to lead with" if stale
+                   else f"{age}d old")
+        fresh_txt = ("; recent activity of theirs"
+                     if activity_boost(f, age) > 1.0 else "")
         fit_txt = ("" if not offer
                    else f"; {hits} word(s) in common with what you sell" if hits
                    else "; nothing in common with what you sell")
         reason = (f"eligible — {tier}-level {f.category}, {age_txt}, specific and safe"
-                  f"{fit_txt}; {provenance.describe(tier, fact_sources(f))}")
+                  f"{fresh_txt}{fit_txt}; {provenance.describe(tier, fact_sources(f))}")
 
         # Not a gate: a company milestone referenced at a junior prospect should
         # be framed as context, not as their personal achievement.
@@ -365,7 +400,26 @@ def judge(
     background.sort(key=lambda f: f.date or "")
 
     eligible = sorted([v for v in verdicts if v.eligible], key=lambda v: v.score, reverse=True)
+
     if not eligible:
+        # Last resort. Nothing cleared the bar, and the alternative is a message
+        # with no reason to exist — so the best surviving fact is used, provided
+        # it is merely old rather than ancient. A reference to something from
+        # last year reads as thin; one from a decade ago reads as automated, and
+        # that line is where this stops.
+        limit = config.FACT_RECENCY_MAX_DAYS * config.LAST_RESORT_MULTIPLE
+        salvage = [v for v in verdicts
+                   if v.score > 0
+                   and v.fact.category not in config.BLOCKED_CATEGORIES
+                   and (a := _age_days(v.fact, today)) is not None and a <= limit]
+        if salvage:
+            pick = max(salvage, key=lambda v: v.score)
+            months = round(_age_days(pick.fact, today) / 30)
+            return JudgeResult(
+                verdicts=verdicts, chosen=pick.fact, background=background,
+                chosen_reason=(f"nothing recent cleared the bar, so the best of what "
+                               f"remains was used — {months} months old. Read it before "
+                               f"sending: an old reference can read as automated"))
         return JudgeResult(verdicts=verdicts, chosen=None, background=background,
                            chosen_reason="no candidate cleared the eligibility gates")
 
@@ -380,7 +434,11 @@ def judge(
     reason += f"; {provenance.describe(best_tier, fact_sources(best.fact))}"
     if runners:
         reason += f"; {len(runners)} runner-up hook(s) available"
+    best_age = _age_days(best.fact, today)
+    if best_age is not None and best_age > config.FACT_RECENCY_MAX_DAYS:
+        reason += (f" — NOTE: {round(best_age / 30)} months old, chosen only "
+                   f"because nothing more recent cleared the bar")
     if background:
-        reason += f"; {len(background)} career fact(s) kept as background"
+        reason += f"; {len(background)} career fact(s) also kept as background"
     return JudgeResult(verdicts=verdicts, chosen=best.fact, chosen_reason=reason,
                        background=background)
