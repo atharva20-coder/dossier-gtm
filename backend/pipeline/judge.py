@@ -86,7 +86,11 @@ def outreach_value(age: int | None) -> float:
     rather than well-researched. Value peaks inside ~3 weeks, decays after.
     """
     if age is None:
-        return 0.35                      # unknown date: usable, never preferred
+        # Usable, never preferred. Low enough that any fact carrying a real
+        # recent date beats it — an absent date is missing information, not
+        # freshness, and treating it as freshness is how an undated fact
+        # outranks the dated version of the same event.
+        return config.UNDATED_VALUE
     if age < 0:
         return 0.5                       # future-dated: suspicious metadata
     if age <= config.OUTREACH_PEAK_DAYS:
@@ -98,6 +102,82 @@ def outreach_value(age: int | None) -> float:
         span = config.FACT_RECENCY_MAX_DAYS - config.OUTREACH_DECAY_DAYS
         return 0.5 - 0.4 * ((age - config.OUTREACH_DECAY_DAYS) / max(span, 1))
     return 0.0
+
+
+# Words that appear in every offer and every fact, and so separate nothing.
+_STOPWORDS = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "your", "their",
+    "our", "are", "was", "were", "has", "have", "had", "not", "but", "all", "any",
+    "who", "how", "why", "what", "when", "which", "them", "they", "you", "its",
+    "company", "companies", "business", "team", "teams", "people", "new", "using",
+    "used", "use", "help", "helps", "make", "makes", "more", "most", "than",
+}
+
+
+# Facts that describe a career rather than an event. These age out of being a
+# hook long before they stop being useful for knowing who someone is.
+CAREER_CATEGORIES = {"role_change", "promotion", "looking_for"}
+
+
+def _norm(text: str) -> str:
+    """Collapse whitespace and case so two phrasings of one event can be compared."""
+    return re.sub(r"\s+", " ", (text or "").strip().lower())
+
+
+def _terms(text: str) -> set[str]:
+    """Meaningful words, lowercased and de-suffixed enough to match loosely."""
+    # Two characters, not three: "AI" is the single most load-bearing term in
+    # a great many offers, and a three-character floor silently drops it.
+    words = re.findall(r"[a-z][a-z0-9]+", (text or "").lower())
+    out = set()
+    for w in words:
+        if w in _STOPWORDS:
+            continue
+        # Crude stemming: "hiring"/"hires"/"hire" should meet.
+        for suffix in ("ing", "ers", "er", "es", "s"):
+            if len(w) > 5 and w.endswith(suffix):
+                w = w[: -len(suffix)]
+                break
+        out.add(w)
+    return out
+
+
+def offer_terms(writer: WriterConfig | None, persona: dict | None = None) -> set[str]:
+    """What the sender actually sells, as words a fact can be matched against.
+
+    Assembled from both the sender config and the active persona because they
+    are filled in at different times — the persona on day one, the writer
+    config later — and a judgment that reads only one of them is blind half
+    the time.
+    """
+    parts: list[str] = []
+    if writer:
+        parts += [writer.product, writer.problem_solved, writer.proof]
+    if persona:
+        parts += [str(persona.get(k) or "") for k in
+                  ("product", "problem", "proof", "looking_for")]
+    return _terms(" ".join(p for p in parts if p))
+
+
+def relevance(fact: ExtractedFact, offer: set[str]) -> tuple[float, int]:
+    """How much this fact connects to what the sender sells.
+
+    THE POINT OF THE WHOLE RANKING. Without it the system optimises for the most
+    interesting fact about a person rather than the one that gives the sender a
+    reason to write — so a decade-old research paper beats "they just moved
+    their whole product onto AI agents" for a vendor selling AI research tooling.
+
+    Deliberately word overlap rather than a model call: it is deterministic,
+    free, explainable in the reason string, and it cannot hallucinate a
+    connection that is not there. Its weakness is synonyms, which is a smaller
+    problem than a confident invented rationale.
+    """
+    if not offer:
+        return 1.0, 0                    # nothing configured: stay neutral
+    hits = len(_terms(fact.text) & offer)
+    if hits == 0:
+        return config.RELEVANCE_MISS, 0
+    return min(1.0 + config.RELEVANCE_STEP * hits, config.RELEVANCE_MAX), hits
 
 
 def intent_weight(category: str, writer: WriterConfig | None) -> float:
@@ -143,8 +223,13 @@ def score_fact(
     fact: ExtractedFact,
     age: int | None,
     writer: WriterConfig | None = None,
+    offer: set[str] | None = None,
 ) -> float:
     score = outreach_value(age) * intent_weight(fact.category, writer)
+
+    # Relevance to the offer, applied before every other multiplier so that a
+    # fact with nothing to do with what the sender sells cannot win on charm.
+    score *= relevance(fact, offer or set())[0]
 
     # A person-level hook ("you were on that podcast", "you just moved into this
     # role") is what makes a message feel written FOR someone. A company-level
@@ -170,12 +255,50 @@ def judge(
     target_company: str = "",
     writer: WriterConfig | None = None,
     stakeholder: StakeholderProfile | None = None,
+    persona: dict | None = None,
 ) -> JudgeResult:
     today = today or date.today()
     verdicts: list[FactVerdict] = []
+    background: list[ExtractedFact] = []
+    offer = offer_terms(writer, persona)
+
+    # Two facts can describe the same event with only one of them dated —
+    # "in the Founder's Office since January 2023" and "joined the Founder's
+    # Office". The dated one is gated out as stale and the undated one sails
+    # through, so the system rewards the version that says less. An undated
+    # fact inherits the age of a stale near-twin.
+    stale_twins = [(f.text, _age_days(f, today)) for f in facts
+                   if (a := _age_days(f, today)) is not None
+                   and a > config.FACT_RECENCY_MAX_DAYS]
+
+    def inherited_age(f: ExtractedFact) -> int | None:
+        """The age of a stale fact describing the same event, if there is one.
+
+        Compared on content words rather than character ratio. Two phrasings of
+        one event — "joined the Founder's Office" and "has been in the
+        Founder's Office since January 2023" — scored 0.618 on characters
+        against a 0.62 threshold, which is not a distinction anyone could tune
+        reliably. Shared words are what actually make them the same event.
+        """
+        mine = _terms(f.text)
+        if not mine:
+            return None
+        for text, twin_age in stale_twins:
+            theirs = _terms(text)
+            # Containment, not Jaccard: the dated version carries extra words
+            # ("since January 2023") that inflate the union and hide the fact
+            # that one restates the other. What matters is how much of the
+            # shorter fact is already in the longer one.
+            shared = len(mine & theirs) / max(min(len(mine), len(theirs)), 1)
+            if shared >= config.TWIN_SIMILARITY:
+                return twin_age
+        return None
 
     for f in facts:
         age = _age_days(f, today)
+        borrowed = False
+        if age is None and (twin := inherited_age(f)) is not None:
+            age, borrowed = twin, True
 
         # Gate 1 — category. Hard exclusion, never a preference the model can
         # override. Referencing layoffs as a sales hook is actively harmful.
@@ -189,10 +312,16 @@ def judge(
         # Gate 2 — factual recency.
         if age is not None and age > config.FACT_RECENCY_MAX_DAYS:
             months = round(age / 30)
-            verdicts.append(FactVerdict(
-                fact=f, eligible=False,
-                reason=f"excluded — stale, roughly {months} months old",
-                score=0.0))
+            why = (f"excluded — undated, but it restates a fact dated roughly "
+                   f"{months} months ago" if borrowed
+                   else f"excluded — stale, roughly {months} months old")
+            # Too old to open with is not the same as worthless. Where someone
+            # has worked, and in what roles, is who they are — it just belongs
+            # in the background of a message rather than its first line.
+            if f.category in CAREER_CATEGORIES and f.level == "person":
+                background.append(f)
+                why += " — kept as career background, never as the opening line"
+            verdicts.append(FactVerdict(fact=f, eligible=False, reason=why, score=0.0))
             continue
 
         # Gate 3 — specificity.
@@ -203,7 +332,8 @@ def judge(
                 score=0.0))
             continue
 
-        score = score_fact(f, age, writer)
+        score = score_fact(f, age, writer, offer)
+        fit, hits = relevance(f, offer)
 
         # Gate 4 — outreach value floor. Technically true, practically dead.
         if score <= 0.05:
@@ -215,8 +345,11 @@ def judge(
 
         tier = f.level if f.level in ("person", "company") else tier_of(f.category)
         age_txt = "date unknown" if age is None else f"{age}d old"
-        reason = (f"eligible — {tier}-level {f.category}, {age_txt}, specific and safe; "
-                  f"{provenance.describe(tier, fact_sources(f))}")
+        fit_txt = ("" if not offer
+                   else f"; {hits} word(s) in common with what you sell" if hits
+                   else "; nothing in common with what you sell")
+        reason = (f"eligible — {tier}-level {f.category}, {age_txt}, specific and safe"
+                  f"{fit_txt}; {provenance.describe(tier, fact_sources(f))}")
 
         # Not a gate: a company milestone referenced at a junior prospect should
         # be framed as context, not as their personal achievement.
@@ -228,9 +361,12 @@ def judge(
 
         verdicts.append(FactVerdict(fact=f, eligible=True, reason=reason, score=score))
 
+    # Oldest first, so a trajectory reads as one.
+    background.sort(key=lambda f: f.date or "")
+
     eligible = sorted([v for v in verdicts if v.eligible], key=lambda v: v.score, reverse=True)
     if not eligible:
-        return JudgeResult(verdicts=verdicts, chosen=None,
+        return JudgeResult(verdicts=verdicts, chosen=None, background=background,
                            chosen_reason="no candidate cleared the eligibility gates")
 
     best = eligible[0]
@@ -239,7 +375,12 @@ def judge(
     reason = f"highest score ({best.score}) — {best_tier}-level {best.fact.category}"
     if best_tier == "person":
         reason += ", preferred because it is about them rather than their employer"
+    if (hits := relevance(best.fact, offer)[1]):
+        reason += f", and it touches what you sell ({hits} term(s) in common)"
     reason += f"; {provenance.describe(best_tier, fact_sources(best.fact))}"
     if runners:
         reason += f"; {len(runners)} runner-up hook(s) available"
-    return JudgeResult(verdicts=verdicts, chosen=best.fact, chosen_reason=reason)
+    if background:
+        reason += f"; {len(background)} career fact(s) kept as background"
+    return JudgeResult(verdicts=verdicts, chosen=best.fact, chosen_reason=reason,
+                       background=background)

@@ -570,6 +570,48 @@ attributing a message to someone who did not write it.
 
 ---
 
+## Ranking: recency and relevance
+
+**An undated fact is missing information, not fresh.** — It scored 0.35, above
+plenty of dated facts, so the version of an event that said *less* won. Now 0.22
+— usable, never preferred.
+
+**An undated fact inherits the age of a stale near-twin.** — "In the Founder's
+Office since January 2023" was gated out at 44 months while "joined the
+Founder's Office" — the same event, undated — scored highest. The system was
+rewarding the phrasing that omitted the date.
+
+**Twins are matched on shared words, by containment.** — Character similarity
+put the true pair at 0.618 against a 0.62 threshold, which is not a distinction
+anyone can tune. Jaccard hid it too, because the dated version carries extra
+words that inflate the union. Containment against the shorter fact separates the
+true twin (0.556) from the nearest false positive (0.286).
+
+**Relevance to what the sender sells is a first-class multiplier.** — Ranking
+optimised for the most interesting fact rather than the one giving a reason to
+write, so a decade-old paper on blood-pressure monitoring outranked "they moved
+their whole product onto AI agents" for a vendor selling AI research tooling.
+*Rejected:* asking a model to rate relevance — word overlap is deterministic,
+free, explainable in the reason string, and cannot invent a connection.
+
+**Offer terms come from the writer config AND the persona.** — They are filled
+in at different times, and reading only one is blind half the time.
+
+**Two-character tokens count.** — A three-character floor silently dropped "AI",
+the most load-bearing word in a great many offers.
+
+**Career history is kept as background, not discarded.** — Where someone worked
+ten years ago is a poor reason to email them today and exactly what tells you
+who you are writing to: a VP then and an SVP now is a different reader from
+someone in their first such role.
+
+**The background block names the current employer and labels the rest FORMER.** —
+Presenting an old employer as current is wrong, checkable in one click, and
+proves nobody read anything. Verified: given Adobe and Oracle as history and
+Ramp as current, the draft names Ramp and neither of the others.
+
+---
+
 ## Watching a run
 
 **One row per stage, not one per event.** — The pipeline writes a row when a

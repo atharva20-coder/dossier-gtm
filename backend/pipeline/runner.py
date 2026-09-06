@@ -346,7 +346,8 @@ async def run(run_id: int, p: ProspectInput) -> None:
         t0 = time.perf_counter()
         await stage("draft", "started", "Writing the draft")
         d = await draft_stage.write(p, jr.chosen, writer=writer, stakeholder=stakeholder,
-                                    style_examples=style_examples, persona=persona)
+                                    style_examples=style_examples, persona=persona,
+                                    background=jr.background)
         note = d.note + (f" · matched to your voice from {len(style_examples)} edited draft(s)"
                          if style_examples else "")
         await stage("draft", "done" if d.body else "failed", note, {"draft": d.model_dump()}, t0=t0)

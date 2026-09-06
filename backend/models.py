@@ -190,6 +190,11 @@ class JudgeResult(BaseModel):
     verdicts: list[FactVerdict] = Field(default_factory=list)
     chosen: Optional[ExtractedFact] = None
     chosen_reason: str = ""
+    # Career history: where they have worked and in what roles. Too old to open
+    # a message with, and exactly what tells you who you are writing to — a VP
+    # at one company a decade ago who is now an SVP somewhere else is a
+    # different person to write to than someone in their first such role.
+    background: list[ExtractedFact] = Field(default_factory=list)
 
 
 class DraftResult(BaseModel):

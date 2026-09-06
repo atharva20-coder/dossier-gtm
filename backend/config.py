@@ -202,3 +202,18 @@ def missing_keys() -> list[str]:
     if not GEMINI_API_KEY:
         missing.append("GEMINI_API_KEY")
     return missing
+
+# --- ranking: recency and relevance -----------------------------------------
+# An undated fact is missing information, not fresh. Low enough that anything
+# carrying a real recent date beats it.
+UNDATED_VALUE = float(os.getenv("UNDATED_VALUE", "0.22"))
+# How much a fact's connection to what the sender sells moves its score. A fact
+# with no overlap is not banned — it is outranked.
+RELEVANCE_MISS = float(os.getenv("RELEVANCE_MISS", "0.65"))
+RELEVANCE_STEP = float(os.getenv("RELEVANCE_STEP", "0.22"))
+RELEVANCE_MAX = float(os.getenv("RELEVANCE_MAX", "1.9"))
+# Two facts describing the same event, one dated and one not: the undated one
+# inherits the age rather than escaping the recency gate on a technicality.
+# 0.45 sits between the true twin (0.556 on the run that exposed this) and
+# the nearest false positive (0.286) — margin on both sides, not a tuned edge.
+TWIN_SIMILARITY = float(os.getenv("TWIN_SIMILARITY", "0.45"))

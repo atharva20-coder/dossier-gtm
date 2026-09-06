@@ -260,6 +260,34 @@ def _writer_block(w: WriterConfig | None) -> str:
     return "\n".join(bits) + "\n"
 
 
+def _background_block(facts: list[ExtractedFact] | None,
+                      current: str = "") -> str:
+    """Career history, offered as context and fenced off from the hook.
+
+    Where someone worked ten years ago is a poor reason to email them today and
+    a real part of knowing who they are: a VP at one company then, an SVP
+    somewhere else now, is a different reader from someone in their first such
+    role. The fence is explicit because the model will otherwise reach for the
+    most colourful line here and open with it.
+    """
+    if not facts:
+        return ""
+    lines = "\n".join(f"- {f.text}" for f in facts[:6])
+    where = f" They are at {current} NOW." if current else ""
+    return (
+        "\n\nTHEIR CAREER SO FAR — FORMER ROLES, CONTEXT ONLY\n"
+        f"{lines}\n"
+        f"Every line above is a PAST role at a FORMER employer.{where} Naming one "
+        "of these as their current job is the single worst mistake this message "
+        "can make: it is wrong, it is checkable in one click, and it proves "
+        "nobody read anything.\n"
+        "Use it only to judge seniority and what they have already lived through "
+        "— someone who has run this function before needs a different pitch from "
+        "someone doing it for the first time. NEVER open with it and never "
+        "present it as news.\n"
+    )
+
+
 def _stakeholder_block(s: StakeholderProfile | None) -> str:
     if not s or not s.title_known:
         return ""
@@ -517,11 +545,12 @@ async def write(
     stakeholder: StakeholderProfile | None = None,
     style_examples: list[StyleExample] | None = None,
     persona: dict | None = None,
+    background: list[ExtractedFact] | None = None,
 ) -> DraftResult:
     role_part = _role_part(p.role)
     company = p.company or "their company"
     wblock = _persona_block(persona) + _writer_block(writer)
-    sblock = _stakeholder_block(stakeholder)
+    sblock = _stakeholder_block(stakeholder) + _background_block(background, company)
     stblock = _style_block(style_examples or [])
     system = BASE_SYSTEM + (
         f" You are writing as {writer.sender_name or 'the sender'}"
