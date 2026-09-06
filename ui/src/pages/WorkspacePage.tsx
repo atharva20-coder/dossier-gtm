@@ -469,6 +469,7 @@ export function WorkspacePage({ notify }: { notify: (m: string) => void }) {
         open={settingsOpen} onOpenChange={setSettingsOpen}
         tab={settingsTab} onTab={setSettingsTab}
         personas={personas} editingId={editingPersonaId}
+        onEditPersona={setEditingPersonaId}
         onSaved={() => notify("Saved")}
         onPersonasChanged={reloadPersonas}
         notify={notify} />

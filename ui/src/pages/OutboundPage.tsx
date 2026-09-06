@@ -88,6 +88,9 @@ export function OutboundPage() {
   const { runId } = useParams()
   const navigate = useNavigate()
   const learning = useLearning()
+  // Which persona the settings dialog is on. Derived from the selection when
+  // nothing has been picked, so opening settings lands on whoever is writing.
+  const [editingPersonaId, setEditingPersonaId] = useState<number | null>(null)
   const selectedId = runId ? Number(runId) : null
 
   const [runs, setRuns] = useState<OutboundRun[]>([])
@@ -870,8 +873,13 @@ export function OutboundPage() {
             setPersonas((prev) => prev.map((x) => ({ ...x, is_selected: x.id === p.id })))
             try { await api.selectPersona(p.id) } catch { /* the next load corrects it */ }
           }}
-          onCreate={() => { setSettingsTab("persona"); setSettingsOpen(true) }}
-          onSetup={() => { setSettingsTab("writer"); setSettingsOpen(true) }} />
+          onCreate={() => {
+            setEditingPersonaId(null); setSettingsTab("persona"); setSettingsOpen(true)
+          }}
+          onSetup={() => {
+            setEditingPersonaId(personas.find((p) => p.is_selected)?.id ?? null)
+            setSettingsTab("writer"); setSettingsOpen(true)
+          }} />
 
         <ResizablePanelGroup orientation="horizontal" className="min-w-0 flex-1">
           <ResizablePanel defaultSize="22" minSize="15" maxSize="34">{list}</ResizablePanel>
@@ -883,7 +891,8 @@ export function OutboundPage() {
       <SettingsDialog
         open={settingsOpen} onOpenChange={setSettingsOpen}
         tab={settingsTab} onTab={setSettingsTab}
-        personas={personas} editingId={personas.find((p) => p.is_selected)?.id ?? null}
+        personas={personas} editingId={editingPersonaId}
+        onEditPersona={setEditingPersonaId}
         onSaved={() => notify("Saved")}
         onPersonasChanged={async () => {
           try { setPersonas((await api.personas()).personas) } catch { /* keep */ }

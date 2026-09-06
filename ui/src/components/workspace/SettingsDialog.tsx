@@ -76,7 +76,8 @@ function Chips({ options, selected, onToggle }: {
  * question whichever field answers it. Tabs, one save.
  */
 export function SettingsDialog({
-  open, onOpenChange, tab, onTab, personas, editingId, onSaved, onPersonasChanged, notify,
+  open, onOpenChange, tab, onTab, personas, editingId, onEditPersona,
+  onSaved, onPersonasChanged, notify,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
@@ -84,6 +85,9 @@ export function SettingsDialog({
   onTab: (t: string) => void
   personas: Persona[]
   editingId: number | null
+  /** Move the dialog onto a persona — used after building one, so the thing
+   *  that was just created is on screen instead of somewhere in the rail. */
+  onEditPersona: (id: number | null) => void
   onSaved: () => void
   onPersonasChanged: () => Promise<void> | void
   notify: (m: string) => void
@@ -194,9 +198,15 @@ export function SettingsDialog({
     setGenerating(true); setError("")
     try {
       const p = await api.generatePersona(describe)
+      // It used to create the persona, clear the box, and leave you looking at
+      // the same empty form — so a working button read as a broken one. The
+      // thing you just made is now the thing on screen, and it is the voice
+      // writing, because you described yourself in order to be written as.
+      await api.selectPersona(p.id)
       await onPersonasChanged()
-      notify(`${p.name} created and now writing`)
       setDescribe("")
+      onEditPersona(p.id)
+      notify(`${p.emoji || ""} ${p.name} built and now writing`.trim())
     } catch (e: any) { setError(e.message) } finally { setGenerating(false) }
   }
 
@@ -234,7 +244,10 @@ export function SettingsDialog({
     } catch (e: any) { setError(e.message) } finally { setSaving(false) }
   }
 
-  const describing = !editing && mode === "describe"
+  // Describing is the way in, and it was reachable only from one "+" in the
+  // rail: open settings on an existing persona and there was no route back to
+  // it, which read as the feature having disappeared.
+  const describing = mode === "describe"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -276,13 +289,47 @@ export function SettingsDialog({
                   </p>
                 </div>
                 {error && <p className="text-[12px] text-destructive">{error}</p>}
-                <button type="button" onClick={() => setMode("fields")}
-                  className="text-[12px] text-primary underline underline-offset-2">
-                  Or fill the fields in by hand
-                </button>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <button type="button" onClick={() => setMode("fields")}
+                    className="text-[12px] text-primary underline underline-offset-2">
+                    Or fill the fields in by hand
+                  </button>
+                  {editing && (
+                    <button type="button"
+                      onClick={() => { setMode("fields"); setDescribe("") }}
+                      className="text-[12px] text-muted-foreground underline
+                                 underline-offset-2">
+                      Back to {editing.name}
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  This builds a new identity and starts writing as it. It leaves
+                  {editing ? ` ${editing.name}` : " anything you already have"} untouched.
+                </p>
               </>
             ) : (
               <>
+                {/* The way back to describing. Filling fields in by hand is the
+                    fallback, not the front door — nobody has an opinion about
+                    a "character" field, and everybody can describe how they
+                    write. */}
+                <button type="button"
+                  onClick={() => setMode("describe")}
+                  className="flex w-full items-center gap-2 rounded-[10px] border
+                             border-dashed px-3 py-2 text-left transition
+                             hover:border-primary hover:bg-muted/40">
+                  <Sparkles className="size-3.5 shrink-0 text-primary" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12.5px] font-medium">
+                      Build one from a description instead
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      Write a paragraph about how you write — it fills all of this in.
+                    </span>
+                  </span>
+                </button>
+
                 <div className="space-y-1.5">
                   <Label>Avatar</Label>
                   <div className="flex h-9 w-fit items-center gap-1 rounded-[10px] border px-1.5">

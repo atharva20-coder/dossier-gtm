@@ -98,6 +98,7 @@ export function DashboardPage() {
   const [outbound, setOutbound] = useState<any[]>([])
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState("persona")
+  const [editingPersonaId, setEditingPersonaId] = useState<number | null>(null)
   const [toast, setToast] = useState("")
 
   const notify = useCallback((m: string) => {
@@ -357,7 +358,9 @@ export function DashboardPage() {
       <SettingsDialog
         open={settingsOpen} onOpenChange={setSettingsOpen}
         tab={settingsTab} onTab={setSettingsTab}
-        personas={personas} editingId={personas.find((p) => p.is_selected)?.id ?? null}
+        personas={personas}
+        editingId={editingPersonaId ?? personas.find((p) => p.is_selected)?.id ?? null}
+        onEditPersona={setEditingPersonaId}
         onSaved={() => notify("Saved")}
         onPersonasChanged={async () => {
           try { setPersonas((await api.personas()).personas) } catch { /* keep */ }
