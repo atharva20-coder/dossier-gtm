@@ -387,6 +387,7 @@ export const api = {
       triggers: {
         category: string; drafted: number; sent: number
         hand_picked: number; weight: number; learned: boolean
+        examples: string[]
       }[]
       min_evidence: number
       note: string

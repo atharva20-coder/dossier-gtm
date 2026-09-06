@@ -16,8 +16,8 @@ import {
   api, type ICPConfig, type Persona, type PersonaMemory, type WriterConfig,
 } from "@/lib/api"
 import {
-  Activity, Brain, Building2, Crosshair, Loader2, PenLine, Sparkles, Undo2,
-  User, UserRound,
+  Activity, Brain, Building2, ChevronRight, Crosshair, Loader2, PenLine,
+  Sparkles, Undo2, User, UserRound,
 } from "lucide-react"
 
 const EMOJI = ["🚀", "🧭", "🎯", "💼", "🧠", "⚡", "🪄", "📣", "🤝", "🔍"]
@@ -115,9 +115,13 @@ export function SettingsDialog({
 
   // --- what the ranking has learned about which triggers matter ---------
   const [triggers, setTriggers] = useState<
-    { category: string; drafted: number; sent: number
-      hand_picked: number; weight: number; learned: boolean }[]>([])
+    { category: string; drafted: number; sent: number; hand_picked: number
+      weight: number; learned: boolean; examples: string[] }[]>([])
   const [triggerNote, setTriggerNote] = useState("")
+  const [minEvidence, setMinEvidence] = useState(2)
+  // One open at a time: these are full sentences, and every row expanded is a
+  // wall of near-identical text in a dialog that is already dense.
+  const [openTrigger, setOpenTrigger] = useState("")
 
   // --- connected services, checked only on request ----------------------
   const [apis, setApis] = useState<any>(null)
@@ -139,7 +143,10 @@ export function SettingsDialog({
     // Counted from the runs themselves, so it costs a local query and nothing
     // else — safe to read every time the dialog opens.
     api.learnedTriggers()
-      .then((t) => { setTriggers(t.triggers); setTriggerNote(t.note) })
+      .then((t) => {
+        setTriggers(t.triggers); setTriggerNote(t.note)
+        setMinEvidence(t.min_evidence)
+      })
       .catch(() => {})
   }, [open])
 
@@ -444,25 +451,62 @@ export function SettingsDialog({
                 </p>
               ) : (
                 <ul className="mt-2 space-y-1">
-                  {triggers.map((t) => (
-                    <li key={t.category}
-                      className="flex items-center gap-2 rounded-[8px] border px-2.5 py-1.5">
-                      <span className={`size-1.5 shrink-0 rounded-full ${
-                        t.learned ? "bg-primary" : "bg-muted-foreground/30"}`} />
-                      <span className="flex-1 truncate text-[13px]">
-                        {t.category.replace(/_/g, " ")}
-                      </span>
-                      <span className="shrink-0 text-[11px] text-muted-foreground">
-                        {t.sent > 0 && `${t.sent} sent · `}
-                        {t.hand_picked > 0 && `${t.hand_picked} picked · `}
-                        {t.drafted} drafted
-                      </span>
-                      <span className={`w-12 shrink-0 text-right text-[12px] tabular-nums ${
-                        t.learned ? "font-medium text-primary" : "text-muted-foreground"}`}>
-                        {t.learned ? `\u00d7${t.weight}` : "—"}
-                      </span>
-                    </li>
-                  ))}
+                  {triggers.map((t) => {
+                    const open = openTrigger === t.category
+                    return (
+                      <li key={t.category} className="overflow-hidden rounded-[8px] border">
+                        <button type="button"
+                          onClick={() => setOpenTrigger(open ? "" : t.category)}
+                          aria-expanded={open}
+                          className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left
+                                     transition hover:bg-muted/50">
+                          <ChevronRight className={`size-3 shrink-0 text-muted-foreground
+                                                    transition ${open ? "rotate-90" : ""}`} />
+                          <span className={`size-1.5 shrink-0 rounded-full ${
+                            t.learned ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                          <span className="flex-1 truncate text-[13px]">
+                            {t.category.replace(/_/g, " ")}
+                          </span>
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
+                            {t.sent > 0 && `${t.sent} sent · `}
+                            {t.hand_picked > 0 && `${t.hand_picked} picked · `}
+                            {t.drafted} drafted
+                          </span>
+                          <span className={`w-12 shrink-0 text-right text-[12px] tabular-nums ${
+                            t.learned ? "font-medium text-primary"
+                                      : "text-muted-foreground"}`}>
+                            {t.learned ? `\u00d7${t.weight}` : "—"}
+                          </span>
+                        </button>
+
+                        {open && (
+                          <div className="border-t bg-muted/30 px-2.5 py-2">
+                            <p className="mb-1.5 text-[11px] text-muted-foreground">
+                              {t.learned
+                                ? `Weighted \u00d7${t.weight} because you acted on these.`
+                                : `Not learned yet — needs ${minEvidence} point(s) of `
+                                  + "evidence, and a draft you left alone is worth none."}
+                            </p>
+                            {t.examples.length === 0 ? (
+                              <p className="text-[12px] text-muted-foreground">
+                                No hooks recorded in this category yet.
+                              </p>
+                            ) : (
+                              <ul className="space-y-1">
+                                {t.examples.map((e, i) => (
+                                  <li key={i}
+                                    className="flex gap-1.5 text-[12px] leading-snug">
+                                    <span className="text-muted-foreground">&middot;</span>
+                                    <span className="text-foreground/80">{e}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>

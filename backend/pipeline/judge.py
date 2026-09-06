@@ -28,6 +28,7 @@ from ..models import ExtractedFact, FactVerdict, JudgeResult, StakeholderProfile
 from ..taxonomy import (
     BLOCKED_INTENTS,
     DEFAULT_INTENT_WEIGHTS,
+    PERSON_INTENTS,
     PERSON_TIER_BOOST,
     tier_of,
 )
@@ -59,8 +60,22 @@ def _parse_date(s: str) -> date | None:
 
 
 def _age_days(fact: ExtractedFact, today: date) -> int | None:
+    """Age in days, or None when the date cannot be trusted.
+
+    A date on or after the day the run happens is treated as no date at all.
+    Extraction stamps "today" on facts it could not date — 4 of 13 dated hooks
+    in this database carry the run's own date — and because today scores maximum
+    freshness, those undatable facts were beating everything else. A fabricated
+    date is worse than a missing one: missing is honest and scores 0.22, while
+    "today" is a confident lie that scores 1.0.
+
+    The cost is that a genuinely same-day fact is treated as undated. That is
+    the right trade against a third of dates being wrong in the other direction.
+    """
     d = _parse_date(fact.date)
-    return None if not d else (today - d).days
+    if not d or d >= today:
+        return None
+    return (today - d).days
 
 
 def is_specific(fact: ExtractedFact) -> bool:
@@ -298,7 +313,16 @@ def score_fact(
     # hook is about their employer, and every other rep in their inbox is using
     # the same one. Prefer the person tier when scores are otherwise close.
     tier = fact.level if fact.level in ("person", "company") else tier_of(fact.category)
-    if tier == "person" and (writer is None or writer.prefer_person_signal):
+
+    # The boost is for a person-level TRIGGER, not for any sentence that happens
+    # to be about a person. "other" is the catch-all — it means the fact could
+    # not be classified as a trigger at all — and letting it collect the tier
+    # boost put "will be turning a year old at Zamp soon" above "Zamp
+    # transitioned completely towards AI agents". An unclassified fact is the
+    # absence of a reason to write, and it should only win when nothing
+    # classified exists.
+    if (tier == "person" and fact.category in PERSON_INTENTS
+            and (writer is None or writer.prefer_person_signal)):
         score *= PERSON_TIER_BOOST
 
     # Where the fact came from. A first-party LinkedIn or X post outranks a web
@@ -408,7 +432,10 @@ def judge(
 
         tier = f.level if f.level in ("person", "company") else tier_of(f.category)
         months = None if age is None else round(age / 30)
-        age_txt = ("date unknown" if age is None
+        dated_today = bool(_parse_date(f.date)) and age is None
+        age_txt = (("dated today, which extraction does when it cannot find a real "
+                    "date — treated as undated") if dated_today
+                   else "date unknown" if age is None
                    else f"{months} months old — too old to lead with" if stale
                    else f"{age}d old")
         fresh_txt = ("; recent activity of theirs"

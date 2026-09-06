@@ -941,16 +941,27 @@ async def hook_outcomes() -> dict[str, dict]:
     """
     p = await pool()
     rows = await p.fetch("""
-        SELECT hook_category AS category,
-               count(*)                                        AS drafted,
-               count(*) FILTER (WHERE sent_at IS NOT NULL)      AS sent,
-               count(*) FILTER (WHERE coalesce(fact_overrides->>'chosen','') <> '')
-                                                                AS hand_picked
-        FROM runs
-        WHERE chosen_hook IS NOT NULL AND coalesce(hook_category,'') <> ''
-        GROUP BY hook_category""")
+        SELECT r.hook_category AS category,
+               count(*)                                          AS drafted,
+               -- A send counts however it was sent. A campaign message goes out
+               -- from `outbound_contacts`, and leaving that out meant the
+               -- strongest signal the app has was invisible to the thing it
+               -- was supposed to teach.
+               count(*) FILTER (WHERE r.sent_at IS NOT NULL
+                                   OR c.sent_at IS NOT NULL)     AS sent,
+               count(*) FILTER (WHERE coalesce(r.fact_overrides->>'chosen','') <> '')
+                                                                 AS hand_picked,
+               (array_agg(r.chosen_hook ORDER BY
+                          (r.sent_at IS NOT NULL OR c.sent_at IS NOT NULL) DESC,
+                          r.id DESC))[1:4]                       AS examples
+        FROM runs r
+        LEFT JOIN outbound_contacts c ON c.lead_run_id = r.id
+        WHERE r.chosen_hook IS NOT NULL AND coalesce(r.hook_category,'') <> ''
+        GROUP BY r.hook_category""")
     return {r["category"]: {"drafted": int(r["drafted"]), "sent": int(r["sent"]),
-                            "hand_picked": int(r["hand_picked"])} for r in rows}
+                            "hand_picked": int(r["hand_picked"]),
+                            "examples": [x for x in (r["examples"] or []) if x]}
+            for r in rows}
 
 
 async def latest_leads(limit: int = 200) -> list[dict]:

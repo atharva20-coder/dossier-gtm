@@ -1031,6 +1031,7 @@ async def learned_triggers():
         "hand_picked": o["hand_picked"],
         "weight": learned.get(category, 1.0),
         "learned": category in learned,
+        "examples": o.get("examples") or [],
     } for category, o in sorted(
         outcomes.items(), key=lambda kv: -(kv[1]["sent"] * 2 + kv[1]["hand_picked"]))]
     return {"triggers": rows,

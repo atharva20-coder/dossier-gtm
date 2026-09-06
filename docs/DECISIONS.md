@@ -570,6 +570,27 @@ attributing a message to someone who did not write it.
 
 ---
 
+## Dates you cannot trust
+
+**A fact dated today is treated as undated.** — Extraction stamps the run date on
+facts it cannot date: 4 of 13 dated hooks in this database carry the day the run
+happened. Because today scores maximum freshness, the facts it could NOT date
+were beating every fact it could. A fabricated date is worse than a missing one
+— missing is honest and scores low, "today" is a confident lie that scores top.
+*Cost accepted:* a genuinely same-day fact is demoted, which is the right trade
+against a third of dates being wrong the other way.
+
+**The person-tier boost requires a person-level TRIGGER, not a sentence about a
+person.** — "other" is the catch-all: it means the fact could not be classified
+as a trigger at all. Collecting the tier boost put "will be turning a year old
+at Zamp soon" above "Zamp transitioned completely towards AI agents".
+
+**A campaign send teaches the ranking like any other send.** — Messages sent from
+a campaign live on the contact, not the run, so the strongest signal the app has
+was invisible to the thing it was meant to teach.
+
+---
+
 ## Learning which triggers matter
 
 **The weight table is a starting point, not a permanent answer.** — It is one
