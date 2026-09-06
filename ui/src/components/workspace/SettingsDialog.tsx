@@ -109,9 +109,12 @@ export function SettingsDialog({
   const [problem, setProblem] = useState("")
   const [proof, setProof] = useState("")
   const [lookingFor, setLookingFor] = useState("")
+  // The whole brief in the sender's own words, and a message they wrote.
+  const [brief, setBrief] = useState("")
+  const [sample, setSample] = useState("")
   const [describe, setDescribe] = useState("")
   const [generating, setGenerating] = useState(false)
-  const [mode, setMode] = useState<"describe" | "fields">("describe")
+  const [mode, setMode] = useState<"describe" | "fields" | "prompt">("describe")
   const [error, setError] = useState("")
 
   // --- learned tab -------------------------------------------------------
@@ -171,8 +174,12 @@ export function SettingsDialog({
     setProblem(editing?.problem ?? "")
     setProof(editing?.proof ?? "")
     setLookingFor(editing?.looking_for ?? "")
+    setBrief(editing?.brief ?? "")
+    setSample(editing?.sample ?? "")
     setDescribe(""); setError("")
-    setMode(editing ? "fields" : "describe")
+    // Someone who has written their own brief opens on it, not on a form that
+    // no longer describes what their agent is doing.
+    setMode(!editing ? "describe" : (editing.brief || "").trim() ? "prompt" : "fields")
     setMemories([]); setPending(0)
     if (editing) {
       api.personaHistory(editing.id).then((h) => {
@@ -233,6 +240,8 @@ export function SettingsDialog({
         if (problem !== editing.problem) changed.problem = problem
         if (proof !== editing.proof) changed.proof = proof
         if (lookingFor !== editing.looking_for) changed.looking_for = lookingFor
+        if (brief !== (editing.brief ?? "")) changed.brief = brief
+        if (sample !== (editing.sample ?? "")) changed.sample = sample
         if (Object.keys(changed).length) {
           await api.updatePersona(editing.id, changed)
           await onPersonasChanged()
@@ -248,6 +257,7 @@ export function SettingsDialog({
   // rail: open settings on an existing persona and there was no route back to
   // it, which read as the feature having disappeared.
   const describing = mode === "describe"
+  const writingPrompt = mode === "prompt"
 
   // The factual fields a short description usually cannot fill. Voice is safe
   // to elaborate — "blunt" reasonably becomes "no throat-clearing" — but what
@@ -285,7 +295,63 @@ export function SettingsDialog({
           <div className="min-h-0 flex-1 overflow-y-auto p-5">
           {/* ------------------------- persona ------------------------- */}
           <TabsContent value="persona" className="mt-0 space-y-4">
-            {describing ? (
+            {/* Three ways in, because people arrive knowing different amounts.
+                Describe: two lines and it writes the rest. Fields: answer
+                questions. Write it yourself: you already know exactly what you
+                want your agent to do, so say it and have it followed. */}
+            {editing && (
+              <div className="flex gap-1 rounded-[10px] bg-muted p-1">
+                {([
+                  ["fields", "Fields"],
+                  ["prompt", "Write it yourself"],
+                  ["describe", "Build from a description"],
+                ] as const).map(([k, label]) => (
+                  <button key={k} type="button" onClick={() => setMode(k)}
+                    className={`flex-1 rounded-[7px] px-2 py-1 text-[12px] transition ${
+                      mode === k ? "bg-background font-medium shadow-sm"
+                                 : "text-muted-foreground hover:text-foreground"}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {writingPrompt ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="brief">Your agent's brief</Label>
+                  <Textarea id="brief" value={brief}
+                    onChange={(e) => setBrief(e.target.value)}
+                    className="min-h-[240px] font-mono text-[12.5px]"
+                    placeholder={"WHO I AM\nFounder of an AI research tool. I write to heads of sales and other founders.\n\nWHAT I WANT\nA fifteen-minute call. Never a demo, never a \"quick sync\".\n\nWHO I TARGET\nSeries A to C B2B SaaS and fintech. Heads of sales, CROs, RevOps. Best moment is a new role, a raise, or hiring AEs.\n\nWHAT I SELL\nDeep, source-verified prospect research in ninety seconds. It removes the forty minutes a rep spends digging, or the templated email they send instead.\n\nHOW I WRITE\nThree sentences. Open on the exact thing I noticed. Engineer talking to a peer. No greeting, no pleasantries, no exclamation marks. Never say synergy or circle back. One small concrete ask at the end."} />
+                  <p className="text-[11px] text-muted-foreground">
+                    Used word for word — this replaces the brief the app would
+                    otherwise assemble from the fields. Say who you are, what you
+                    want, who you target, what you sell, and how you write.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="sample">A message you actually wrote</Label>
+                  <Textarea id="sample" value={sample}
+                    onChange={(e) => setSample(e.target.value)}
+                    className="min-h-[120px] text-[13px]"
+                    placeholder={"Paste one you were happy to send.\n\nIt is shown as the voice to match — worth more than any description of a voice, because it is the voice."} />
+                  <p className="text-[11px] text-muted-foreground">
+                    Optional, and the single most useful thing here. Its facts are
+                    never reused — only how it reads.
+                  </p>
+                </div>
+
+                {brief.trim() && (
+                  <p className="rounded-[8px] border border-primary/40 bg-primary/5
+                                px-3 py-2 text-[11.5px] text-muted-foreground">
+                    Live as soon as you save. Every draft after that follows this,
+                    and anything it has learned from your edits is applied on top.
+                  </p>
+                )}
+              </>
+            ) : describing ? (
               <>
                 <div className="space-y-1.5">
                   <Label htmlFor="describe">Describe how you write</Label>
@@ -326,7 +392,21 @@ export function SettingsDialog({
                     because an invented one becomes a claim in every message
                     this persona ever writes. Blank fields say so instead of
                     sitting there looking finished. */}
-                {editing && gaps.length > 0 && (
+                {editing && brief.trim() && (
+                  <div className="rounded-[10px] border border-primary/40 bg-primary/5
+                                  px-3 py-2">
+                    <p className="text-[12.5px] font-medium">
+                      Your own brief is in charge
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                      These fields still feed the ranking — what you sell is matched
+                      against what the research found — but the writing follows what
+                      you wrote, not this form.
+                    </p>
+                  </div>
+                )}
+
+                {editing && !brief.trim() && gaps.length > 0 && (
                   <div className="rounded-[10px] border border-amber-500/40
                                   bg-amber-500/5 px-3 py-2">
                     <p className="text-[12.5px] font-medium">

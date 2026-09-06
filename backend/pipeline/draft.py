@@ -188,6 +188,32 @@ def _persona_block(persona: dict | None) -> str:
     if not persona:
         return ""
 
+    # Written by hand? Then it IS the brief, verbatim.
+    #
+    # The assembled version below is a scaffold for someone who would rather
+    # answer questions than write a page. Someone who has written the page
+    # should not have it treated as raw material for a brief this app composes
+    # — that is the app overruling the person whose agent it is. Learned rules
+    # still apply on top, because those came from their own edits.
+    hand_written = (persona.get("brief") or "").strip()
+    if hand_written:
+        out = ["THE BRIEF — written by the sender. Follow it exactly. It outranks "
+               "every other instruction about how to write.\n", hand_written]
+        sample = (persona.get("sample") or "").strip()
+        if sample:
+            out.append(
+                "\nA MESSAGE THEY WROTE THEMSELVES — match this voice. Do not copy "
+                "its facts; this prospect is a different person.\n"
+                f"---\n{sample}\n---")
+        learned = [m["rule"] for m in (persona.get("memories") or [])
+                   if m.get("rule") and not m.get("folded")]
+        if learned:
+            out.append(
+                "\nLEARNED FROM THEIR EDITS — inferred from changes they made to "
+                "real drafts, and these OVERRIDE anything above that contradicts "
+                "them:\n" + "\n".join(f"- {r}" for r in learned))
+        return "\n".join(out) + "\n\n"
+
     out = ["THE BRIEF — this outranks every other instruction about how to write.\n"]
 
     who = persona.get("character") or persona.get("name") or "a salesperson"
@@ -224,6 +250,11 @@ def _persona_block(persona: dict | None) -> str:
 
     if persona.get("instructions"):
         out.append(f"\nHOW THEY WRITE — follow this closely:\n{persona['instructions']}")
+
+    if (persona.get("sample") or "").strip():
+        out.append("\nA MESSAGE THEY WROTE THEMSELVES — match this voice. Do not copy "
+                   "its facts; this prospect is a different person.\n"
+                   f"---\n{persona['sample'].strip()}\n---")
 
     # Only the rules not yet written into the instructions above. A rule that
     # has been folded in is already there; appending it again would state it

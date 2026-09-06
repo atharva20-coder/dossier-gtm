@@ -289,6 +289,19 @@ CREATE TABLE IF NOT EXISTS personas (
     proof        TEXT NOT NULL DEFAULT '',   -- customers, numbers, credibility
     looking_for  TEXT NOT NULL DEFAULT '',   -- the signals that make someone worth writing to
 
+    -- The whole brief, written by hand, used verbatim.
+    --
+    -- The fields above are a good scaffold and a ceiling: someone who knows
+    -- exactly what they want their agent to do should be able to say it in
+    -- their own words and have those words be the instruction, not an input to
+    -- one this app assembles. When this is set it REPLACES the assembled brief
+    -- rather than sitting alongside it, because two briefs in one prompt is
+    -- two sets of orders.
+    brief        TEXT NOT NULL DEFAULT '',
+    -- A message they wrote themselves, as the anchor for voice. Worth more
+    -- than any description of a voice, because it IS the voice.
+    sample       TEXT NOT NULL DEFAULT '',
+
     is_selected  BOOLEAN NOT NULL DEFAULT FALSE,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()

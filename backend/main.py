@@ -746,6 +746,10 @@ class PersonaIn(BaseModel):
     problem: str = ""
     proof: str = ""
     looking_for: str = ""
+    # The whole brief in the sender's own words, and a message they wrote. Both
+    # optional: someone who fills in the fields never sees them.
+    brief: str = ""
+    sample: str = ""
 
 
 @app.get("/api/personas")

@@ -51,6 +51,10 @@ export interface Persona {
   problem: string
   proof: string
   looking_for: string
+  /** The whole brief, written by hand. When set it replaces the assembled one. */
+  brief: string
+  /** A message they wrote themselves, as the anchor for voice. */
+  sample: string
 }
 
 /** One rule the persona learned from edits, and whether it is still in force. */

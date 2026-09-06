@@ -252,6 +252,11 @@ def offer_terms(writer: WriterConfig | None, persona: dict | None = None) -> set
     if persona:
         parts += [str(persona.get(k) or "") for k in
                   ("product", "problem", "proof", "looking_for")]
+        # A hand-written brief usually says what they sell and who they want in
+        # prose rather than in those fields. Reading it keeps relevance working
+        # for someone who skipped the form — otherwise writing your own brief
+        # would silently switch off the part of the ranking that matters most.
+        parts.append(str(persona.get("brief") or ""))
     return _terms(" ".join(p for p in parts if p))
 
 
