@@ -76,11 +76,18 @@ class AccessKey(BaseModel):
 @app.get("/api/auth/status")
 async def auth_status(request: Request):
     """Whether a gate exists, and whether this browser is through it."""
+    authenticated = (not security.enabled()
+                     or security.valid(request.cookies.get(security.COOKIE)))
     return {"required": security.enabled(),
-            "authenticated": not security.enabled()
-            or security.valid(request.cookies.get(security.COOKIE)),
-            # Shown on the sign-in form so it is obvious which mailbox this is.
-            "mailbox": config.GMAIL_ADDRESS or None}
+            "authenticated": authenticated,
+            # Only once through the gate. This endpoint is PUBLIC — it has to be,
+            # the sign-in form calls it before anyone has signed in — and the
+            # sign-in form is the one screen where the address must not be given
+            # away. authenticate() is deliberately vague about which half of a
+            # wrong guess was wrong precisely so the mailbox cannot be enumerated;
+            # printing it here as the field's placeholder handed it to every
+            # visitor for free and undid that.
+            "mailbox": (config.GMAIL_ADDRESS or None) if authenticated else None}
 
 
 @app.post("/api/auth")

@@ -296,7 +296,7 @@ export function OutboundPage() {
                                 -translate-y-1/2 text-[var(--ink-8)]" />
           <input value={target} onChange={(e) => setTarget(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") start() }}
-            placeholder="ramp.com"
+            placeholder="company.com"
             className="h-7 w-full rounded-[6px] bg-[var(--surface-3)] pl-7 pr-2 text-[12.5px]
                        text-[var(--ink)] outline-none placeholder:text-[var(--ink-8)]
                        focus:bg-[var(--surface)] focus:ring-1 focus:ring-[var(--line-6)]" />

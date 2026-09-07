@@ -21,13 +21,12 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const [allowed, setAllowed] = useState(false)
   const [email, setEmail] = useState("")
   const [key, setKey] = useState("")
-  const [mailbox, setMailbox] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
     api.authStatus()
-      .then((s) => { setAllowed(s.authenticated); setMailbox(s.mailbox ?? null) })
+      .then((s) => setAllowed(s.authenticated))
       // If the check itself fails the server is unreachable, not the key — show
       // the app and let its own error handling say so.
       .catch(() => setAllowed(true))
@@ -68,9 +67,13 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
           <Label htmlFor="login-email" className="flex items-center gap-1.5">
             <Mail className="size-3.5" /> Email
           </Label>
+          {/* Generic, never the configured mailbox. This form is what stands
+              between a stranger and the app, so printing the address here hands
+              them half the credential before they have typed anything. The
+              server no longer sends it to an unauthenticated caller either. */}
           <Input id="login-email" type="email" autoFocus autoComplete="username"
             value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder={mailbox ?? "you@gmail.com"} />
+            placeholder="you@gmail.com" />
         </div>
 
         <div className="space-y-1.5">

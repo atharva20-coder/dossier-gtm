@@ -52,7 +52,7 @@ function parseLinkedIn(raw: string): { ok: boolean; slug: string; kind: string }
   return { ok: false, slug: "", kind: "" }
 }
 
-/** "shubham-verma-91b4a0b7" -> "Shubham Verma". Trailing hash segment dropped. */
+/** "jane-doe-91b4a0b7" -> "Jane Doe". Trailing hash segment dropped. */
 function nameFromSlug(slug: string): string {
   const parts = slug.split("-").filter((s) => s && !/^[0-9a-f]{4,}$/i.test(s) && !/^\d+$/.test(s))
   if (!parts.length) return ""
@@ -146,7 +146,7 @@ export function AddProspectDialog({
             </Label>
             <Input
               id="li-url"
-              placeholder="https://www.linkedin.com/in/shubham-verma-91b4a0b7/"
+              placeholder="https://www.linkedin.com/in/username"
               value={f.url}
               onChange={(e) => onUrlChange(e.target.value)}
               autoFocus
@@ -169,24 +169,24 @@ export function AddProspectDialog({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="p-name">Name *</Label>
-              <Input id="p-name" placeholder="Shubham Verma" value={f.name}
+              <Input id="p-name" placeholder="Full name" value={f.name}
                 onChange={(e) => set("name", e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="p-company" className="flex items-center gap-1.5">
                 <Building2 className="size-3.5" /> Company
               </Label>
-              <Input id="p-company" placeholder="Zamp" value={f.company}
+              <Input id="p-company" placeholder="Company name" value={f.company}
                 onChange={(e) => set("company", e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="p-role">Role</Label>
-              <Input id="p-role" placeholder="Founder's Office" value={f.role}
+              <Input id="p-role" placeholder="Job title" value={f.role}
                 onChange={(e) => set("role", e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="p-loc">Location</Label>
-              <Input id="p-loc" placeholder="Bengaluru, India" value={f.location}
+              <Input id="p-loc" placeholder="City, Country" value={f.location}
                 onChange={(e) => set("location", e.target.value)} />
             </div>
           </div>

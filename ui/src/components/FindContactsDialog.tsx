@@ -103,7 +103,7 @@ export function FindContactsDialog({
               <Building2 className="pointer-events-none absolute left-2.5 top-1/2 size-4
                                     -translate-y-1/2 text-muted-foreground" />
               <Input id="fc-company" value={company} className="pl-8"
-                placeholder="Zamp, or zamp.finance"
+                placeholder="Company name, or company.com"
                 onChange={(e) => setCompany(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") run() }} />
             </div>
