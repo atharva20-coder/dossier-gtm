@@ -208,6 +208,24 @@ _FIELD_MARKER = re.compile(r"\b(description|dates?|location|skills|title|company
 # because "india" is inside "Indian Institute of Technology".
 _NOT_AN_ORG = re.compile(r"\b(area|region|remote|present|greater)\b", re.I)
 
+# A qualification sitting where an employer should be. Education lines read
+# "Doctor of Business Administration degree at ...", so _ORG_AT can capture the
+# DEGREE rather than the institution — and `"Maheedhar" "Doctor of Business
+# Administration"` is a credit spent on a phrase no employer page contains.
+#
+# The institution itself is a legitimate node and stays: IIM Ahmedabad and NIT
+# Karnataka are places this person really was, and things get written about
+# people there.
+#
+# Matched as a shape, not as bare words, because the words alone are ambiguous.
+# "Doctors Without Borders" is an employer; so is "Master Builders". Requiring
+# the "<qualification> of ..." form, or an unmistakable abbreviation, keeps both.
+_IS_QUALIFICATION = re.compile(
+    r"^(?:(?:doctor|bachelor|master)s?\s+of\b"
+    r"|(?:mba|phd|ph\.d|doctorate|diploma|postgraduate|undergraduate"
+    r"|b\.?tech|m\.?tech|b\.?sc|m\.?sc|certification)\b)",
+    re.I)
+
 
 # Lowercase words that genuinely appear inside organisation names. Anything
 # else in lowercase means the match has run past the name into prose — "at Dunzo
@@ -284,7 +302,7 @@ def profile_orgs_with_evidence(profile_text: str, exclude: str) -> list[tuple[st
         name = _FIELD_MARKER.split(m.group(1))[0].strip(" .,:-")
         name = re.sub(r"\s*\([^)]*\)$", "", name).strip()    # drop a trailing "(BCG)"
         name = _trim_to_name(name)
-        if len(name) < 3 or _NOT_AN_ORG.search(name):
+        if len(name) < 3 or _NOT_AN_ORG.search(name) or _IS_QUALIFICATION.match(name):
             continue
         key = company_key(name)
         if not key or key == skip:
@@ -582,6 +600,36 @@ def _demo() -> None:
                                              role="Founder"))
     assert withco.company_episodic and any("appointed Founder" in q
                                            for q in withco.person)
+
+    # A degree is not an employer. Taken from a real profile that produced
+    # `"Maheedhar" "Doctor of Business Administration"` as a search.
+    profile = "\n".join([
+        "Title: Founder's Office at Zamp",
+        "Dates: Sep 2023 - Present",
+        # The shape that actually produced the bad query: the qualification is
+        # what follows "at", so it is what got captured as the employer.
+        "Title: Advisor at Doctor of Business Administration Degree",
+        "Dates: Jan 2021 - Dec 2022",
+        # The institution, by contrast, must survive — it is a real node.
+        "Title: Student at IIM Ahmedabad",
+        "Dates: Jan 2019 - Dec 2021",
+        "Title: Associate at McKinsey",
+        "Dates: Jun 2015 - Aug 2018",
+    ])
+    orgs = [o for o, _ in profile_orgs_with_evidence(profile, exclude="Zamp")]
+    assert not any("Doctor of" in o for o in orgs), orgs
+    assert "IIM Ahmedabad" in orgs, ("the institution is a real node", orgs)
+    assert "McKinsey" in orgs, orgs
+    # Newest first — the graph reads as a career and a career has a direction.
+    assert orgs.index("IIM Ahmedabad") < orgs.index("McKinsey"), orgs
+
+    # The shape is what disqualifies, not the words — these are employers.
+    for real in ("Doctors Without Borders", "Master Builders Solutions",
+                 "Mastercard", "Bachelor Farmer Restaurant"):
+        assert not _IS_QUALIFICATION.match(real), real
+    for degree in ("Doctor of Philosophy", "Masters of Science", "MBA",
+                   "PhD in Economics", "B.Tech", "Diploma in Design"):
+        assert _IS_QUALIFICATION.match(degree), degree
 
     # The URL is a pin only when something can actually resolve it.
     key = config.SUPERCARL_API_KEY
