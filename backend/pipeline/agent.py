@@ -13,13 +13,27 @@ say "I've excluded that fact" while excluding nothing. Giving it tools means the
 only way it can claim to have done something is to have actually done it, and
 every action it takes is logged with its arguments.
 
-WHAT IT CANNOT DO
+WHAT IT CAN REACH
 -----------------
-There is no tool that adds a fact, edits a source, or spends search credits. The
-assistant rearranges what research already found and rewrites how it reads. New
-information only ever enters through the pipeline, where it is grounded against
-a real source — otherwise "include that he moved to Stripe" becomes a fact in an
-email with nothing behind it.
+Everything the interface can, through `api_catalog` and `api_call`: research a
+new person, run the pipeline, manage personas and outbound campaigns, find
+contacts, change config, export. Calls go through the app's own HTTP API in
+process, over ASGI, carrying a session cookie — so they pass the same security
+gate, hit the same validation and the same connection pool as a click would.
+There is no second code path to keep in step, and no tool that can reach the
+database behind the API's back.
+
+THE ONE THING THAT DID NOT CHANGE
+---------------------------------
+The assistant still cannot assert a fact of its own. New information enters only
+by an endpoint that grounds it against a real source, exactly as a click would
+have — otherwise "include that he moved to Stripe" becomes a line in an email
+with nothing behind it. Widening what it can DO deliberately did not widen what
+it can CLAIM.
+
+Two actions are refused outright without explicit approval in the conversation:
+sending mail, which cannot be recalled, and deleting, which takes the research
+with it. See _needs_confirm.
 """
 from __future__ import annotations
 
@@ -69,10 +83,33 @@ So after you exclude or choose a fact — ACT FIRST, then ask, in the same reply
   while asking, or if they are clearly working fast and giving one-word orders.
 - Never withhold the action until they explain, and never ask twice.
 
+DRIVING THE WHOLE APPLICATION
+You are not limited to this prospect's facts. `api_catalog` lists every
+operation the app can perform and `api_call` performs one, as the user. Between
+them you can research a new person, start and execute runs, upload leads, manage
+personas, run outbound campaigns, find contacts and addresses, change config and
+export — anything the interface can do.
+
+- When a request goes beyond the current facts, call `api_catalog` first and
+  work from what it lists. Do not guess a path.
+- Paths take real values: /api/runs/41/execute, never /api/runs/{run_id}.
+- Report what actually came back. A non-2xx status is a failure — say so and say
+  what it said, rather than narrating the call as if it worked.
+- Research spends search and model credits. For an ordinary request just do it;
+  for something obviously expensive — a bulk run over many leads — say what it
+  will cost and get a yes first.
+
+SENDING AND DELETING
+`api_call` refuses anything that sends mail or deletes, unless you pass
+confirm=true. Pass it only after the user has approved that exact action in
+plain words in this conversation. "Send it" about the message under discussion
+is approval; "draft something to Pedro" is not. Never confirm on your own
+initiative, and never re-send because a first attempt looked ambiguous.
+
 HARD RULES
-- Never invent facts about the prospect. You may only use what `list_facts`
-  returns. If asked to include something not there, say plainly that the
-  research did not find it, and offer what is there instead.
+- Never invent facts about the prospect. Use what `list_facts` returns, or what
+  a real API call actually returned. If asked to include something neither has,
+  say plainly that the research did not find it, and offer what is there instead.
 - Excluding a fact or choosing a hook rewrites the message from the remaining
   evidence. That is expected; do it when asked.
 - After acting, say what you did in one or two short sentences. No bullet
@@ -152,7 +189,165 @@ TOOLS = [
             "required": ["instruction"],
         },
     },
+    {
+        "name": "api_catalog",
+        "description": (
+            "Every operation this application can perform, with its method, path, "
+            "query parameters and request-body fields. Call this FIRST whenever the "
+            "request goes beyond the current prospect's facts — researching a new "
+            "person, starting or executing a run, personas, outbound campaigns, "
+            "contact discovery, config, exports, sending. It is read from the app's "
+            "live spec, so it is always current."),
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "api_call",
+        "description": (
+            "Perform one operation from api_catalog, as the user. This is how you "
+            "actually do things: research a prospect, run the pipeline, edit a "
+            "persona, find contacts, export. Paths take real values, not "
+            "placeholders — /api/runs/41, never /api/runs/{run_id}. Anything that "
+            "sends mail or deletes is refused unless confirm=true, which you may "
+            "only pass after the user has said yes in plain words."),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "method": {"type": "string",
+                           "description": "GET, POST, PATCH, PUT or DELETE"},
+                "path": {"type": "string",
+                         "description": "e.g. /api/runs or /api/runs/41/execute"},
+                "body": {"type": "object",
+                         "description": "JSON request body, for POST/PATCH/PUT"},
+                "query": {"type": "object", "description": "query-string parameters"},
+                "confirm": {"type": "boolean",
+                            "description": ("true only after the user explicitly "
+                                            "approved this exact send or deletion")},
+            },
+            "required": ["method", "path"],
+        },
+    },
 ]
+
+
+# ------------------------------------------------------------- app control ---
+# The assistant drives the whole application through its own HTTP API rather
+# than through fifty hand-written tool schemas. FastAPI already publishes the
+# catalogue at app.openapi(), so this cannot drift out of date when an endpoint
+# is added, renamed or removed — a hand-maintained tool list silently would.
+#
+# Calls are dispatched in-process over ASGI: no socket, no second uvicorn, and
+# the same connection pool. They pass through security.gate exactly as a browser
+# request does, carrying a freshly issued session cookie, so the assistant acts
+# with the user's authority and no more.
+_BLOCKED = (
+    "/api/auth",        # the browser's session is not the assistant's business
+    "/api/ping",        # a healthcheck it could only answer about itself
+)
+# Calling the chat endpoint from inside a chat turn is unbounded recursion.
+_BLOCKED_SUFFIX = ("/chat",)
+
+# Mail to a real person cannot be recalled, and a deleted run takes its research
+# with it. Both need the user to have actually said so in this conversation. The
+# model sets confirm=true only after asking; this check is what makes that a
+# rule rather than a suggestion it can talk itself out of.
+_CONFIRM_METHODS = ("DELETE",)
+_CONFIRM_SUFFIX = ("/send",)
+
+
+def _needs_confirm(method: str, path: str) -> bool:
+    return method.upper() in _CONFIRM_METHODS or path.rstrip("/").endswith(_CONFIRM_SUFFIX)
+
+
+def _allowed(path: str) -> bool:
+    return (path.startswith("/api/")
+            and not path.startswith(_BLOCKED)
+            and not path.rstrip("/").endswith(_BLOCKED_SUFFIX))
+
+
+def _body_fields(op: dict, schemas: dict) -> dict:
+    """Property names and types of an endpoint's request body, one level deep.
+
+    Enough for the model to construct a call; not the whole component graph,
+    which would cost more tokens than the endpoint list itself.
+    """
+    ref = (((op.get("requestBody") or {}).get("content") or {})
+           .get("application/json") or {}).get("schema") or {}
+    name = (ref.get("$ref") or "").rsplit("/", 1)[-1]
+    props = (schemas.get(name) or {}).get("properties") or ref.get("properties") or {}
+    return {k: (v.get("type") or "object") for k, v in props.items()}
+
+
+def api_catalog() -> list[dict]:
+    """Every endpoint the assistant may call, read from the app's own spec."""
+    from ..main import app
+    spec = app.openapi()
+    schemas = (spec.get("components") or {}).get("schemas") or {}
+    out: list[dict] = []
+    for path, ops in (spec.get("paths") or {}).items():
+        if not _allowed(path):
+            continue
+        for method, op in ops.items():
+            if method.upper() not in ("GET", "POST", "PATCH", "PUT", "DELETE"):
+                continue
+            entry: dict = {
+                "method": method.upper(),
+                "path": path,
+                "what": (op.get("summary") or "").strip()[:120],
+            }
+            params = [q.get("name") for q in (op.get("parameters") or [])
+                      if q.get("in") == "query"]
+            if params:
+                entry["query"] = params
+            fields = _body_fields(op, schemas)
+            if fields:
+                entry["body"] = fields
+            if _needs_confirm(method, path):
+                entry["confirm_required"] = True
+            out.append(entry)
+    return out
+
+
+async def api_call(method: str, path: str,
+                   body: dict | None = None, query: dict | None = None,
+                   confirm: bool = False) -> dict:
+    """Perform one API call as the user. Returns {status, data}."""
+    import httpx
+
+    from .. import security
+    from ..main import app
+
+    method = (method or "GET").upper()
+    if not _allowed(path):
+        return {"error": f"{path} is not callable from chat"}
+    if _needs_confirm(method, path) and not confirm:
+        return {"error": "refused: this sends or destroys something. Ask the user "
+                         "to confirm in plain words first, then call again with "
+                         "confirm=true.",
+                "needs_confirm": True}
+
+    async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://internal",
+            cookies={security.COOKIE: security.issue()},
+            # An execute call runs the whole pipeline; it is the slow one.
+            timeout=float(config.RUN_STALE_AFTER_S)) as client:
+        try:
+            r = await client.request(method, path, json=body or None,
+                                     params=query or None)
+        except Exception as e:  # noqa: BLE001 — a tool failure is a result, not a crash
+            log.warning("api_call %s %s failed: %s", method, path, type(e).__name__)
+            return {"error": f"call failed ({type(e).__name__})"}
+
+    try:
+        data = r.json()
+    except ValueError:
+        data = r.text[:4000]
+    # A run listing or an export can be enormous; the model needs the shape and
+    # the first rows, not every byte.
+    text = json.dumps(data, default=str)
+    if len(text) > 12000:
+        data = {"truncated": True, "preview": text[:12000]}
+    return {"status": r.status_code, "data": data}
 
 
 def _fact_rows(run: dict, verdicts: list[dict], overrides: dict) -> list[dict]:
@@ -320,6 +515,24 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
                     run_id, before, d.body, str(args.get("instruction") or ""))
             return {"ok": True, "grounded": d.grounded, "note": d.note}
 
+        if name == "api_catalog":
+            return api_catalog()
+
+        if name == "api_call":
+            result = await api_call(
+                str(args.get("method") or "GET"),
+                str(args.get("path") or ""),
+                body=args.get("body") if isinstance(args.get("body"), dict) else None,
+                query=args.get("query") if isinstance(args.get("query"), dict) else None,
+                confirm=bool(args.get("confirm")),
+            )
+            # A call may have changed this very run — re-read it so the reply and
+            # the returned run are the state after the change, not before it.
+            fresh = await db.get_run(run_id)
+            if fresh:
+                run = fresh
+            return result
+
         return {"error": f"no such tool: {name}"}
 
     facts_now = _fact_rows(run, verdicts, overrides)
@@ -345,9 +558,65 @@ async def run_turn(run_id: int, message: str, stage_payload) -> dict:
 
     try:
         reply, actions = await llm.with_tools(
-            prompt, TOOLS, run_tool, model=config.MODEL_SMART, system=SYSTEM)
+            prompt, TOOLS, run_tool, model=config.MODEL_SMART, system=SYSTEM,
+            # Driving the app takes more steps than rearranging facts did:
+            # catalogue, then act, then read the result back. Six ran out
+            # mid-task and the turn ended with the work half done.
+            max_steps=config.CHAT_MAX_TOOL_STEPS)
     except llm.LLMFailure as e:
         return {"reply": f"I could not reach the model ({e.reason}).",
                 "actions": [], "run": run}
 
     return {"reply": reply or "Done.", "actions": actions, "run": await db.get_run(run_id)}
+
+
+def _demo() -> None:
+    """Self-check for the guards. The catalogue can grow; these must not slip."""
+    import asyncio
+
+    # Recursion and the browser's session are out of reach.
+    assert not _allowed("/api/runs/41/chat"), "chat must not call itself"
+    assert not _allowed("/api/auth"), "session is the browser's business"
+    assert not _allowed("/api/ping")
+    assert not _allowed("/"), "only the API is reachable"
+    assert not _allowed("/assets/index.js")
+
+    # The ordinary surface is.
+    assert _allowed("/api/runs") and _allowed("/api/runs/41/execute")
+    assert _allowed("/api/personas") and _allowed("/api/outbound/runs")
+
+    # Irreversible actions are gated; reading and ordinary writes are not.
+    assert _needs_confirm("POST", "/api/runs/41/send")
+    assert _needs_confirm("POST", "/api/outbound/runs/2/contacts/9/send/")
+    assert _needs_confirm("DELETE", "/api/runs/41")
+    assert not _needs_confirm("GET", "/api/runs")
+    assert not _needs_confirm("POST", "/api/runs/41/execute")
+    # "/send" must match a path segment, not a prefix of one.
+    assert not _needs_confirm("GET", "/api/send/status")
+
+    # The gate is enforced in api_call, not merely described in the prompt.
+    refused = asyncio.run(api_call("POST", "/api/runs/41/send", body={}))
+    assert refused.get("needs_confirm"), refused
+    blocked = asyncio.run(api_call("POST", "/api/runs/41/chat", body={}))
+    assert "error" in blocked and "needs_confirm" not in blocked, blocked
+
+    # Body fields are read from the component schema the endpoint references.
+    schemas = {"SendRequest": {"properties": {"address": {"type": "string"}}}}
+    op = {"requestBody": {"content": {"application/json": {
+        "schema": {"$ref": "#/components/schemas/SendRequest"}}}}}
+    assert _body_fields(op, schemas) == {"address": "string"}
+    assert _body_fields({}, schemas) == {}
+
+    cat = api_catalog()
+    paths = {(e["method"], e["path"]) for e in cat}
+    assert ("POST", "/api/runs") in paths, "the catalogue must reach real endpoints"
+    assert not any(p.endswith("/chat") for _, p in paths)
+    assert not any(p.startswith("/api/auth") for _, p in paths)
+    assert all(e.get("confirm_required") for e in cat
+               if _needs_confirm(e["method"], e["path"])), \
+        "anything gated must be advertised as gated"
+    print(f"agent checks passed ({len(cat)} operations reachable)")
+
+
+if __name__ == "__main__":
+    _demo()

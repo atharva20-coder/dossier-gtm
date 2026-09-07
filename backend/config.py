@@ -242,6 +242,12 @@ LEARN_FLOOR = float(os.getenv("LEARN_FLOOR", "0.4"))
 # How much of a lead's conversation the assistant is given back. Enough to
 # follow a thread, bounded because every turn is tokens on every later turn.
 CHAT_HISTORY_TURNS = int(os.getenv("CHAT_HISTORY_TURNS", "12"))
+# Tool calls one chat turn may make. The assistant drives the whole app through
+# api_catalog/api_call, so a single request costs several steps — look up the
+# operation, perform it, read the result back. This is a bound on a model that
+# loops, not a target: each step is a model call, so raising it raises the worst
+# case cost of one chat message.
+CHAT_MAX_TOOL_STEPS = int(os.getenv("CHAT_MAX_TOOL_STEPS", "14"))
 
 # With no parseable date, the wording is the only evidence of currency there is.
 # "just launched" is weaker than a date and far better than nothing; "will be
