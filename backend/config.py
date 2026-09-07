@@ -22,7 +22,21 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 # Optional person-level signal provider. Absent = web search only, which still
 # works; this is an enhancement, never a dependency.
 SUPERCARL_API_KEY = os.getenv("SUPERCARL_API_KEY", "").strip()
-SUPERCARL_TIMEOUT_S = float(os.getenv("SUPERCARL_TIMEOUT_S", "15"))
+# Per-REQUEST, and fetch() makes two: resolve the person, then pull their
+# profile text with posts. Worst case is therefore about twice this before the
+# provider gives up.
+#
+# 15s was too tight in practice — the text call, which asks for a full profile
+# plus SUPERCARL_POSTS_LIMIT posts, timed out against a profile that had just
+# resolved successfully. A provider that resolves the person and then loses the
+# race to return them is worse than one that fails outright: the run has already
+# spent the resolve call and gets nothing for it.
+#
+# The cost of raising it is real. The provider is awaited alongside web search,
+# so this is now allowed to be the slowest thing in a run, and a lead against a
+# hanging provider waits here before falling back. That is the trade: a slower
+# worst case, in exchange for the person-level signal actually arriving.
+SUPERCARL_TIMEOUT_S = float(os.getenv("SUPERCARL_TIMEOUT_S", "38"))
 SUPERCARL_POSTS_LIMIT = int(os.getenv("SUPERCARL_POSTS_LIMIT", "15"))
 # The provider is metered in whole calls and the allowance is small, so resolved
 # profiles are cached. A profile changes over weeks; a stale one costs far less

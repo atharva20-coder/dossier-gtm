@@ -34,6 +34,7 @@ paid provider gets no more trust than signal from a news article.
 """
 from __future__ import annotations
 
+import json
 import logging
 
 import httpx
@@ -155,7 +156,14 @@ async def _resolve_person(
     users = data.get("users") or []
     if not users:
         reason = data.get("no_results_reason") or "no matching profile"
-        return None, f"no person-level profile found ({reason})"
+        # Measured: resolving by URL takes about a second and returns the right
+        # person; resolving by description takes ten and routinely returns
+        # nobody. When the slow path found nothing, say what would have worked,
+        # because the fix is a field the user can fill in.
+        hint = "" if how == "LinkedIn URL" else (
+            " — their LinkedIn URL resolves them directly, which is both faster "
+            "and exact")
+        return None, f"no person-level profile found ({reason}){hint}"
 
     top = users[0]
     pid = top.get("id")
@@ -173,6 +181,28 @@ async def _resolve_person(
     return pid, note
 
 
+def _text_failure(status: int, body: str) -> str:
+    """Explain why the text call failed, in terms someone can act on.
+
+    The provider answers 404 with "Profile text not available yet" for a profile
+    it has just resolved successfully: the person IS known, their text has not
+    finished being ingested. That is a WAIT, not a failure. Reporting it as
+    "returned HTTP 404" sent people looking for a broken key or a wrong URL when
+    the answer was to run it again later.
+    """
+    detail = ""
+    try:
+        detail = str((json.loads(body) or {}).get("error") or "").strip()
+    except (ValueError, AttributeError):
+        pass
+    if status == 404 and "not available yet" in detail.lower():
+        return ("profile found, but the provider has not finished preparing its "
+                "text — research continues on web search, and this profile "
+                "should resolve on a later run")
+    return (f"Super Carl profile text returned HTTP {status}"
+            + (f": {detail}" if detail else ""))
+
+
 async def _profile_text(client: httpx.AsyncClient, pid: str) -> str:
     r = await client.get(
         f"{BASE}/api/v1/profiles/{pid}/text",
@@ -181,7 +211,7 @@ async def _profile_text(client: httpx.AsyncClient, pid: str) -> str:
     )
     await _record("profiles/text", r.status_code < 400)
     if r.status_code >= 400:
-        raise PersonSignalUnavailable(f"Super Carl profile text returned HTTP {r.status_code}")
+        raise PersonSignalUnavailable(_text_failure(r.status_code, r.text))
     data = r.json()
     return _flatten_text(data.get("text") or data)
 
@@ -281,3 +311,21 @@ async def health(probe: bool = False) -> tuple[bool, str]:
         return True, f"ok ({n} result{'' if n == 1 else 's'})"
     except Exception as e:
         return False, f"{type(e).__name__}: {e}"
+
+
+def _demo() -> None:
+    """Self-check: 'not ready yet' must not read like 'broken'."""
+    waiting = _text_failure(404, '{"error":"Profile text not available yet"}')
+    assert "later run" in waiting and "HTTP 404" not in waiting, waiting
+
+    # A genuine failure still names the status, and carries the provider's words.
+    gone = _text_failure(404, '{"error":"No such profile"}')
+    assert "HTTP 404" in gone and "No such profile" in gone, gone
+    assert "HTTP 500" in _text_failure(500, "upstream exploded")
+    assert "HTTP 502" in _text_failure(502, "")          # empty body is fine
+    assert "HTTP 503" in _text_failure(503, "<html>no json here</html>")
+    print("person-signal checks passed")
+
+
+if __name__ == "__main__":
+    _demo()
