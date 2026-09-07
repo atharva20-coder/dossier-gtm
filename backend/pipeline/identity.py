@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from .. import config
 from ..integrations import llm
 from ..models import IdentityCandidate, IdentityResult, ProspectInput, SearchHit
+from . import normalize
 
 
 class _Candidate(BaseModel):
@@ -107,8 +108,14 @@ async def resolve(p: ProspectInput, hits: list[SearchHit]) -> IdentityResult:
     scored = sorted(
         [(c, _score(c)) for c in read.candidates], key=lambda t: t[1], reverse=True
     )
+    # A model asked for a field it could not find answers in prose — "Not
+    # stated", "Unknown". Left as-is that string becomes the run's company, gets
+    # quoted into `site:x.com "Atharva" "Not stated"`, and is written into the
+    # draft as where the person works. Blank is the honest answer and the one
+    # every later stage already knows how to handle.
     candidates = [
-        IdentityCandidate(company=c.company, role=c.role, location=c.location,
+        IdentityCandidate(company=normalize.clean_company(c.company),
+                          role=c.role, location=c.location,
                           evidence=c.evidence, score=s)
         for c, s in scored
     ]

@@ -92,6 +92,12 @@ export — anything the interface can do.
 
 - When a request goes beyond the current facts, call `api_catalog` first and
   work from what it lists. Do not guess a path.
+- Researching someone needs their COMPANY, not just a name or a profile link.
+  Without it the run cannot disambiguate: the social queries are dropped, the
+  employer traversal never starts, and the remaining queries carry a bare name
+  into an index full of strangers who share it. If the user gives you a name or
+  a URL and no company, ask for the company in one short question before
+  creating the run. A LinkedIn URL is worth supplying too — pass it as `url`.
 - Paths take real values: /api/runs/41/execute, never /api/runs/{run_id}.
 - Report what actually came back. A non-2xx status is a failure — say so and say
   what it said, rather than narrating the call as if it worked.

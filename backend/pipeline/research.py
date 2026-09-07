@@ -76,6 +76,7 @@ Prospect:
   company:  {company}
   role:     {role}
   location: {location}
+  profile:  {url}
 
 Return THREE groups.
 
@@ -101,15 +102,33 @@ Rules:
 - Do not include the words "news" or "latest" — recency is handled elsewhere.
 - Do not write site-scoped queries for LinkedIn or X. Those are added separately
   and would only duplicate them here.
+- NEVER invent a profession, industry, employer or descriptor that is not given
+  above. If the role and company are unknown, the queries use the name and
+  nothing else. Guessing what someone does turns a search for this person into a
+  search for a famous stranger who shares their name — which is the single most
+  expensive mistake available here, because every result that comes back is
+  about the wrong human being and looks entirely plausible.
+- If only a name is known, prefer FEWER queries over padding the list out. Two
+  honest queries beat four invented ones.
 """
 
 
 def _fallback_queries(p: ProspectInput) -> _Queries:
-    """Used if query generation fails — the run degrades, it does not die."""
-    n, c = p.name, p.company or p.name
+    """Used if query generation fails — the run degrades, it does not die.
+
+    With no company, the company tiers are dropped rather than aimed at the
+    person's own name: `"Atharva" funding round` is not a question about anyone,
+    and every credit it spends buys a result about someone else.
+    """
+    n, c = p.name, p.company
+    person = [f"{n} {c} interview" if c else f"{n} interview",
+              f"{n} podcast", f"{n} conference talk"]
+    if p.role:
+        person.append(f"{n} appointed {p.role}")
+    if not c:
+        return _Queries(person=person)
     return _Queries(
-        person=[f"{n} {c} interview", f"{n} podcast", f"{n} conference talk",
-                f"{n} appointed {p.role}".strip()],
+        person=person,
         company_episodic=[f"{c} funding round", f"{c} expansion plans"],
         company_always_on=[f"{c} careers open roles", f"{c} what the company does"],
     )
@@ -121,7 +140,9 @@ async def build_queries(p: ProspectInput) -> _Queries:
         q = await llm.structured(
             _Queries,
             QUERY_PROMPT.format(name=p.name, company=p.company or "(unknown)",
-                                role=p.role or "(unknown)", location=p.location or "(unknown)"),
+                                role=p.role or "(unknown)",
+                                location=p.location or "(unknown)",
+                                url=p.url or "(none)"),
             model=config.MODEL_FAST,
             system="You write precise, literal web search queries.",
         )
@@ -134,6 +155,15 @@ async def build_queries(p: ProspectInput) -> _Queries:
 
 # Domains asked directly for person-level signal, strongest first.
 SOCIAL_SITES = ("linkedin.com", "x.com")
+
+
+def _pinned_profile(p: ProspectInput) -> bool:
+    """Whether identity is pinned by a profile URL the provider can resolve.
+
+    Both halves matter. The URL alone is not a pin if nothing will fetch it, and
+    the provider alone cannot pin anyone without an address to fetch.
+    """
+    return "linkedin.com/in/" in (p.url or "").lower() and personsignal.enabled()
 
 
 def _social_queries(p: ProspectInput) -> list[tuple[str, str]]:
@@ -156,8 +186,8 @@ def _social_queries(p: ProspectInput) -> list[tuple[str, str]]:
     """
     if not p.name.strip() or not p.company.strip():
         return []
-    pinned = "linkedin.com/in/" in p.url.lower() and personsignal.enabled()
-    sites = [s for s in SOCIAL_SITES if not (s == "linkedin.com" and pinned)]
+    sites = [s for s in SOCIAL_SITES
+             if not (s == "linkedin.com" and _pinned_profile(p))]
     return [(f'site:{site} "{p.name}" "{p.company}"', "general") for site in sites]
 
 
@@ -460,6 +490,28 @@ async def gather(
     if not hits and not provider_hits and errors and len(errors) == len(all_q):
         raise SearchFailure("; ".join(errors[:3]))
 
+    # The LinkedIn query was skipped on the promise that the provider would
+    # fetch the supplied profile instead. When the provider comes back with
+    # nothing, that promise is broken and the URL — the one piece of certain
+    # identity in the whole run — is being used for nothing at all, while the
+    # remaining queries carry only a name and go looking for whoever famous
+    # shares it.
+    #
+    # So ask the index for the profile URL itself. This is not the query that
+    # was skipped: that one searched by NAME and returned strangers. This one
+    # searches for the exact profile address, so what comes back is that page
+    # and pages citing it — no namesake can match it.
+    if not provider_hits and _pinned_profile(p):
+        slug = p.url.split("linkedin.com/in/", 1)[1].strip("/").split("?")[0]
+        recovery = [(f'"linkedin.com/in/{slug}"', "general")]
+        rec_hits, rec_errs = await search.search_many(recovery)
+        hits += rec_hits
+        errors += rec_errs
+        all_q += recovery
+        person_q += recovery
+        provider_note = (f"{provider_note}; recovered by searching the profile URL"
+                         if provider_note else "provider returned nothing")
+
     # Everything above was decided before anything was read. What follows is the
     # part that behaves like a person: walk outward from the prospect, following
     # what each wave turns up. See pipeline/graph.py.
@@ -519,6 +571,29 @@ def _demo() -> None:
 
     # Unchanged: no company means no disambiguator, so neither site is asked.
     assert _social_queries(ProspectInput(name="Atharva Joshi")) == []
+
+    # A bare name must not buy company queries aimed at the person's own name.
+    bare = _fallback_queries(ProspectInput(name="Atharva"))
+    assert bare.company_episodic == [] and bare.company_always_on == [], bare
+    assert all("Atharva" in q for q in bare.person)
+    assert not any("appointed" in q for q in bare.person), "no role, no role query"
+
+    withco = _fallback_queries(ProspectInput(name="Atharva", company="Zamp",
+                                             role="Founder"))
+    assert withco.company_episodic and any("appointed Founder" in q
+                                           for q in withco.person)
+
+    # The URL is a pin only when something can actually resolve it.
+    key = config.SUPERCARL_API_KEY
+    try:
+        config.SUPERCARL_API_KEY = "test-key"
+        assert _pinned_profile(p)
+        assert not _pinned_profile(p.model_copy(update={"url": ""}))
+        config.SUPERCARL_API_KEY = ""
+        assert not _pinned_profile(p), "no provider, no pin"
+    finally:
+        config.SUPERCARL_API_KEY = key
+
     print("research checks passed")
 
 
