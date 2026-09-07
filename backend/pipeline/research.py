@@ -142,10 +142,23 @@ def _social_queries(p: ProspectInput) -> list[tuple[str, str]]:
     Skipped when there is no company to disambiguate with: `site:linkedin.com
     "Shubham Verma"` on a common name returns a wall of strangers, which is the
     namesake problem the extract stage then has to clean up. Better not to ask.
+
+    LinkedIn is skipped for the same reason, more sharply, once the prospect's
+    own profile URL is supplied and the provider is there to fetch it. This
+    query searches BY NAME, so it cannot return the one profile we were already
+    handed — everything it does return is someone else with that name. The
+    provider resolves the exact profile from the URL, so asking anyway spends a
+    credit to reintroduce the ambiguity the URL was given to remove.
+
+    The provider has to be enabled for that to hold. Without a key nothing
+    fetches the URL, and this query is the only thing reaching LinkedIn at all —
+    so it stays, namesakes and all, rather than dropping the tier entirely.
     """
     if not p.name.strip() or not p.company.strip():
         return []
-    return [(f'site:{site} "{p.name}" "{p.company}"', "general") for site in SOCIAL_SITES]
+    pinned = "linkedin.com/in/" in p.url.lower() and personsignal.enabled()
+    sites = [s for s in SOCIAL_SITES if not (s == "linkedin.com" and pinned)]
+    return [(f'site:{site} "{p.name}" "{p.company}"', "general") for site in sites]
 
 
 # How many anchored follow-up queries the second pass may spend. Each one is a
@@ -477,3 +490,37 @@ async def gather(
         "graph": snapshot,
     }
     return all_hits, errors, breakdown
+
+
+def _demo() -> None:
+    """Self-check: a supplied profile URL must not buy a namesake search."""
+    p = ProspectInput(name="Atharva Joshi", company="Zamp",
+                      url="https://www.linkedin.com/in/atharva20/")
+    key = config.SUPERCARL_API_KEY
+    try:
+        config.SUPERCARL_API_KEY = "test-key"
+        qs = [q for q, _ in _social_queries(p)]
+        assert not any("linkedin.com" in q for q in qs), qs
+        assert any("x.com" in q for q in qs), "x.com has no URL to pin it, so it stays"
+
+        # No URL supplied: this query is how the prospect's own posts get reached.
+        assert any("linkedin.com" in q for q, _ in
+                   _social_queries(p.model_copy(update={"url": ""})))
+
+        # A company page is not a person's profile and pins nobody.
+        assert any("linkedin.com" in q for q, _ in _social_queries(
+            p.model_copy(update={"url": "https://linkedin.com/company/zamp"})))
+
+        # Without the provider, nothing else fetches the URL — keep the query.
+        config.SUPERCARL_API_KEY = ""
+        assert any("linkedin.com" in q for q, _ in _social_queries(p))
+    finally:
+        config.SUPERCARL_API_KEY = key
+
+    # Unchanged: no company means no disambiguator, so neither site is asked.
+    assert _social_queries(ProspectInput(name="Atharva Joshi")) == []
+    print("research checks passed")
+
+
+if __name__ == "__main__":
+    _demo()
