@@ -1,0 +1,28 @@
+# .env holds the Gmail app password, the database URL and every provider key.
+# It must never enter the image — and if it did, load_dotenv would override the
+# variables Railway injects.
+.env
+.env.local
+*.env.local
+
+.git
+node_modules
+ui/node_modules
+frontend
+*.db
+*.sqlite3
+*.tsbuildinfo
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+venv
+docs
+fixtures
+supabase
+scripts
+tools
+test_*.py
+verify.py
+discover_supercarl.py
+.DS_Store
