@@ -50,21 +50,248 @@ boot. Set `SESSION_SECRET` too, or sessions reset on every restart.
 
 ## How it works
 
-Upload a sheet → each prospect runs through six stages → you get a draft with its reasoning attached.
+Upload a sheet → each prospect runs through seven stages → you get a draft with its reasoning attached.
 
 ```
   Targeting → Identity → Research → Extract → Ground → Judge → Draft
 ```
 
-| Stage | What it does |
-|---|---|
-| **Targeting** | Classifies seniority and function from the title, scores ICP fit, and checks relationship state. An existing customer or competitor is skipped *before* any research spend. |
-| **Identity** | Works out *who this actually is*. Scores candidates on company/role/location/URL evidence. Two plausible people → it stops and asks rather than guessing. |
-| **Research** | Generates queries from the prospect (not hardcoded) across two tiers — **person-level** (interviews, podcasts, talks, bylines, quotes, their own role change) and **company-level** (funding, hiring, IPO, expansion) — and fires them concurrently. |
-| **Extract** | Pulls concrete facts from source text, each carrying verbatim key entities. Collapses syndicated duplicates; discards facts about other companies. |
-| **Ground** | **Verifies every fact against the source text.** Anything unverifiable is dropped before it can be drafted. |
-| **Judge** | Applies four eligibility gates, then scores survivors on outreach value × buying intent. |
-| **Draft** | Writes the email, then checks it actually used the hook's specific detail and avoided generic openers. Two failures → falls back honestly. |
+| Stage | What it does | Code |
+|---|---|---|
+| **Targeting** | Classifies seniority and function from the title, scores ICP fit, and checks relationship state. An existing customer or competitor is skipped *before* any research spend. | `pipeline/profile.py` |
+| **Identity** | Works out *who this actually is*. Scores candidates on company/role/location/URL evidence. Two plausible people → it stops and asks rather than guessing. | `pipeline/identity.py` |
+| **Research** | Generates queries from the prospect (not hardcoded) across two tiers — **person-level** (interviews, podcasts, talks, bylines, quotes, their own role change) and **company-level** (funding, hiring, IPO, expansion) — and fires them concurrently. Then walks outward from the confirmed person through their real employment history. | `pipeline/research.py`, `graph.py` |
+| **Extract** | Pulls concrete facts from source text, each carrying verbatim key entities. Collapses syndicated duplicates; discards facts about other companies. | `pipeline/extract.py` |
+| **Ground** | **Verifies every fact against the source text.** Anything unverifiable is dropped before it can be drafted. | `pipeline/grounding.py` |
+| **Judge** | Applies four eligibility gates, then scores survivors on outreach value × buying intent. | `pipeline/judge.py` |
+| **Draft** | Writes the email, then checks it actually used the hook's specific detail and avoided generic openers. Two failures → falls back honestly. | `pipeline/draft.py` |
+
+Each stage writes a row to `run_stages` as it finishes, which is both the audit
+trail and the progress bar. The section below is the same seven stages seen from
+underneath: what is wired to what, what each one prevents, and how information
+changes shape as it moves.
+
+---
+
+## System design
+
+### The shape of it
+
+One process. FastAPI serves both the JSON API and the built React app, so there
+is no separate frontend server, no CORS, and one thing to deploy. All state
+lives in Postgres — the process itself holds nothing that matters, which is what
+lets it be restarted or replaced mid-flight without losing a run.
+
+```
+   browser (React SPA)
+        │  fetch /api/…            ← same origin, served by the same process
+        ▼
+   ┌──────────────────────────────────────────────┐
+   │  FastAPI  (backend/main.py)                  │
+   │    security.gate  → session cookie on /api/* │
+   │    routes         → thin; no logic lives here│
+   └───────────┬──────────────────────────────────┘
+               │ calls
+               ▼
+   ┌──────────────────────────────────────────────┐
+   │  pipeline/   the actual work, stage by stage │
+   │  runner.py orchestrates; each stage is a file│
+   └───┬──────────────────────┬───────────────────┘
+       │ reads/writes         │ calls out
+       ▼                      ▼
+   Postgres (Supabase)   Tavily   Gemini   Super Carl
+   runs, stages,         search    LLM     profile+posts
+   sources, drafts,                        (optional)
+   personas, chat
+```
+
+Three outside services, and each is failed-over differently on purpose. Tavily
+going down is fatal to a run (`research_failed`). Gemini going down is fatal to
+a run. Super Carl going down is **not** — it degrades to web search alone,
+because it is an enhancement and an enhancement must never be able to fail the
+thing it enhances.
+
+### How one lead flows through
+
+The unit of work is a **run**: one row in `runs`, one prospect. Two HTTP calls
+create and execute it, and the split matters — see "why polling" below.
+
+```
+POST /api/runs          → row created, status=queued, returns {run_id}
+POST /api/runs/{id}/execute
+                        → runner.run() executes all seven stages inline
+                        → each stage appends a row to run_stages as it finishes
+GET  /api/runs/{id}     → browser polls this; reads those stage rows back
+```
+
+Inside `execute`, information changes form five times. That is the whole system:
+
+```
+ProspectInput        name, company, role, url         ← what you uploaded
+   │  research.py
+   ▼
+SearchHit[]          url, title, page text            ← what the web said
+   │  extract.py
+   ▼
+ExtractedFact[]      claim + date + verbatim entities ← what it means
+   │  grounding.py
+   ▼
+ExtractedFact[]      same, minus anything unverifiable← what is actually true
+   │  judge.py
+   ▼
+one hook             the single fact worth opening on ← what is worth saying
+   │  draft.py
+   ▼
+subject + body                                        ← what gets sent
+```
+
+Each arrow narrows. Nothing is ever added back in later — a fact that fails
+grounding cannot reappear at draft time, because draft only ever sees what judge
+handed it. That one-way narrowing is why an invented fact cannot reach an email.
+
+### Why each step exists
+
+A stage earns its place by preventing a specific, nameable failure. If you
+delete the stage, you get the failure in the right-hand column.
+
+| Stage | The question it answers | Delete it and you get |
+|---|---|---|
+| **Targeting** `profile.py` | Is this person worth spending money on at all? | Research credits burned on existing customers and competitors — and eventually a cold pitch sent *to a customer*, which is the worst output this system can produce |
+| **Identity** `identity.py` | Which human is this, exactly? | Research about a stranger who shares the name. Everything downstream is then perfectly executed and entirely wrong |
+| **Research** `research.py` | What does the public record say? | Nothing to write from. Runs in two separate tiers, person and company, because one query pool returns company news and attributes it to the individual |
+| **Extract** `extract.py` | What are the concrete claims? | Raw page text at the drafting step, which the model happily paraphrases into things the page never said |
+| **Ground** `grounding.py` | Is each claim actually in the source? | Invented facts in real emails. This is the load-bearing one |
+| **Judge** `judge.py` | Which single fact is worth opening on? | An email built on an award from 2019, or on a layoff |
+| **Draft** `draft.py` | Does the message use that fact specifically? | "I was impressed by your work at ⟨company⟩" — personalisation theatre |
+
+**Why search is a step at all, rather than a prompt.** A model asked "what is
+new with this person" answers from training data: confident, undated, and
+unfalsifiable. Search makes the claim *checkable* — every fact arrives attached
+to a URL whose text can be string-matched. The search step is not there to
+inform the model, it is there to give grounding something to verify against.
+Without retrieval there is nothing to ground, and without grounding there is no
+way to tell a real fact from a fluent one.
+
+**Why grounding is dumb on purpose.** Each extracted fact must carry verbatim
+entities lifted from the source. Grounding string-matches them back against the
+retrieved text. No model is asked "is this true?" — a model that invented the
+fact will happily confirm it. A string comparison cannot be persuaded.
+
+### Where state lives
+
+| Table | Holds | Why it exists separately |
+|---|---|---|
+| `runs` | one prospect, its status, chosen hook, draft | the unit of work |
+| `run_stages` | one row per stage, with its payload and timing | the audit trail, and the progress feed — same rows, two jobs |
+| `run_sources` | every URL read | so "where did that come from?" is answerable without re-running |
+| `run_chat` | the assistant thread | survives refresh, tab change, machine |
+| `draft_revisions` | every version of every draft | what changed, who changed it, and why |
+| `style_examples` | (original, edited) pairs | the voice-learning input |
+| `fact_feedback` | facts included/excluded by hand, with reasons | the ranking-learning input |
+| `personas`, `persona_memories` | who is writing, and what they have learned | learning belongs to a voice, not to the app |
+| `person_profiles` | cached provider lookups | the provider allowance is small and re-runs are common |
+| `outbound_*` | the campaign pipeline's own runs, contacts, stages | a different unit of work — see below |
+
+### How the browser knows what is happening
+
+There is no websocket and no SSE. The pipeline writes a `run_stages` row the
+moment each stage finishes; the browser polls `GET /api/runs/{id}` and renders
+those rows. Progress is therefore *real* — it is the pipeline's own record,
+not an animation on a timer, and it cannot drift out of step with the work
+because it **is** the work's output.
+
+This started as a serverless constraint (a function cannot hold a queue in
+memory between invocations) and stayed after the move to a long-running host,
+because the stage rows had to be written for durability anyway. One mechanism,
+two jobs, and a refresh mid-run loses nothing.
+
+The same reasoning explains why disambiguation does not block. When identity is
+ambiguous the run parks in `needs_disambiguation` and returns; the human's
+answer arrives later as `POST /api/runs/{id}/resolve`, which re-enters the
+pipeline with the company filled in. No resume state machine, no in-memory
+waiting, nothing to lose on restart.
+
+### The second pipeline: outbound campaigns
+
+Lead research answers "what do I say to this person?". The campaign pipeline
+answers "who should I be talking to at all?" — it starts from one company and
+works outward. Its own runs, its own stages, its own tables.
+
+```
+target company
+   │  competitors.py   who else plays here
+   ▼
+competitors  →  contacts.py    who works there, from public pages
+   │
+   ▼
+contacts     →  waterfall.py   find and verify an address, cheapest source first
+   │
+   ▼
+verified     →  runner.py      each contact gets a FULL lead research run
+addresses         (the pipeline above, reused wholesale)
+   │
+   ▼
+campaign     →  drafts per contact, grouped for review and sending
+```
+
+The reuse is the point: a campaign contact is researched by exactly the same
+seven stages, with the same grounding, as one you typed in by hand. There is no
+second, weaker path — which is why a campaign draft can be trusted as much as a
+single one.
+
+### The assistant, and what it can reach
+
+The chat panel is not a text box that rewrites prose. It is given tools, so the
+only way it can claim to have done something is to have actually done it.
+
+```
+you type  →  agent.py  →  api_catalog()   what can this app do?     (reads app.openapi())
+                       →  api_call(…)     do one of those things    (in-process, over ASGI)
+                                             │
+                                             ▼
+                                          the same FastAPI routes a click uses,
+                                          through the same security gate,
+                                          the same validation, the same pool
+```
+
+Because the catalogue is read from FastAPI's own spec, it cannot fall out of
+date when a route is added or renamed. And because calls re-enter through the
+HTTP layer rather than reaching into the database, the assistant has exactly the
+authority a signed-in user has, and no path of its own.
+
+Two things it cannot do. It cannot **assert a fact** — new information enters
+only through an endpoint that grounds it against a source, so "add that he moved
+to Stripe" is refused rather than written. And it cannot **send or delete**
+without explicit confirmation in the conversation, enforced in `api_call`, not
+merely requested in the prompt.
+
+### The loop that makes it better
+
+Three signals feed back, and each lands somewhere different:
+
+```
+you edit a draft        → draft_revisions + style_examples → next drafts few-shot your last 3 edits
+you drop/keep a fact    → fact_feedback                    → judge.learned_weights shifts that category
+you correct the writing → persona_memories                 → the persona rewrites its own instructions
+```
+
+No training and no fine-tuning. Each is just showing the next call what you
+actually did last time.
+
+### Where the money goes
+
+Worth understanding before changing any knob, because two of the three services
+are metered and one run touches all three.
+
+| Spend | When | Bounded by |
+|---|---|---|
+| Tavily search | every query in research + traversal | `GRAPH_QUERY_BUDGET`, `MAX_RESULTS_PER_QUERY` |
+| Gemini calls | query generation, extract, judge, draft | `EXTRACT_MAX_SOURCES` (extraction is the long pole) |
+| Super Carl | one resolve + one profile fetch per person | cached `SUPERCARL_CACHE_DAYS`; skipped entirely without a key |
+
+Two rules the code holds to: **a badge never costs money** (`/api/health`
+answers from config alone unless you explicitly press the button), and **ten
+contacts at one company cost one company research pass, not ten**.
 
 ---
 
@@ -127,49 +354,82 @@ no fine-tuning — just showing the model what you actually changed.
 
 ## Layout
 
+Read it in the order information moves: `main.py` takes the request,
+`runner.py` decides what happens, `pipeline/*` does it, `db.py` records it.
+
 ```
 backend/
   config.py           tunables + hard-excluded categories
   taxonomy.py         ICP, seniority/function, person + company intent tiers
   models.py           schemas (also the structured-output contracts)
   db.py               Supabase Postgres: runs, stages, sources (asyncpg)
-  main.py             routes, upload parsing
+  outbound_db.py      the campaign pipeline's own tables
+  main.py             routes, upload parsing        ← thin: no logic lives here
   security.py         access gate, session cookies, response headers
   integrations/
     search.py         Tavily — typed failures, bounded concurrency
     llm.py            Gemini — structured output, retry, timeouts
+    personsignal.py   Super Carl — profile + posts, optional, never fatal
+    mailer.py         SMTP send
+    hunter.py         email discovery
+    email_verify.py   address validation
+    reachability.py   is this address worth sending to
   pipeline/
-    normalize.py      input hygiene
+    runner.py         orchestration, stage events, company cache
+    normalize.py      input hygiene                 ← incl. placeholder companies
     profile.py        seniority/function classification + ICP fit scoring
-    identity.py       stage 0
+    identity.py       stage 0 — which human is this
     research.py       stages 1-2 + the traversal
     graph.py          research-as-graph: what to look at next, and the budget
     provenance.py     source ranking — LinkedIn > X > web, and corroboration
     extract.py        stage 3 + syndication collapsing + wrong-person gates
-    grounding.py      verification
-    judge.py          eligibility gates + scoring  (pure logic)
+    grounding.py      verification                  ← the load-bearing one
+    judge.py          eligibility gates + scoring   (pure logic)
     draft.py          stage 5 + post-checks
-    runner.py         orchestration, events, company cache
+    agent.py          the assistant: api_catalog + api_call over the app's API
+    persona.py        the writing voice, and what it has learned
+    outbound.py       campaign orchestration        ← reuses runner.py wholesale
+    competitors.py    who else plays in this market
+    contacts.py       who works there, from public pages
+    waterfall.py      find an address, cheapest source first
 ui/                   Vite + React + Tailwind + shadcn/ui source
   ResearchGraph.tsx   live traversal drawing, arbitrary breadth and depth
-frontend/             built assets, served by FastAPI
+frontend/             built assets — GITIGNORED, the Dockerfile builds it
+Dockerfile            two stages: node builds the SPA, python runs the app
+railway.json          selects the Dockerfile builder, healthcheck /api/ping
 verify.py             preflight
 discover_supercarl.py probe for a person-signal data provider
 ```
 
+**Self-checks.** Non-trivial logic keeps a runnable check in the same file,
+under `__main__` — no framework, no fixtures. Each one fails loudly if the
+behaviour it names regresses:
+
 ```bash
-python -m backend.security                    # access-gate self-check
-python -m backend.pipeline.graph              # traversal self-check
-cd ui && npx tsx src/components/ResearchGraph.check.ts   # layout self-check
+python -m backend.security                    # access gate, cookie, HTTPS detection
+python -m backend.pipeline.graph              # traversal budget and layout
+python -m backend.pipeline.research           # query anchoring, URL pinning
+python -m backend.pipeline.normalize          # placeholder companies
+python -m backend.pipeline.agent              # what the assistant may reach
+python -m backend.pipeline.contacts           # domain resolution
+python -m backend.pipeline.provenance         # source ranking, corroboration
+python -m backend.integrations.personsignal   # provider failure messages
+python test_bugs.py                           # regression checks
 ```
 
-Tests that touch Supabase (`test_persistence.py`) need `DATABASE_URL`; they
-write to a throwaway batch and delete it afterwards. Everything else runs
-offline.
+`test_outbound.py` is an integration script, not a unit test: it drives a
+running server over HTTP, so start the app before running it. Everything above
+is offline and needs no keys and no database.
+
 
 ---
 
 ## Deploying to Vercel
+
+> Railway is the currently deployed target — see the section below. This one is
+> kept because the serverless constraints it describes are why several parts of
+> the app are shaped the way they are, and those shapes did not change when the
+> host did.
 
 The app deploys as a single Vercel Function serving both the API and the built
 frontend. `pyproject.toml` points Vercel at `backend.main:app`; `vercel.json`
@@ -214,18 +474,51 @@ seconds to every run — measured from India against a Sydney project, that was
 match the database's `ap-south-1` (Mumbai). If you move the Supabase project, change
 that line too; the default `iad1` would be just as far away as a laptop is.
 
-## Falling back to Railway
+## Deploying to Railway (the Dockerfile path)
 
-Railway is a long-running host, so nothing about the app has to change —
-`Procfile` and `railway.json` are already here and the built frontend is
-committed, so no Node step is needed at deploy time. Set the same environment
-variables, and set `DB_POOL_MIN=1` since the process is long-lived and should
-keep a warm connection.
+Railway is a long-running host, which suits this app better than serverless
+does: the process can hold a warm connection, and a run is never racing a
+function ceiling. Deployment is the `Dockerfile`, and `railway.json` selects it.
+
+**The build has to compile the frontend, and that is the whole reason a
+Dockerfile exists here.** `frontend/` is gitignored — it is build output, and
+committing it means the repo carries a stale copy. Vercel got away with this
+because `vercel.json` runs the npm build itself; Railway's Python builder has no
+equivalent hook, so it would install Python, find no `frontend/`, and serve
+"Frontend is not built" on every page load. The image therefore builds it:
+
+```
+stage 1  node:22-slim    npm ci && npm run build     → /app/frontend
+stage 2  python:3.12     pip install -r requirements.txt
+                         COPY --from=1 /app/frontend  ← only the output crosses
+```
+
+Node never reaches the runtime image, and `.dockerignore` keeps `.env` out of
+it — which matters for more than secret hygiene, since `config.py` calls
+`load_dotenv()` at import and a baked-in `.env` would silently override every
+variable Railway injects.
+
+Set the same environment variables, plus `DB_POOL_MIN=1` — the process is
+long-lived, so a warm connection saves the first request of each burst a ~0.5s
+TLS handshake.
+
+Two details that will cost you an afternoon if you miss them:
+
+* **Clear any Custom Start Command in the service settings.** It overrides the
+  Dockerfile's `CMD`, and Railway runs it without a shell, so a command
+  containing `$PORT` arrives at uvicorn as the literal string `$PORT`.
+* **`CMD` is exec-form on purpose**: `["sh","-c","exec python -m uvicorn …"]`.
+  The `sh -c` expands `$PORT`; the `exec` then replaces the shell so python is
+  PID 1 and actually receives `SIGTERM`. Shell form leaves `/bin/sh` as PID 1,
+  the app never hears the signal, and the shutdown hook that hands pooled
+  Postgres connections back never runs.
 
 The healthcheck is `/api/ping`, not `/api/health`. `/api/health` calls Tavily,
 Gemini and the person-signal provider for real — the right check before a demo,
 the wrong one for a platform that probes on every deploy and restart, where it
-would spend search credits just to confirm the app is up.
+would spend search credits just to confirm the app is up. Note that `/api/ping`
+does touch the database, so a missing `DATABASE_URL` fails the deploy rather
+than just failing a request.
 
 Be aware what Railway's free plan actually is: **$1/month of credit** at 0.5 GB
 RAM, which is hours of always-on uptime rather than a month of it. New accounts
