@@ -19,5 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY --from=ui /app/frontend/ ./frontend/
 
-# Shell form so $PORT expands. Railway injects it; 8000 is the local fallback.
-CMD python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# sh -c is what expands $PORT (Railway injects it; 8000 is the local fallback),
+# and `exec` then replaces the shell with python so python is PID 1. Without the
+# exec, SIGTERM on shutdown would reach /bin/sh and never the app, so the hook in
+# main.py that hands pooled Postgres connections back would not run.
+CMD ["sh", "-c", "exec python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
