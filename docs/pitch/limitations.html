@@ -180,56 +180,7 @@
       Each of these I hit myself, on real runs. None is hypothetical.
     </p>
 
-    <div class="item">
-      <div class="item-head">
-        <span class="t">Competitor discovery returns companies from the wrong market</span>
-        <span class="tagx tag-broken">broken</span>
-      </div>
-      <div class="item-body">
-        <p>
-          An outbound run against <code>spacex.com</code> returned Isar Aerospace,
-          PLD Space and Impulse Space &mdash; all correct &mdash; and also
-          <strong>Snapchat</strong>, which then produced four Snapchat leads
-          including its CEO. A run against <code>ramp.com</code> got all nine
-          right, so it is not uniformly broken: fintech has a crisp competitive
-          set and aerospace apparently does not.
-        </p>
-        <p>
-          The consequence is worse than a wasted search. A wrong competitor
-          becomes real contacts, which become real drafts, which a rep could send.
-        </p>
-        <p class="fix"><b>What would fix it</b>
-          The competitor list is model output with no verification step, unlike
-          every fact in the research path. It needs the same treatment: check the
-          claimed competitor actually operates in the same market before its
-          people enter the pipeline.</p>
-      </div>
-    </div>
 
-    <div class="item">
-      <div class="item-head">
-        <span class="t">Deep research is skipped silently when the search budget is low</span>
-        <span class="tagx tag-broken">broken</span>
-      </div>
-      <div class="item-body">
-        <p>
-          In an outbound campaign, each contact is meant to go through the full
-          research pipeline. When the month's search budget approaches its
-          reserve, that step is skipped and the draft falls back to a
-          competitor-angle message instead. The stage line reads
-          <em>&ldquo;0 researched in full, 1 from the competitor angle&rdquo;</em>
-          &mdash; which is honest, but easy to miss.
-        </p>
-        <p>
-          So the same screen can show either a fully-researched contact or a
-          generic one, and the difference is one line of text.
-        </p>
-        <p class="fix"><b>What would fix it</b>
-          Mark the contact itself, not just the run's stage log, so a
-          thinly-drafted lead is visibly different from a researched one at the
-          point where someone decides to send it.</p>
-      </div>
-    </div>
 
     <div class="item">
       <div class="item-head">
@@ -314,6 +265,28 @@
       </div>
     </div>
 
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Campaign contacts stop being researched in full as credits run down</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          In an outbound campaign every contact is meant to go through the full
+          research pipeline, at roughly 12 searches each. A reserve is held back
+          so a batch cannot drain the month to zero, so as the budget approaches
+          that floor the research step is skipped and the draft falls back to a
+          competitor-angle message.
+        </p>
+        <p>
+          The run says so &mdash; <em>&ldquo;0 researched in full, 1 from the
+          competitor angle&rdquo;</em> &mdash; but it is one line among several,
+          and the same screen can show a fully-researched contact or a generic
+          one with little to separate them. On a paid plan this simply would not
+          trigger.
+        </p>
+      </div>
+    </div>
     <div class="item">
       <div class="item-head">
         <span class="t">Hosting is a free Railway plan</span>
