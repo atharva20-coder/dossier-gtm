@@ -18,6 +18,10 @@ __pycache__
 .venv
 venv
 docs
+# …except the landing page, which the app serves at /. Nothing else
+# in docs/ ships: it is interview prep, not public material.
+!docs/pitch
+!docs/pitch/index.html
 fixtures
 supabase
 scripts

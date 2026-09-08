@@ -25,8 +25,10 @@ export default function App() {
     setTimeout(() => setToast(""), 4500)
   }, [])
 
+  // The app is served under /app — "/" is the landing page. The basename is
+  // what keeps these routes written as "/", "/outbound" and so on.
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/app">
       <TooltipProvider delayDuration={200}>
         <div className="h-dvh overflow-hidden bg-[var(--surface)]">
           <Routes>

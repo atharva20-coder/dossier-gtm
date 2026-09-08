@@ -16,7 +16,8 @@ import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import (FileResponse, JSONResponse, RedirectResponse,
+                               StreamingResponse)
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -1548,14 +1549,17 @@ async def export_runs(batch_id: str = ""):
 
 # -------------------------------------------------------------- frontend ---
 FRONTEND = ROOT / "frontend"
+# The marketing page. One file, copied into the image on its own — the rest of
+# docs/ is deliberately not shipped, because it is interview preparation and
+# nobody outside this machine should be able to request it.
+LANDING = ROOT / "landing" / "index.html"
 
 if (FRONTEND / "assets").exists():
     # Vite emits hashed files under /assets — mount that path exactly.
     app.mount("/assets", StaticFiles(directory=str(FRONTEND / "assets")), name="assets")
 
 
-@app.get("/")
-def index():
+def _spa() -> FileResponse:
     idx = FRONTEND / "index.html"
     if not idx.exists():
         raise HTTPException(
@@ -1565,18 +1569,47 @@ def index():
     return FileResponse(str(idx))
 
 
+@app.get("/")
+def index():
+    """The landing page, for someone who has not seen this before.
+
+    The app itself lives at /app. Splitting them means a first-time visitor gets
+    an explanation rather than a login box, and the login box is one click away
+    for anyone who already knows what this is. If the landing page is missing —
+    a local checkout that never copied it — fall through to the app rather than
+    erroring, so development is unaffected.
+    """
+    if LANDING.exists():
+        return FileResponse(str(LANDING))
+    return _spa()
+
+
+@app.get("/app")
+def app_root():
+    """The application. React Router is mounted with basename="/app"."""
+    return _spa()
+
+
 @app.get("/{path:path}")
 def spa_fallback(path: str):
     """Serve any other static file, else fall back to index.html.
 
-    Keeps deep links working without a separate dev server during a demo.
+    Keeps deep links working without a separate dev server during a demo. A
+    deep link into the app — /app/outbound, /app/leads/41 — lands here too:
+    there is no such file, so it returns the SPA and React Router resolves the
+    rest of the path against its basename.
     """
     if path.startswith("api/"):
         raise HTTPException(404, "Not found")
     candidate = FRONTEND / path
     if path and candidate.is_file():
         return FileResponse(str(candidate))
-    idx = FRONTEND / "index.html"
-    if idx.exists():
-        return FileResponse(str(idx))
-    raise HTTPException(404, "Not found")
+
+    # A link made before the app moved under /app — /leads/41, /outbound —
+    # would otherwise return the SPA at a URL outside its basename, and React
+    # Router would match nothing and render a blank page. Send it to the same
+    # path under /app instead, so old links keep working.
+    if path and not path.startswith("app"):
+        return RedirectResponse(f"/app/{path}", status_code=308)
+
+    return _spa()
