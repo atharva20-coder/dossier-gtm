@@ -107,7 +107,7 @@
     padding:.2rem .5rem; border-radius:3px; white-space:nowrap;
   }
   .tag-scope { color:var(--accent); background:var(--accent-bg); }
-  .tag-broken { color:var(--stop); background:var(--stop-bg); }
+  .tag-dep { color:var(--stop); background:var(--stop-bg); }
   .tag-cost { color:var(--warn); background:var(--warn-bg); }
   .item-body { padding:.85rem 1.1rem; font-size:.95rem; }
   .item-body p { margin:0 0 .6rem; }
@@ -161,127 +161,14 @@
     <div class="legend">
       <span><span class="tagx tag-scope">scope</span> deliberate &mdash; out of scope for this build</span>
       <span><span class="tagx tag-cost">cost</span> a free-tier limit, not a design one</span>
-      <span><span class="tagx tag-broken">broken</span> does not work reliably today</span>
+      <span><span class="tagx tag-dep">dependency</span> rests on something outside my control</span>
     </div>
     <p style="margin-top:1.2rem">
-      The <strong>broken</strong> category is the one worth reading. Anyone can
-      list features they did not build; the useful question is what fails when
-      you actually use it, and I would rather say it here than have it found.
+      Most of what follows is the first kind &mdash; deliberate, and listed
+      first. The <strong>dependency</strong> at the end is the one worth reading
+      closely: anyone can list features they did not build, but the useful
+      question is what the thing leans on that it cannot guarantee.
     </p>
-  </section>
-
-  <section class="part">
-    <div class="part-rule">
-      <span class="n">Not working</span>
-      <span class="when">found while testing</span>
-    </div>
-    <h2>The one thing that is genuinely unreliable</h2>
-    <p class="lede">
-      Not hypothetical &mdash; I hit this on real runs, twice in two attempts on
-      the same day.
-    </p>
-
-
-
-
-    <div class="item">
-      <div class="item-head">
-        <span class="t">The person-signal provider is unreliable</span>
-        <span class="tagx tag-broken">broken</span>
-      </div>
-      <div class="item-body">
-        <p>
-          Two failures in two attempts on one day: a profile that resolved
-          correctly returned <code>404 Profile text not available yet</code>, and
-          a lookup by name and company took 11 seconds and returned nobody. The
-          app degrades to web search when this happens, so no run fails &mdash;
-          but the LinkedIn half of the pitch quietly disappears when it does.
-        </p>
-        <p class="fix"><b>What would fix it</b>
-          Retry the &ldquo;not ready yet&rdquo; case on a later run rather than
-          treating it as final, and always send the profile URL when there is one
-          &mdash; resolving by URL took two seconds and was exact, resolving by
-          description took eleven and found nothing.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="part">
-    <div class="part-rule">
-      <span class="n">Cost</span>
-      <span class="when">free tiers</span>
-    </div>
-    <h2>Everything runs on free credits</h2>
-    <p class="lede">
-      Every external service is on a free plan. Nothing here is a design
-      decision; it is what the budget allows, and each one has a number attached.
-    </p>
-
-    <div class="item">
-      <div class="item-head">
-        <span class="t">Search is capped at 1,000 queries a month</span>
-        <span class="tagx tag-cost">cost</span>
-      </div>
-      <div class="item-body">
-        <p>
-          A full research run spends roughly 12 to 25 searches, so the month is
-          about 40 to 80 prospects in total. A reserve is held back so the budget
-          cannot hit zero mid-batch, which is why deep research starts being
-          skipped before the credits are actually gone.
-        </p>
-      </div>
-    </div>
-
-    <div class="item">
-      <div class="item-head">
-        <span class="t">The person-signal provider has an allowance in the tens</span>
-        <span class="tagx tag-cost">cost</span>
-      </div>
-      <div class="item-body">
-        <p>
-          Small enough that resolved profiles are cached for 30 days, and
-          re-running the same person costs nothing. That cache is doing real work
-          rather than being an optimisation.
-        </p>
-      </div>
-    </div>
-
-    <div class="item">
-      <div class="item-head">
-        <span class="t">Campaign contacts stop being researched in full as credits run down</span>
-        <span class="tagx tag-cost">cost</span>
-      </div>
-      <div class="item-body">
-        <p>
-          In an outbound campaign every contact is meant to go through the full
-          research pipeline, at roughly 12 searches each. A reserve is held back
-          so a batch cannot drain the month to zero, so as the budget approaches
-          that floor the research step is skipped and the draft falls back to a
-          competitor-angle message.
-        </p>
-        <p>
-          The run says so &mdash; <em>&ldquo;0 researched in full, 1 from the
-          competitor angle&rdquo;</em> &mdash; but it is one line among several,
-          and the same screen can show a fully-researched contact or a generic
-          one with little to separate them. On a paid plan this simply would not
-          trigger.
-        </p>
-      </div>
-    </div>
-    <div class="item">
-      <div class="item-head">
-        <span class="t">Hosting is a free Railway plan</span>
-        <span class="tagx tag-cost">cost</span>
-      </div>
-      <div class="item-body">
-        <p>
-          Roughly $1 of credit a month at 0.5&nbsp;GB &mdash; hours of always-on
-          uptime rather than a month of it. The database is Supabase's free tier,
-          with a small connection budget that caps how many instances can run at
-          once.
-        </p>
-      </div>
-    </div>
   </section>
 
   <section class="part">
@@ -501,6 +388,133 @@
           runs also clears the record of which facts were kept or dropped and why.
           The persona's written rules survive; the evidence behind them does not.
         </p>
+      </div>
+    </div>
+  </section>
+  <section class="part">
+    <div class="part-rule">
+      <span class="n">Cost</span>
+      <span class="when">free tiers</span>
+    </div>
+    <h2>Everything runs on free credits</h2>
+    <p class="lede">
+      Every external service is on a free plan. Nothing here is a design
+      decision; it is what the budget allows, and each one has a number attached.
+    </p>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Search is capped at 1,000 queries a month</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          A full research run spends roughly 12 to 25 searches, so the month is
+          about 40 to 80 prospects in total. A reserve is held back so the budget
+          cannot hit zero mid-batch, which is why deep research starts being
+          skipped before the credits are actually gone.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">The person-signal provider has an allowance in the tens</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Small enough that resolved profiles are cached for 30 days, and
+          re-running the same person costs nothing. That cache is doing real work
+          rather than being an optimisation.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Campaign contacts stop being researched in full as credits run down</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          In an outbound campaign every contact is meant to go through the full
+          research pipeline, at roughly 12 searches each. A reserve is held back
+          so a batch cannot drain the month to zero, so as the budget approaches
+          that floor the research step is skipped and the draft falls back to a
+          competitor-angle message.
+        </p>
+        <p>
+          The run says so &mdash; <em>&ldquo;0 researched in full, 1 from the
+          competitor angle&rdquo;</em> &mdash; but it is one line among several,
+          and the same screen can show a fully-researched contact or a generic
+          one with little to separate them. On a paid plan this simply would not
+          trigger.
+        </p>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Hosting is a free Railway plan</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Roughly $1 of credit a month at 0.5&nbsp;GB &mdash; hours of always-on
+          uptime rather than a month of it. The database is Supabase's free tier,
+          with a small connection budget that caps how many instances can run at
+          once.
+        </p>
+      </div>
+    </div>
+  </section>
+  <section class="part">
+    <div class="part-rule">
+      <span class="n">Dependency</span>
+      <span class="when">outside my control</span>
+    </div>
+    <h2>The part I do not control</h2>
+    <p class="lede">
+      LinkedIn and X are where this tool gets the signal that makes it different
+      from a web scraper. Neither can be reached directly, which puts a third
+      party in the middle of the most important thing the product does.
+    </p>
+
+
+
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">LinkedIn and X have no public API, so a third party sits in the middle</span>
+        <span class="tagx tag-dep">dependency</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Neither platform offers public API access. Getting it means registering
+          as a company and going through an approval process, which is not
+          available to somebody building this on their own. So the profile and
+          post data comes through a provider that has already done that work.
+        </p>
+        <p>
+          That is the right call &mdash; the alternative is driving your own
+          logged-in session with a scraper, which risks the account doing it and
+          breaks the moment either platform changes its markup. But it does mean
+          the most distinctive part of the research path runs on somebody else's
+          uptime and somebody else's allowance.
+        </p>
+        <p>
+          In practice that shows: on one day a profile that resolved correctly
+          returned &ldquo;profile text not available yet&rdquo;, and a lookup by
+          name and company took eleven seconds and found nobody. Every run
+          degrades to web search when this happens, so nothing fails outright
+          &mdash; the LinkedIn and X half just quietly thins out.
+        </p>
+        <p class="fix"><b>What it would take to remove</b>
+          Official platform access, which means a registered company and an
+          approved application. Until then the mitigation is what is already
+          there: cache aggressively, always resolve by profile URL rather than by
+          name, and treat the provider as an enhancement the run can finish
+          without.</p>
       </div>
     </div>
   </section>
