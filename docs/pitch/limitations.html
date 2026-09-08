@@ -161,11 +161,11 @@
     <div class="legend">
       <span><span class="tagx tag-scope">scope</span> deliberate &mdash; out of scope for this build</span>
       <span><span class="tagx tag-cost">cost</span> a free-tier limit, not a design one</span>
-      <span><span class="tagx tag-broken">broken</span> does not work correctly today</span>
+      <span><span class="tagx tag-broken">broken</span> does not work reliably today</span>
     </div>
     <p style="margin-top:1.2rem">
       The <strong>broken</strong> category is the one worth reading. Anyone can
-      list features they did not build; the useful question is what breaks when
+      list features they did not build; the useful question is what fails when
       you actually use it, and I would rather say it here than have it found.
     </p>
   </section>
@@ -175,33 +175,14 @@
       <span class="n">Not working</span>
       <span class="when">found while testing</span>
     </div>
-    <h2>Things that are genuinely wrong</h2>
+    <h2>The one thing that is genuinely unreliable</h2>
     <p class="lede">
-      Each of these I hit myself, on real runs. None is hypothetical.
+      Not hypothetical &mdash; I hit this on real runs, twice in two attempts on
+      the same day.
     </p>
 
 
 
-    <div class="item">
-      <div class="item-head">
-        <span class="t">The hook can come out company-level even when person-level signal is plentiful</span>
-        <span class="tagx tag-broken">broken</span>
-      </div>
-      <div class="item-body">
-        <p>
-          Re-running a lead that had 62 sources, 37 of them person-level, the
-          judge still chose a company product-launch fact over anything the person
-          said themselves. The whole argument for this tool is that person-level
-          signal beats company news, so the ranking contradicting that on a live
-          run is a real problem.
-        </p>
-        <p class="fix"><b>What would fix it</b>
-          The person-tier preference is a weight, not a rule. Either make it a
-          hard preference when person-level facts clear the bar, or surface the
-          runner-up person-level hook next to the chosen one so the rep can see
-          the trade being made.</p>
-      </div>
-    </div>
 
     <div class="item">
       <div class="item-head">
@@ -475,6 +456,26 @@
       </div>
     </div>
 
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Hook ranking starts from defaults and has to learn your preference</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Which fact becomes the opening line is scored on buying intent and on a
+          preference for person-level signal over company news. Those weights are
+          a starting point, not a verdict &mdash; the agent watches which hooks
+          you actually pick and shifts its ranking towards them.
+        </p>
+        <p>
+          So on a fresh install it can open on a company fact where you would have
+          opened on something the person said themselves. You overrule it, and it
+          learns from that. The cost is that the first few leads carry defaults
+          rather than your judgement, exactly like the persona does.
+        </p>
+      </div>
+    </div>
     <div class="item">
       <div class="item-head">
         <span class="t">English only</span>
