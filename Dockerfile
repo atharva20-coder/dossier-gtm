@@ -18,10 +18,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./backend/
 COPY --from=ui /app/frontend/ ./frontend/
-# The landing page, and only the landing page. Everything else under docs/ is
-# interview preparation — .dockerignore keeps it out, and a single explicit
-# COPY is what makes that hard to undo by accident.
+# The three public pages, named one by one. Everything else under docs/ is
+# interview preparation and stays out of the image — .dockerignore blocks the
+# directory, and explicit COPYs are what make adding to that set a decision
+# rather than an accident.
 COPY docs/pitch/index.html ./landing/index.html
+COPY docs/pitch/limitations.html ./landing/limitations.html
+COPY docs/pitch/future-scope.html ./landing/future-scope.html
 
 # sh -c is what expands $PORT (Railway injects it; 8000 is the local fallback),
 # and `exec` then replaces the shell with python so python is PID 1. Without the

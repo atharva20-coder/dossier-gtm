@@ -22,6 +22,8 @@ docs
 # in docs/ ships: it is interview prep, not public material.
 !docs/pitch
 !docs/pitch/index.html
+!docs/pitch/limitations.html
+!docs/pitch/future-scope.html
 fixtures
 supabase
 scripts

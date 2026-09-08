@@ -1590,6 +1590,24 @@ def app_root():
     return _spa()
 
 
+# Public pages that sit beside the landing page. Named explicitly rather than
+# served from a directory: the rest of docs/ is interview preparation, and a
+# static mount would make adding something public an accident rather than a
+# decision. These must stay in step with the COPY lines in the Dockerfile.
+LANDING_PAGES = {"limitations.html", "future-scope.html"}
+
+
+@app.get("/{page}.html")
+def landing_page(page: str):
+    name = f"{page}.html"
+    if name not in LANDING_PAGES:
+        raise HTTPException(404, "Not found")
+    f = LANDING.parent / name
+    if not f.exists():
+        raise HTTPException(404, "Not found")
+    return FileResponse(str(f))
+
+
 @app.get("/{path:path}")
 def spa_fallback(path: str):
     """Serve any other static file, else fall back to index.html.

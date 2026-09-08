@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What It Cannot Do Yet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:#F5F7F4; --card:#FFFFFF; --ink:#131A16; --ink-2:#2E3A33;
+    --muted:#5B6660; --faint:#8A948E; --rule:#E1E6DF; --rule-soft:#EDF0EB;
+    --accent:#136F4E; --accent-bg:#E7F1EA; --warn:#9A5B0B; --warn-bg:#FBF1E3;
+    --stop:#9A2B2B; --stop-bg:#F7E9E9;
+    --display: "Newsreader", ui-serif, Georgia, serif;
+    --body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0F1311; --card:#161C19; --ink:#EDF1EE; --ink-2:#CBD4CE;
+      --muted:#93A099; --faint:#6B7A73; --rule:#26302B; --rule-soft:#1D2622;
+      --accent:#5FBF95; --accent-bg:#163024; --warn:#E0A75C; --warn-bg:#2C2213;
+      --stop:#E08A8A; --stop-bg:#2E1A1A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0F1311; --card:#161C19; --ink:#EDF1EE; --ink-2:#CBD4CE;
+    --muted:#93A099; --faint:#6B7A73; --rule:#26302B; --rule-soft:#1D2622;
+    --accent:#5FBF95; --accent-bg:#163024; --warn:#E0A75C; --warn-bg:#2C2213;
+    --stop:#E08A8A; --stop-bg:#2E1A1A;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink-2);
+    font-family:var(--body); font-size:16.5px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:50rem; margin:0 auto; padding:4.5rem 1.5rem 7rem; }
+
+  .masthead { border-bottom:2px solid var(--ink); padding-bottom:1.5rem; }
+  .kicker {
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 1rem;
+  }
+  h1 {
+    font-family:var(--display); font-weight:600;
+    font-size:clamp(2.4rem,6vw,3.6rem); line-height:1.04;
+    letter-spacing:-.02em; color:var(--ink); margin:0 0 .9rem; text-wrap:balance;
+  }
+  .standfirst {
+    font-family:var(--display); font-size:1.2rem; line-height:1.5;
+    color:var(--muted); margin:0; max-width:38rem;
+  }
+
+  .part { margin-top:4rem; }
+  .part-rule {
+    display:flex; align-items:baseline; gap:1rem;
+    border-top:2px solid var(--ink); padding-top:.9rem; margin-bottom:.4rem;
+  }
+  .part-rule .n {
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent); white-space:nowrap;
+  }
+  .part-rule .when {
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+    color:var(--faint); margin-left:auto;
+  }
+  .part > h2 {
+    font-family:var(--display); font-weight:600; font-size:1.9rem;
+    line-height:1.15; letter-spacing:-.015em; color:var(--ink);
+    margin:0 0 .5rem; text-wrap:balance;
+  }
+  .part > .lede { color:var(--muted); margin:0 0 1.6rem; max-width:42rem; }
+
+  h3 {
+    font-family:var(--display); font-weight:600; font-size:1.3rem;
+    color:var(--ink); margin:2.4rem 0 .8rem; letter-spacing:-.01em;
+  }
+
+  p { margin:0 0 1rem; }
+  strong { color:var(--ink); font-weight:600; }
+  em { font-style:italic; }
+  a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+  a:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  code {
+    font-family:var(--mono); font-size:.88em; background:var(--rule-soft);
+    padding:.1em .35em; border-radius:3px;
+  }
+
+  /* ------------------------------------------------------------- items */
+  .item {
+    border:1px solid var(--rule); border-radius:6px; background:var(--card);
+    margin:.8rem 0; overflow:hidden;
+  }
+  .item-head {
+    display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap;
+    padding:.75rem 1.1rem; border-bottom:1px solid var(--rule-soft);
+  }
+  .item-head .t { font-weight:600; color:var(--ink); font-size:1rem; }
+  .tagx {
+    margin-left:auto; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.12em; text-transform:uppercase;
+    padding:.2rem .5rem; border-radius:3px; white-space:nowrap;
+  }
+  .tag-scope { color:var(--accent); background:var(--accent-bg); }
+  .tag-broken { color:var(--stop); background:var(--stop-bg); }
+  .tag-cost { color:var(--warn); background:var(--warn-bg); }
+  .item-body { padding:.85rem 1.1rem; font-size:.95rem; }
+  .item-body p { margin:0 0 .6rem; }
+  .item-body p:last-child { margin-bottom:0; }
+  .item-body .fix {
+    font-size:.88rem; color:var(--muted); border-top:1px dashed var(--rule);
+    padding-top:.6rem; margin-top:.7rem;
+  }
+  .item-body .fix b {
+    font-family:var(--mono); font-size:9.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint); display:block;
+    margin-bottom:.25rem; font-weight:500;
+  }
+
+  .note {
+    border-left:3px solid var(--warn); background:var(--warn-bg);
+    padding:1rem 1.15rem; margin:1.2rem 0; border-radius:0 5px 5px 0;
+  }
+  .note .label {
+    display:block; font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--warn);
+    margin-bottom:.5rem;
+  }
+  .note p:last-child { margin-bottom:0; }
+
+  .legend { display:flex; flex-wrap:wrap; gap:.5rem 1.2rem; margin:1.2rem 0 0;
+    font-size:.85rem; color:var(--muted); align-items:center; }
+
+  .foot {
+    margin-top:4.5rem; padding-top:1.4rem; border-top:1px solid var(--rule);
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.08em;
+    color:var(--faint); display:flex; flex-wrap:wrap; gap:.4rem .9rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Dossier &middot; limitations</p>
+    <h1>What It Cannot Do Yet</h1>
+    <p class="standfirst">
+      Everything the application does not do, separated into three kinds: decisions taken on purpose, costs of running on free tiers, and things that are genuinely not working.
+    </p>
+  </header>
+
+  <section class="part">
+    <div class="part-rule">
+      <span class="n">How to read this</span>
+    </div>
+    <div class="legend">
+      <span><span class="tagx tag-scope">scope</span> deliberate &mdash; out of scope for this build</span>
+      <span><span class="tagx tag-cost">cost</span> a free-tier limit, not a design one</span>
+      <span><span class="tagx tag-broken">broken</span> does not work correctly today</span>
+    </div>
+    <p style="margin-top:1.2rem">
+      The <strong>broken</strong> category is the one worth reading. Anyone can
+      list features they did not build; the useful question is what breaks when
+      you actually use it, and I would rather say it here than have it found.
+    </p>
+  </section>
+
+  <section class="part">
+    <div class="part-rule">
+      <span class="n">Not working</span>
+      <span class="when">found while testing</span>
+    </div>
+    <h2>Things that are genuinely wrong</h2>
+    <p class="lede">
+      Each of these I hit myself, on real runs. None is hypothetical.
+    </p>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Competitor discovery returns companies from the wrong market</span>
+        <span class="tagx tag-broken">broken</span>
+      </div>
+      <div class="item-body">
+        <p>
+          An outbound run against <code>spacex.com</code> returned Isar Aerospace,
+          PLD Space and Impulse Space &mdash; all correct &mdash; and also
+          <strong>Snapchat</strong>, which then produced four Snapchat leads
+          including its CEO. A run against <code>ramp.com</code> got all nine
+          right, so it is not uniformly broken: fintech has a crisp competitive
+          set and aerospace apparently does not.
+        </p>
+        <p>
+          The consequence is worse than a wasted search. A wrong competitor
+          becomes real contacts, which become real drafts, which a rep could send.
+        </p>
+        <p class="fix"><b>What would fix it</b>
+          The competitor list is model output with no verification step, unlike
+          every fact in the research path. It needs the same treatment: check the
+          claimed competitor actually operates in the same market before its
+          people enter the pipeline.</p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Deep research is skipped silently when the search budget is low</span>
+        <span class="tagx tag-broken">broken</span>
+      </div>
+      <div class="item-body">
+        <p>
+          In an outbound campaign, each contact is meant to go through the full
+          research pipeline. When the month's search budget approaches its
+          reserve, that step is skipped and the draft falls back to a
+          competitor-angle message instead. The stage line reads
+          <em>&ldquo;0 researched in full, 1 from the competitor angle&rdquo;</em>
+          &mdash; which is honest, but easy to miss.
+        </p>
+        <p>
+          So the same screen can show either a fully-researched contact or a
+          generic one, and the difference is one line of text.
+        </p>
+        <p class="fix"><b>What would fix it</b>
+          Mark the contact itself, not just the run's stage log, so a
+          thinly-drafted lead is visibly different from a researched one at the
+          point where someone decides to send it.</p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">The hook can come out company-level even when person-level signal is plentiful</span>
+        <span class="tagx tag-broken">broken</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Re-running a lead that had 62 sources, 37 of them person-level, the
+          judge still chose a company product-launch fact over anything the person
+          said themselves. The whole argument for this tool is that person-level
+          signal beats company news, so the ranking contradicting that on a live
+          run is a real problem.
+        </p>
+        <p class="fix"><b>What would fix it</b>
+          The person-tier preference is a weight, not a rule. Either make it a
+          hard preference when person-level facts clear the bar, or surface the
+          runner-up person-level hook next to the chosen one so the rep can see
+          the trade being made.</p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">The person-signal provider is unreliable</span>
+        <span class="tagx tag-broken">broken</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Two failures in two attempts on one day: a profile that resolved
+          correctly returned <code>404 Profile text not available yet</code>, and
+          a lookup by name and company took 11 seconds and returned nobody. The
+          app degrades to web search when this happens, so no run fails &mdash;
+          but the LinkedIn half of the pitch quietly disappears when it does.
+        </p>
+        <p class="fix"><b>What would fix it</b>
+          Retry the &ldquo;not ready yet&rdquo; case on a later run rather than
+          treating it as final, and always send the profile URL when there is one
+          &mdash; resolving by URL took two seconds and was exact, resolving by
+          description took eleven and found nothing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="part">
+    <div class="part-rule">
+      <span class="n">Cost</span>
+      <span class="when">free tiers</span>
+    </div>
+    <h2>Everything runs on free credits</h2>
+    <p class="lede">
+      Every external service is on a free plan. Nothing here is a design
+      decision; it is what the budget allows, and each one has a number attached.
+    </p>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Search is capped at 1,000 queries a month</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          A full research run spends roughly 12 to 25 searches, so the month is
+          about 40 to 80 prospects in total. A reserve is held back so the budget
+          cannot hit zero mid-batch, which is why deep research starts being
+          skipped before the credits are actually gone.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">The person-signal provider has an allowance in the tens</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Small enough that resolved profiles are cached for 30 days, and
+          re-running the same person costs nothing. That cache is doing real work
+          rather than being an optimisation.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Hosting is a free Railway plan</span>
+        <span class="tagx tag-cost">cost</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Roughly $1 of credit a month at 0.5&nbsp;GB &mdash; hours of always-on
+          uptime rather than a month of it. The database is Supabase's free tier,
+          with a small connection budget that caps how many instances can run at
+          once.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="part">
+    <div class="part-rule">
+      <span class="n">Scope</span>
+      <span class="when">deliberate</span>
+    </div>
+    <h2>Decisions taken on purpose</h2>
+    <p class="lede">
+      These are not oversights. Each was cut to keep the build focused on the
+      problem statement, and each has a clear reason.
+    </p>
+
+    <h3>Access and identity</h3>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Authentication is a single shared credential</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          One password gates the whole application, exchanged for a signed
+          HttpOnly session cookie. There are no user accounts, no roles, no
+          per-user data separation, and no password reset. Everyone who logs in
+          sees the same leads.
+        </p>
+        <p>
+          For a single-operator tool that is adequate. For anything shared it is
+          the first thing that has to change, and it was left out because real
+          auth is a project of its own, not because it is unimportant.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">One mailbox, and it belongs to whoever set up the server</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Sending uses one Gmail address and app password held in the environment.
+          Every message goes out from that mailbox regardless of who is logged in,
+          because there is only one of them. A team would need each rep sending
+          from their own address, which means OAuth per user and tokens in the
+          database.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Single user, no team anything</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          No shared inbox, no assignment, no seeing who already contacted a
+          prospect, no duplicate protection across colleagues. Two reps running
+          this would each research the same person and each email them.
+        </p>
+      </div>
+    </div>
+
+    <h3>Sending</h3>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">One message per prospect, and no follow-ups</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          There is no sequencer, no cadence, no scheduler and no batch send. Every
+          message is one deliberate click. That is a deliberate safety property
+          &mdash; a sent email cannot be unsent &mdash; but it also means the tool
+          does not do the follow-up that most replies actually come from.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Nothing comes back</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Send is one-way. No reply tracking, no open or click tracking, no bounce
+          handling, and no idea whether anything worked. The app can tell you what
+          it sent and why, and nothing about what happened next.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Send time is not considered at all</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          A message goes out when you click. Nothing knows the recipient's
+          timezone, working hours, or whether Tuesday morning beats Friday
+          evening.
+        </p>
+      </div>
+    </div>
+
+    <h3>Scale and workflow</h3>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">200 rows per upload, and runs execute inside the request</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          There is no job queue and no background worker. A run happens during the
+          HTTP request that starts it, and progress reaches the browser by polling
+          the stage rows it writes. That was the right shape on serverless and it
+          still works, but it caps how much can be in flight and means a very
+          large batch is a long series of requests rather than one queued job.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">No CRM or sequencer integration</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          CSV export is the bridge. Nothing writes back to Salesforce or HubSpot,
+          nothing reads an existing account list, and nothing knows what your CRM
+          already says about a prospect.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">It qualifies a list, it does not source one</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          The ICP settings score prospects you already have, or people found at a
+          named company's competitors. There is no &ldquo;find me everyone
+          matching this profile&rdquo; across the market.
+        </p>
+      </div>
+    </div>
+
+    <h3>Learning and language</h3>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">The persona needs three consistent edits before it learns anything</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          That threshold is the point &mdash; one edit is a mood, not a rule
+          &mdash; but it does mean the first few drafts teach it nothing, and a
+          user who edits differently every time never accumulates a rule at all.
+          Only one persona is active at a time, so a rep selling two products
+          switches between them by hand.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">English only</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Query generation, extraction, judging and drafting all assume English
+          sources and English output. A prospect whose public writing is in
+          another language is effectively invisible to it.
+        </p>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="item-head">
+        <span class="t">Deleting a run deletes what it taught the system</span>
+        <span class="tagx tag-scope">scope</span>
+      </div>
+      <div class="item-body">
+        <p>
+          Fact-level feedback is tied to the run it came from, so clearing old
+          runs also clears the record of which facts were kept or dropped and why.
+          The persona's written rules survive; the evidence behind them does not.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot" style="margin-top:3.5rem">
+    <span><a href="future-scope.html">What comes next &rarr;</a></span>
+    <span>&middot;</span>
+    <span><a href="index.html">&larr; Back to Dossier</a></span>
+  </div>
+
+</div>
+</body>
+</html>
