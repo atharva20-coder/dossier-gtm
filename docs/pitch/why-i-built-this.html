@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why I Built This</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:      #F5F7F4;
+    --card:       #FFFFFF;
+    --ink:        #131A16;
+    --ink-2:      #2E3A33;
+    --muted:      #5B6660;
+    --faint:      #8A948E;
+    --rule:       #E1E6DF;
+    --rule-soft:  #EDF0EB;
+    --accent:     #136F4E;
+    --accent-bg:  #E7F1EA;
+    --warn:       #9A5B0B;
+    --warn-bg:    #FBF1E3;
+
+    --display: "Newsreader", ui-serif, Georgia, serif;
+    --body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0F1311;
+      --card:      #161C19;
+      --ink:       #EDF1EE;
+      --ink-2:     #CBD4CE;
+      --muted:     #93A099;
+      --faint:     #6B7A73;
+      --rule:      #26302B;
+      --rule-soft: #1D2622;
+      --accent:    #5FBF95;
+      --accent-bg: #163024;
+      --warn:      #E0A75C;
+      --warn-bg:   #2C2213;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:     #0F1311;
+    --card:      #161C19;
+    --ink:       #EDF1EE;
+    --ink-2:     #CBD4CE;
+    --muted:     #93A099;
+    --faint:     #6B7A73;
+    --rule:      #26302B;
+    --rule-soft: #1D2622;
+    --accent:    #5FBF95;
+    --accent-bg: #163024;
+    --warn:      #E0A75C;
+    --warn-bg:   #2C2213;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 16.5px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 47rem;
+    margin: 0 auto;
+    padding: 4.5rem 1.5rem 7rem;
+  }
+
+  /* ---------------------------------------------------------- masthead */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.5rem; }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: var(--display);
+    font-size: 1.2rem;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+    max-width: 34rem;
+  }
+
+  /* ------------------------------------------------------------ steps */
+  .step { margin-top: 3.75rem; }
+
+  .step-head {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 0 1rem;
+    align-items: baseline;
+  }
+
+  .num {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    padding-top: 0.42rem;
+    border-top: 2px solid var(--accent);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.72rem;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    margin: 0;
+    padding-top: 0.3rem;
+    text-wrap: balance;
+  }
+
+  .step-body { padding-left: 3.6rem; }
+  @media (max-width: 34rem) { .step-body { padding-left: 0; } }
+
+  h3 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.94rem;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p { margin: 0 0 1rem; }
+  .step-body > p:first-child { margin-top: 1.1rem; }
+
+  strong { color: var(--ink); font-weight: 600; }
+  em { font-style: italic; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin-bottom: 0.45rem; }
+  li::marker { color: var(--faint); }
+
+  /* ------------------------------------------------------- say / show */
+  .say, .show {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: 1rem 1.15rem;
+    margin: 1.2rem 0;
+    border-radius: 0 5px 5px 0;
+  }
+
+  .show { border-left-color: var(--faint); background: var(--rule-soft); }
+
+  .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .show .label { color: var(--muted); }
+
+  .say p:last-child, .show p:last-child { margin-bottom: 0; }
+
+  .say.finding p {
+    font-family: var(--display);
+    font-size: 1.24rem;
+    line-height: 1.4;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  .say.aside {
+    background: transparent;
+    border-left-color: var(--faint);
+  }
+  .say.aside p {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 1.18rem;
+    color: var(--muted);
+    margin-bottom: 0;
+  }
+
+  /* The one claim marked on the page — the thing the product itself does. */
+  .mark {
+    background: var(--warn-bg);
+    box-shadow: 0 0 0 2px var(--warn-bg);
+    border-radius: 1px;
+  }
+
+  /* ----------------------------------------------------------- ledger */
+  .ledger {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--card);
+    margin: 1.4rem 0;
+    overflow: hidden;
+  }
+
+  .ledger-head {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.7rem 1.15rem;
+    background: var(--rule-soft);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 2rem 1fr auto;
+    gap: 0 0.9rem;
+    align-items: center;
+    padding: 0.8rem 1.15rem;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .sig {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .sig.down { color: var(--warn); }
+
+  .row .tally {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .ledger .threshold {
+    padding: 0.85rem 1.15rem;
+    background: var(--accent-bg);
+    font-size: 0.94rem;
+    border-bottom: 0;
+  }
+  .ledger .threshold strong { color: var(--accent); }
+
+  /* ------------------------------------------------------ search table */
+  .searched {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.2rem 0;
+    font-size: 0.96rem;
+  }
+  .searched th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    font-weight: 400;
+    padding: 0 0 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .searched td {
+    padding: 0.62rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: baseline;
+  }
+  .searched td:first-child {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    width: 9rem;
+  }
+  .searched tr:last-child td { border-bottom: 0; }
+
+  /* ----------------------------------------------------------- footer */
+  .foot {
+    margin-top: 4.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">PS-3 &middot; GTM outreach</p>
+    <h1>Why I Built This</h1>
+    <p class="standfirst">
+      GTM teams don&rsquo;t lose their time on the outreach. They lose it on the research
+      before it &mdash; and that&rsquo;s the part everyone skips.
+    </p>
+  </header>
+
+  <section class="step">
+    <div class="step-head">
+      <div class="num">01</div>
+      <h2>What did you build? Which problem did you select?</h2>
+    </div>
+    <div class="step-body">
+      <p>I chose to work upon the <strong>PS3 &mdash; GTM outreach problem</strong>.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <div class="num">02</div>
+      <h2>Why did you choose this?</h2>
+    </div>
+    <div class="step-body">
+      <p>
+        While working at Axis with Sarvam, Gnani, Greylabs, and at ArisX with
+        Bolna, I met a lot of GTMs.
+      </p>
+      <p>
+        While working at Axis and ArisX, I always got messages and mails from GTMs
+        reaching out to me for their service &mdash; but the message always looked
+        irrelevant, disengaging, and most importantly, looked like someone just
+        sent it as a formality to a bulk list of people they could send it to.
+      </p>
+      <p>
+        When I got the problem statement from Palak, I read the document and this
+        problem immediately struck me, so I started digging into it.
+      </p>
+      <p>
+        I went and looked at where GTM teams actually lose their time. I spoke
+        with some of the GTMs I know at companies like Sarvam, Greylabs and Bolna,
+        and one common thing came out of those conversations:
+      </p>
+
+      <div class="say finding">
+        <span class="label">What they all said</span>
+        <p>
+          The GTM teams lose their time, and it isn&rsquo;t outreach &mdash;
+          it&rsquo;s the research before it.
+        </p>
+      </div>
+
+      <p>
+        Scrolling the web, LinkedIn, X &mdash; jotting things down in a doc one by
+        one, and then later opening the doc again and trying to write a message
+        out of it by selecting your hooks from the doc.
+      </p>
+      <p>
+        That&rsquo;s <span class="mark">two separate costs: finding the signal,
+        and then reading your own notes to turn it into an email.</span> Both take
+        real effort, so most people skip it. They put the company name in a
+        template and send it at scale.
+      </p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <div class="num">03</div>
+      <h2>What is Dossier, and how is it different?</h2>
+    </div>
+    <div class="step-body">
+      <p>
+        Dossier isn&rsquo;t a simple web search with a nice wrapper. It goes where
+        a person actually leaves a trail &mdash; their LinkedIn, their posts on X
+        &mdash; reads the pages, and <span class="mark">checks every claim back
+        against the page it came from.</span> You get a real view of the lead, not
+        a summary of their company&rsquo;s homepage.
+      </p>
+      <p>
+        And it works the other way round too. Give it a company, and it finds the
+        handful of people there actually worth a conversation &mdash; instead of
+        running a campaign at everyone in the org and hoping someone bites.
+      </p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <div class="num">04</div>
+      <h2>The second difference: a persona that learns you</h2>
+    </div>
+    <div class="step-body">
+      <p>
+        Once the right leads are identified, it researches each one properly
+        &mdash; who they are, what they&rsquo;ve been posting on LinkedIn and X
+        recently &mdash; and drafts the message. But the interesting part
+        isn&rsquo;t drafting.
+      </p>
+      <p>
+        It&rsquo;s the <strong>self-learning persona</strong>. You design your
+        persona on day one, so you don&rsquo;t start at zero &mdash; you start at
+        one, and it writes as you from the very first message, rather than
+        sounding like a language model.
+      </p>
+
+      <h3>Now the interesting part &mdash; the self-learning</h3>
+
+      <p>
+        The agent lives inside the application, and it closes the gap by watching
+        you. Every time you edit a draft before sending &mdash; change the hooks,
+        change the writing style &mdash; it looks at what you changed. After a few
+        consistent edits, it writes down the rule and applies it from the next
+        message it drafts. <span class="mark">You never train it. You just keep
+        editing, until it learns you</span> &mdash; and that&rsquo;s the point.
+      </p>
+      <p>
+        <strong>How it learns.</strong> It&rsquo;s not a clever prompt, it&rsquo;s
+        a system. The agent waits for three confident and consistent changes, then
+        scores it.
+      </p>
+
+      <div class="ledger">
+        <div class="ledger-head">The scoring</div>
+        <div class="row">
+          <div class="sig">+</div>
+          <div>A consistent change, made again</div>
+          <div class="tally">adds on</div>
+        </div>
+        <div class="row">
+          <div class="sig down">&minus;</div>
+          <div>A message accepted, sent unedited</div>
+          <div class="tally">downgrades</div>
+        </div>
+        <div class="row threshold">
+          <div class="sig">3</div>
+          <div>consistent changes before a rule is written down &mdash; and it
+            keeps having to <strong>earn that</strong></div>
+          <div class="tally"></div>
+        </div>
+      </div>
+
+      <div class="say aside">
+        <p>Because one edit is just a mood.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <div class="num">05</div>
+      <h2>The GTM thinking underneath</h2>
+    </div>
+    <div class="step-body">
+      <p><strong>How did I decide what to build?</strong></p>
+      <p>
+        I imagined myself as a GTM and jotted down all the tasks I&rsquo;d have to
+        perform to sell Dossier as a product. So I researched:
+      </p>
+
+      <table class="searched">
+        <thead>
+          <tr><th>Where I looked</th><th>What I found</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>The web</td><td>Nothing relevant</td></tr>
+          <tr><td>LinkedIn</td><td>Scrolled</td></tr>
+          <tr><td>X</td><td>Scrolled</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        Everything looked segregated and like a large pool &mdash; it felt like
+        fishing in a sea, hoping something gets caught. It burned me up, and
+        that&rsquo;s how I realized the problem.
+      </p>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span><a href="index.html">&larr; Pitch materials</a></span>
+    <span>&middot;</span>
+    <span>Dossier</span>
+    <span>&middot;</span>
+    <span>PS-3</span>
+  </div>
+
+</div>
+</body>
+</html>

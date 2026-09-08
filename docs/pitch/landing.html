@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:#F5F7F4; --card:#FFFFFF; --ink:#131A16; --ink-2:#2E3A33;
+    --muted:#5B6660; --faint:#8A948E; --rule:#E1E6DF; --rule-soft:#EDF0EB;
+    --accent:#136F4E; --accent-bg:#E7F1EA; --warn:#9A5B0B; --warn-bg:#FBF1E3;
+    --display: "Newsreader", ui-serif, Georgia, serif;
+    --body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --shadow:0 1px 2px rgba(19,26,22,.05), 0 10px 30px rgba(19,26,22,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0F1311; --card:#161C19; --ink:#EDF1EE; --ink-2:#CBD4CE;
+      --muted:#93A099; --faint:#6B7A73; --rule:#26302B; --rule-soft:#1D2622;
+      --accent:#5FBF95; --accent-bg:#163024; --warn:#E0A75C; --warn-bg:#2C2213;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0F1311; --card:#161C19; --ink:#EDF1EE; --ink-2:#CBD4CE;
+    --muted:#93A099; --faint:#6B7A73; --rule:#26302B; --rule-soft:#1D2622;
+    --accent:#5FBF95; --accent-bg:#163024; --warn:#E0A75C; --warn-bg:#2C2213;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 34px rgba(0,0,0,.4);
+  }
+
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+
+  body {
+    margin:0; background:var(--paper); color:var(--ink-2);
+    font-family:var(--body); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap { max-width:64rem; margin:0 auto; padding:0 1.5rem; }
+  .narrow { max-width:44rem; }
+
+  a { color:var(--accent); text-underline-offset:2px; }
+  a:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:2px; }
+
+  .eyebrow {
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 1rem;
+  }
+
+  /* --------------------------------------------------------------- nav */
+  nav {
+    border-bottom:1px solid var(--rule);
+    position:sticky; top:0; background:var(--paper); z-index:10;
+  }
+  nav .wrap {
+    display:flex; align-items:center; gap:1.5rem;
+    padding-top:1rem; padding-bottom:1rem;
+  }
+  .brand {
+    font-family:var(--display); font-weight:600; font-size:1.25rem;
+    color:var(--ink); letter-spacing:-.01em; text-decoration:none;
+  }
+  .brand span { color:var(--accent); }
+  nav .links { margin-left:auto; display:flex; gap:1.4rem; align-items:center; }
+  nav .links a {
+    font-size:.9rem; color:var(--muted); text-decoration:none;
+  }
+  nav .links a:hover { color:var(--ink); }
+  @media (max-width:44rem) { nav .links a.hide-sm { display:none; } }
+
+  /* -------------------------------------------------------------- hero */
+  .hero { padding:5.5rem 0 4rem; }
+  h1 {
+    font-family:var(--display); font-weight:600;
+    font-size:clamp(2.8rem,7vw,4.75rem); line-height:1.02;
+    letter-spacing:-.025em; color:var(--ink);
+    margin:0 0 1.4rem; text-wrap:balance; max-width:20ch;
+  }
+  h1 em { font-style:italic; color:var(--accent); }
+  .hero .sub {
+    font-family:var(--display); font-size:clamp(1.15rem,2.4vw,1.4rem);
+    line-height:1.45; color:var(--muted); margin:0 0 2.2rem; max-width:36rem;
+  }
+  .cta { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; }
+  .btn {
+    display:inline-block; font-family:var(--body); font-size:.95rem;
+    font-weight:500; padding:.7rem 1.3rem; border-radius:6px;
+    text-decoration:none; border:1px solid transparent; cursor:pointer;
+    transition:opacity .15s ease, border-color .15s ease;
+  }
+  .btn-primary { background:var(--accent); color:var(--paper); }
+  .btn-primary:hover { opacity:.9; }
+  .btn-secondary:hover { border-color:var(--accent); }
+  .btn-secondary { border-color:var(--rule); color:var(--ink); background:var(--card); }
+
+  /* ------------------------------------------------------------ receipt */
+  .receipt {
+    margin-top:3.5rem; background:var(--card); border:1px solid var(--rule);
+    border-radius:10px; box-shadow:var(--shadow); overflow:hidden;
+  }
+  .receipt-head {
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+    padding:.75rem 1.2rem; border-bottom:1px solid var(--rule);
+    background:var(--rule-soft);
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .receipt-head .dot {
+    width:7px; height:7px; border-radius:50%; background:var(--accent);
+  }
+  .receipt-head .right { margin-left:auto; color:var(--faint); }
+  .receipt-body { padding:1.5rem 1.4rem; }
+  .draft {
+    font-family:var(--display); font-size:1.12rem; line-height:1.6;
+    color:var(--ink); margin:0 0 1.3rem;
+  }
+  .draft .hook {
+    background:var(--accent-bg); border-bottom:2px solid var(--accent);
+    padding:.05em .15em;
+  }
+  .trace {
+    border-top:1px dashed var(--rule); padding-top:1rem;
+    display:grid; grid-template-columns:auto 1fr; gap:.4rem .8rem;
+    font-size:.86rem; align-items:baseline;
+  }
+  .trace dt {
+    font-family:var(--mono); font-size:10px; letter-spacing:.11em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .trace dd { margin:0; color:var(--ink-2); }
+  .trace dd .src { word-break:break-all; color:var(--accent); }
+
+  /* ---------------------------------------------------------- sections */
+  section { padding:4.5rem 0; border-top:1px solid var(--rule); }
+  h2 {
+    font-family:var(--display); font-weight:600;
+    font-size:clamp(1.9rem,4vw,2.6rem); line-height:1.12;
+    letter-spacing:-.02em; color:var(--ink); margin:0 0 1rem;
+    text-wrap:balance; max-width:22ch;
+  }
+  .lede { font-size:1.08rem; color:var(--muted); margin:0 0 2rem; max-width:38rem; }
+  p { margin:0 0 1rem; }
+  strong { color:var(--ink); font-weight:600; }
+
+  /* ------------------------------------------------------------- costs */
+  .costs { display:grid; grid-template-columns:repeat(auto-fit,minmax(16rem,1fr)); gap:1rem; }
+  .cost {
+    border:1px solid var(--rule); border-radius:8px; background:var(--card);
+    padding:1.4rem 1.3rem;
+  }
+  .cost .n {
+    font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    color:var(--accent); display:block; margin-bottom:.6rem;
+  }
+  .cost h3 {
+    font-family:var(--display); font-size:1.3rem; font-weight:600;
+    color:var(--ink); margin:0 0 .5rem; letter-spacing:-.01em;
+  }
+  .cost p { font-size:.95rem; color:var(--muted); margin:0; }
+
+  /* ------------------------------------------------------------ routes */
+  .routes { display:grid; grid-template-columns:repeat(auto-fit,minmax(18rem,1fr)); gap:1rem; }
+  .route {
+    border:1px solid var(--rule); border-radius:8px; background:var(--card);
+    padding:1.5rem 1.4rem; display:flex; flex-direction:column;
+  }
+  .route .tag {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:.7rem;
+  }
+  .route .q {
+    font-family:var(--display); font-size:1.3rem; line-height:1.3;
+    color:var(--ink); margin:0 0 1.1rem; letter-spacing:-.01em;
+  }
+  .route dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:.5rem .9rem; font-size:.92rem; }
+  .route dt {
+    font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); white-space:nowrap;
+    padding-top:.15rem;
+  }
+  .route dd { margin:0; color:var(--ink-2); }
+
+  /* ---------------------------------------------------------- features */
+  .feature { display:grid; grid-template-columns:1fr; gap:2rem; }
+  @media (min-width:52rem) {
+    .feature { grid-template-columns:1fr 1fr; gap:3.5rem; align-items:center; }
+  }
+  .feature + .feature { margin-top:4rem; padding-top:4rem; border-top:1px solid var(--rule-soft); }
+  .feature h3 {
+    font-family:var(--display); font-weight:600; font-size:1.75rem;
+    line-height:1.2; color:var(--ink); margin:0 0 .9rem; letter-spacing:-.015em;
+  }
+  .feature .body p { color:var(--ink-2); }
+  .pull {
+    font-family:var(--display); font-style:italic; font-size:1.2rem;
+    color:var(--accent); border-left:2px solid var(--accent);
+    padding-left:1rem; margin:1.4rem 0 0;
+  }
+
+  /* ------------------------------------------------------------ ledger */
+  .panel {
+    border:1px solid var(--rule); border-radius:8px; background:var(--card);
+    overflow:hidden;
+  }
+  .panel-head {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted);
+    padding:.75rem 1.2rem; background:var(--rule-soft);
+    border-bottom:1px solid var(--rule);
+  }
+  .panel-row {
+    display:grid; grid-template-columns:2rem 1fr auto; gap:0 .9rem;
+    align-items:center; padding:.85rem 1.2rem;
+    border-bottom:1px solid var(--rule-soft); font-size:.95rem;
+  }
+  .panel-row:last-child { border-bottom:0; }
+  .panel-row .sig {
+    font-family:var(--mono); font-size:1.05rem; font-weight:500;
+    color:var(--accent); font-variant-numeric:tabular-nums;
+  }
+  .panel-row .sig.down { color:var(--warn); }
+  .panel-row .tally {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .panel-row.accent { background:var(--accent-bg); }
+  .panel-row.accent strong { color:var(--accent); }
+
+  /* ----------------------------------------------------------- stages */
+  .stages { display:flex; flex-wrap:wrap; gap:.5rem; margin:1.6rem 0 0; }
+  .stage {
+    border:1px solid var(--rule); border-radius:999px; background:var(--card);
+    padding:.4rem .9rem; font-size:.86rem; color:var(--ink-2);
+    display:flex; align-items:baseline; gap:.5rem;
+  }
+  .stage b {
+    font-family:var(--mono); font-size:10px; color:var(--accent); font-weight:500;
+  }
+  .stage.key { border-color:var(--accent); background:var(--accent-bg); }
+
+  /* ------------------------------------------------------------ refuse */
+  .refuse {
+    background:var(--card); border:1px solid var(--rule);
+    border-radius:10px; padding:2rem 1.8rem;
+  }
+  .refuse .big {
+    font-family:var(--display); font-size:clamp(1.4rem,3vw,1.9rem);
+    line-height:1.3; color:var(--ink); margin:0 0 1rem;
+    letter-spacing:-.015em; text-wrap:balance;
+  }
+  .refuse p:last-child { margin-bottom:0; }
+
+  /* ------------------------------------------------------------ footer */
+  footer {
+    border-top:1px solid var(--rule); padding:2.5rem 0 4rem;
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.07em;
+    color:var(--faint);
+  }
+  footer .wrap { display:flex; flex-wrap:wrap; gap:.5rem 1.2rem; align-items:center; }
+  footer .right { margin-left:auto; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">Dossier<span>.</span></a>
+    <div class="links">
+      <a href="#problem" class="hide-sm">The problem</a>
+      <a href="#routes">Routes</a>
+      <a href="#sourcing" class="hide-sm">Sourcing</a>
+      <a href="#persona">Persona</a>
+      <a href="https://dossier.up.railway.app/">Open app &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap" id="top">
+  <header class="hero">
+    <p class="eyebrow">Prospect research &amp; outreach drafting</p>
+    <h1>Every line in the email opens <em>a page you can read</em>.</h1>
+    <p class="sub">
+      Dossier reads what a person has actually said in public, works out whether
+      there is a real reason to reach out, and writes the message &mdash; showing
+      every page it used, and everything it threw away.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://dossier.up.railway.app/">Open Dossier</a>
+      <a class="btn btn-secondary" href="#sourcing">See how it works</a>
+    </div>
+
+    <div class="receipt">
+      <div class="receipt-head">
+        <span class="dot"></span>
+        <span>Real run &mdash; nothing staged</span>
+        <span class="right">47 sources &middot; 22 person-level</span>
+      </div>
+      <div class="receipt-body">
+        <p class="draft">
+          Pedro,<br><br>
+          Your breakdown on
+          <span class="hook">LightconePod about AI's impact on company building</span>
+          hits different regarding operational efficiency. Reps burning half their
+          week on manual prospect research kills leverage, so I built Dossier to
+          deliver source-verified intelligence in ninety seconds.
+        </p>
+        <dl class="trace">
+          <dt>Hook</dt>
+          <dd>First-party post, 10 June 2026 &mdash; person-level, chosen across
+            8 candidates</dd>
+          <dt>Source</dt>
+          <dd><span class="src">x.com/ycombinator/status/2064728817802092579</span></dd>
+          <dt>Checked</dt>
+          <dd>50 of 50 facts verified against the text of the page they came
+            from</dd>
+          <dt>Dropped</dt>
+          <dd>8 copies of the same story folded into one; 3 facts about a different
+            person with the same name &mdash; nothing tied them to Brex</dd>
+        </dl>
+      </div>
+    </div>
+  </header>
+</div>
+
+<section id="problem">
+  <div class="wrap">
+    <p class="eyebrow">The problem</p>
+    <h2>Doing it properly takes too long. Doing it with AI reads like AI.</h2>
+    <p class="lede narrow">
+      Researching one prospect well is roughly forty minutes of work. Nobody has
+      that per name &mdash; so the job goes to a tool, and two problems arrive
+      with it.
+    </p>
+    <div class="costs">
+      <div class="cost">
+        <span class="n">Problem 01</span>
+        <h3>It takes forty minutes</h3>
+        <p>Per prospect, done properly. That time is the reason the research gets
+          skipped and a template goes out instead.</p>
+      </div>
+      <div class="cost">
+        <span class="n">Problem 02</span>
+        <h3>The message reads robotic</h3>
+        <p>Competent, polite, obviously generated. The recipient can tell, which
+          costs you the reply it was meant to win.</p>
+      </div>
+      <div class="cost">
+        <span class="n">Problem 03</span>
+        <h3>It surfs, it doesn't read</h3>
+        <p>Tools skim the open internet rather than opening the source a claim
+          came from. So you can't tell where a line came from &mdash; or whether
+          it's true at all.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="routes">
+  <div class="wrap">
+    <p class="eyebrow">Two ways in</p>
+    <h2>It depends on one question: do you already have the names?</h2>
+    <p class="lede narrow">
+      Same engine underneath either way. The only difference is where you start
+      &mdash; with a person, or with a market.
+    </p>
+    <div class="routes">
+      <div class="route">
+        <p class="tag">Leads</p>
+        <p class="q">You know who to talk to. You don't have a reason to open the email.</p>
+        <dl>
+          <dt>You have</dt><dd>A list &mdash; CRM export, event attendees, inbound signups.</dd>
+          <dt>You give</dt><dd>People.</dd>
+          <dt>You get</dt><dd>A researched, sourced message for each one.</dd>
+        </dl>
+      </div>
+      <div class="route">
+        <p class="tag">Outbound</p>
+        <p class="q">You have no list at all. You have one company that worked.</p>
+        <dl>
+          <dt>You have</dt><dd>A customer you just won, or a company you sell against.</dd>
+          <dt>You give</dt><dd>One company name.</dd>
+          <dt>You get</dt><dd>Their competitors, the right people inside them, each already researched.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="stages">
+      <span class="stage"><b>1</b> Targeting</span>
+      <span class="stage"><b>2</b> Identity</span>
+      <span class="stage"><b>3</b> Research</span>
+      <span class="stage"><b>4</b> Extract</span>
+      <span class="stage key"><b>5</b> Ground</span>
+      <span class="stage"><b>6</b> Judge</span>
+      <span class="stage"><b>7</b> Draft</span>
+    </div>
+    <p class="lede" style="margin-top:1rem;font-size:.95rem">
+      Both routes run the same seven stages. A name that came out of a campaign is
+      researched as carefully as one you typed in yourself &mdash; there is no
+      weaker second path.
+    </p>
+  </div>
+</section>
+
+<section id="sourcing">
+  <div class="wrap">
+    <p class="eyebrow">Feature 01</p>
+    <h2>Not another web search tool.</h2>
+
+    <div class="feature">
+      <div class="body">
+        <h3>It reads their LinkedIn and their X, not the company homepage</h3>
+        <p>
+          The easy build is a wrapper: hand a model a name and ask what's new. It
+          answers from memory &mdash; confidently, with no date and nothing you can
+          check. It will write you a funding round that never happened.
+        </p>
+        <p>
+          Dossier doesn't ask a model what it remembers. It goes and reads &mdash;
+          their <strong>LinkedIn</strong> profile and posts, what they put on
+          <strong>X</strong>, and the podcasts, interviews and talks they have
+          actually spoken on. What is about the person is kept apart from what is
+          about the company, and scored on its own &mdash; because company news is
+          what everyone else in that inbox is already sending.
+        </p>
+      </div>
+      <div class="panel">
+        <div class="panel-head">One real run, counted honestly</div>
+        <div class="panel-row"><span class="sig">47</span><span>sources read</span><span class="tally">pages</span></div>
+        <div class="panel-row"><span class="sig">22</span><span>about the person, not the company</span><span class="tally">person-level</span></div>
+        <div class="panel-row"><span class="sig">50</span><span>concrete facts extracted</span><span class="tally">candidates</span></div>
+        <div class="panel-row"><span class="sig">11</span><span>thrown out &mdash; 8 repeat copies, 3 about the wrong person</span><span class="tally">dropped</span></div>
+        <div class="panel-row accent"><span class="sig">1</span><span>became the hook &mdash; <strong>with its source attached</strong></span><span class="tally">used</span></div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="body">
+        <h3>And the check is dumb on purpose</h3>
+        <p>
+          Every fact has to bring exact words from the page it came from, and
+          those words are checked back against that page before anything is
+          written. No model is ever asked whether a fact is true.
+        </p>
+        <p>
+          A model that invented the fact will happily confirm it. A string
+          comparison can't be talked round.
+        </p>
+        <p class="pull">
+          It will hand you an honest blank before it hands you a convincing lie.
+        </p>
+      </div>
+      <div class="refuse">
+        <p class="big">When there's nothing real to say, it says so.</p>
+        <p>
+          When a run finds nothing it can check, it says <strong>no signal
+          found</strong>, and marks the draft generic instead of dressing it up.
+        </p>
+        <p>
+          If the search budget runs out, it says <strong>research failed</strong>
+          &mdash; never &ldquo;this person has nothing public&rdquo;. One is about
+          the person. The other is about my bill.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="persona">
+  <div class="wrap">
+    <p class="eyebrow">Feature 02</p>
+    <h2>A voice that gets closer to yours every time you correct it.</h2>
+
+    <div class="feature">
+      <div class="body">
+        <h3>You start at one, not zero</h3>
+        <p>
+          You design your persona on day one, so the first message already sounds
+          like you rather than like a language model. Then it watches what you
+          change.
+        </p>
+        <p>
+          Cut the closing line three times and it writes that rule down &mdash; and
+          from the next draft on, the line is already gone. You never train it. You
+          just keep editing, and it stops needing to be edited.
+        </p>
+        <p class="pull">Because one edit is just a mood.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head">How a rule earns its place</div>
+        <div class="panel-row"><span class="sig">+</span><span>The same change, made again</span><span class="tally">adds on</span></div>
+        <div class="panel-row"><span class="sig down">&minus;</span><span>A draft sent unedited</span><span class="tally">downgrades</span></div>
+        <div class="panel-row accent"><span class="sig">3</span><span>consistent changes before a rule is <strong>written down</strong></span><span class="tally">threshold</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="close">
+  <div class="wrap narrow">
+    <h2>Research you can check, in a voice that's yours.</h2>
+    <p class="lede">
+      Two ways in depending on whether you have the names yet, every claim tracing
+      back to a page you can open, and a persona that learns how you write by
+      watching you correct it.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://dossier.up.railway.app/">Open Dossier</a>
+      <a class="btn btn-secondary" href="index.html">Read the docs</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Dossier</span>
+    <span>&middot;</span>
+    <span>Prospect research &amp; outreach drafting</span>
+    <span class="right"><a href="index.html">Pitch materials &rarr;</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

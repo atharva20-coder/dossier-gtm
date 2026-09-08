@@ -28,3 +28,7 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+
+# Database snapshots taken before clearing demo data. These hold real prospect
+# rows and addresses — they are a local safety net, never something to commit.
+.backup/

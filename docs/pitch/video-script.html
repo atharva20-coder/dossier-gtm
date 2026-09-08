@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Say This, Do This</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:#F5F7F4; --card:#FFFFFF; --ink:#131A16; --ink-2:#2E3A33;
+    --muted:#5B6660; --faint:#8A948E; --rule:#E1E6DF; --rule-soft:#EDF0EB;
+    --accent:#136F4E; --accent-bg:#E7F1EA; --warn:#9A5B0B; --warn-bg:#FBF1E3;
+    --display:"Newsreader",ui-serif,Georgia,serif;
+    --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0F1311; --card:#161C19; --ink:#EDF1EE; --ink-2:#CBD4CE;
+      --muted:#93A099; --faint:#6B7A73; --rule:#26302B; --rule-soft:#1D2622;
+      --accent:#5FBF95; --accent-bg:#163024; --warn:#E0A75C; --warn-bg:#2C2213;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0F1311; --card:#161C19; --ink:#EDF1EE; --ink-2:#CBD4CE;
+    --muted:#93A099; --faint:#6B7A73; --rule:#26302B; --rule-soft:#1D2622;
+    --accent:#5FBF95; --accent-bg:#163024; --warn:#E0A75C; --warn-bg:#2C2213;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink-2);
+    font-family:var(--body); font-size:16.5px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:50rem; margin:0 auto; padding:4.5rem 1.5rem 7rem; }
+
+  .masthead { border-bottom:2px solid var(--ink); padding-bottom:1.5rem; }
+  .kicker {
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 1rem;
+  }
+  h1 {
+    font-family:var(--display); font-weight:600;
+    font-size:clamp(2.4rem,6vw,3.6rem); line-height:1.04;
+    letter-spacing:-.02em; color:var(--ink); margin:0 0 .9rem; text-wrap:balance;
+  }
+  .standfirst {
+    font-family:var(--display); font-size:1.2rem; line-height:1.5;
+    color:var(--muted); margin:0; max-width:36rem;
+  }
+
+  /* ------------------------------------------------------------- parts */
+  .part { margin-top:4rem; }
+  .part-rule {
+    display:flex; align-items:baseline; gap:1rem;
+    border-top:2px solid var(--ink); padding-top:.9rem; margin-bottom:.4rem;
+  }
+  .part-rule .n {
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent); white-space:nowrap;
+  }
+  .part-rule .when {
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+    color:var(--faint); margin-left:auto; white-space:nowrap;
+  }
+  .part > h2 {
+    font-family:var(--display); font-weight:600; font-size:1.9rem;
+    line-height:1.15; letter-spacing:-.015em; color:var(--ink);
+    margin:0 0 .5rem; text-wrap:balance;
+  }
+  .part > .lede { color:var(--muted); margin:0 0 1.6rem; max-width:42rem; }
+
+  h3 {
+    font-family:var(--display); font-weight:600; font-size:1.25rem;
+    color:var(--ink); margin:2.4rem 0 .6rem; letter-spacing:-.01em;
+  }
+
+  p { margin:0 0 1rem; }
+  strong { color:var(--ink); font-weight:600; }
+  em { font-style:italic; }
+  a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+  a:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  ul, ol { margin:0 0 1rem; padding-left:1.15rem; }
+  li { margin-bottom:.45rem; }
+  li::marker { color:var(--faint); }
+  code {
+    font-family:var(--mono); font-size:.88em; background:var(--rule-soft);
+    padding:.1em .35em; border-radius:3px;
+  }
+
+  /* -------------------------------------------------------------- shot */
+  .shot {
+    border:1px solid var(--rule); border-radius:6px; background:var(--card);
+    margin:1rem 0; overflow:hidden;
+  }
+  .shot-head {
+    display:flex; align-items:center; gap:.8rem; flex-wrap:wrap;
+    padding:.65rem 1.1rem; background:var(--rule-soft);
+    border-bottom:1px solid var(--rule);
+  }
+  .shot-id {
+    font-family:var(--mono); font-size:11px; font-weight:500;
+    letter-spacing:.1em; color:var(--accent);
+  }
+  .shot-name { font-weight:600; color:var(--ink); font-size:.95rem; }
+  .shot-len {
+    margin-left:auto; font-family:var(--mono); font-size:11px;
+    color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  .shot-body { padding:.9rem 1.1rem; }
+  .shot-body ol { margin:0; padding-left:1.2rem; }
+  .shot-body ol li { margin-bottom:.35rem; font-size:.95rem; }
+  .shot-body p { margin:.7rem 0 0; font-size:.92rem; color:var(--muted); }
+  .shot-body p:first-child { margin-top:0; }
+
+  /* ---------------------------------------------------------------- vo */
+  .vo {
+    border-left:3px solid var(--accent); background:var(--accent-bg);
+    padding:1.1rem 1.25rem; margin:1rem 0; border-radius:0 5px 5px 0;
+  }
+  .vo-head {
+    display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap;
+    margin-bottom:.7rem;
+  }
+  .vo-id {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--accent);
+  }
+  .vo-meta {
+    margin-left:auto; font-family:var(--mono); font-size:10.5px;
+    color:var(--muted); font-variant-numeric:tabular-nums;
+  }
+  .vo p {
+    font-family:var(--display); font-size:1.16rem; line-height:1.52;
+    color:var(--ink); margin:0;
+  }
+  .vo p + p { margin-top:.75rem; }
+  .vo .beat-pause {
+    font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); margin:.55rem 0 0;
+  }
+
+  .note {
+    border-left:3px solid var(--warn); background:var(--warn-bg);
+    padding:1rem 1.15rem; margin:1.1rem 0; border-radius:0 5px 5px 0;
+  }
+  .note .label {
+    display:block; font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--warn);
+    margin-bottom:.5rem;
+  }
+  .note p:last-child { margin-bottom:0; }
+
+  /* ---------------------------------------------------------- cue sheet */
+  .cues { margin:1.4rem 0; }
+  .cue-shot {
+    display:flex; align-items:baseline; gap:.7rem;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--muted);
+    margin:1.9rem 0 .5rem; padding-bottom:.4rem;
+    border-bottom:1px solid var(--rule);
+  }
+  .cue-shot:first-child { margin-top:0; }
+  .cue-shot span {
+    color:var(--accent); font-weight:500;
+    border:1px solid var(--accent); border-radius:3px;
+    padding:.1rem .35rem; letter-spacing:.06em;
+  }
+  .cue {
+    display:grid; grid-template-columns:3.2rem 12rem 1fr;
+    gap:0 1rem; padding:.8rem 0;
+    border-bottom:1px solid var(--rule-soft);
+  }
+  .cue:last-child { border-bottom:0; }
+  .cue .t {
+    font-family:var(--mono); font-size:11.5px; color:var(--accent);
+    font-variant-numeric:tabular-nums; padding-top:.28rem;
+  }
+  .cue .scr {
+    font-size:.86rem; color:var(--muted); line-height:1.45; padding-top:.18rem;
+  }
+  .cue .scr strong { color:var(--ink); font-weight:600; }
+  .cue .wrd {
+    font-family:var(--display); font-size:1.08rem; line-height:1.5;
+    color:var(--ink);
+  }
+  .cue.silent .wrd {
+    font-style:italic; color:var(--faint); font-size:.98rem;
+  }
+  @media (max-width:44rem) {
+    .cue { grid-template-columns:3.2rem 1fr; gap:.35rem 1rem; }
+    .cue .scr { grid-column:2; }
+    .cue .wrd { grid-column:2; }
+  }
+
+  /* --------------------------------------------------------- sync table */
+  .sync-scroll { overflow-x:auto; margin:1.2rem 0; }
+  .sync { width:100%; border-collapse:collapse; font-size:.92rem; min-width:34rem; }
+  .sync th {
+    font-family:var(--mono); font-size:10px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); text-align:left;
+    font-weight:400; padding:0 .8rem .5rem 0; border-bottom:1px solid var(--rule);
+    white-space:nowrap;
+  }
+  .sync td {
+    padding:.6rem .8rem .6rem 0; border-bottom:1px solid var(--rule-soft);
+    vertical-align:top;
+  }
+  .sync td:first-child, .sync td:nth-child(2) {
+    font-family:var(--mono); font-size:.82rem; color:var(--accent);
+    white-space:nowrap; font-variant-numeric:tabular-nums;
+  }
+  .sync td:nth-child(2) { color:var(--muted); }
+  .sync td:last-child { font-family:var(--mono); font-size:.82rem;
+    color:var(--muted); text-align:right; white-space:nowrap; }
+  .sync tr:last-child td { border-bottom:0; }
+  .sync tfoot td {
+    border-top:1px solid var(--rule); border-bottom:0; padding-top:.6rem;
+    color:var(--ink); font-weight:600;
+  }
+
+  .foot {
+    margin-top:4.5rem; padding-top:1.4rem; border-top:1px solid var(--rule);
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.08em;
+    color:var(--faint); display:flex; flex-wrap:wrap; gap:.4rem .9rem;
+  }
+
+  .step { display:grid; grid-template-columns:15rem 1fr; gap:0 1.4rem;
+    padding:.9rem 0; border-bottom:1px solid var(--rule-soft); }
+  .step:last-child { border-bottom:0; }
+  .step .do { font-size:.88rem; color:var(--muted); line-height:1.45;
+    padding-top:.25rem; }
+  .step .line { font-family:var(--display); font-size:1.15rem; line-height:1.5;
+    color:var(--ink); }
+  .step.wait { background:var(--warn-bg); border-radius:5px;
+    padding:.9rem 1rem; margin:.4rem 0; border-bottom:0; }
+  .step.wait .do { color:var(--warn); }
+  .step .w { display:block; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--warn);
+    margin-top:.3rem; }
+  @media (max-width:44rem) {
+    .step { grid-template-columns:1fr; gap:.4rem; }
+  }
+
+  .step { display:grid; grid-template-columns:15rem 1fr; gap:0 1.4rem;
+    padding:.9rem 0; border-bottom:1px solid var(--rule-soft); }
+  .step:last-child { border-bottom:0; }
+  .step .do { font-size:.88rem; color:var(--muted); line-height:1.45;
+    padding-top:.25rem; }
+  .step .line { font-family:var(--display); font-size:1.15rem; line-height:1.5;
+    color:var(--ink); }
+  .step.wait { background:var(--warn-bg); border-radius:5px;
+    padding:.9rem 1rem; margin:.4rem 0; border-bottom:0; }
+  .step.wait .do { color:var(--warn); }
+  .step .w { display:block; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--warn);
+    margin-top:.3rem; }
+  @media (max-width:44rem) {
+    .step { grid-template-columns:1fr; gap:.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Dossier &middot; live recording &middot; one take</p>
+    <h1>Say This, Do This</h1>
+    <p class="standfirst">
+      Audio and screen together, top to bottom. The left column is what you do,
+      the right is what you say while doing it.
+    </p>
+  </header>
+
+  <section class="beat">
+    <div class="beat-head">
+      <div class="tc">READ</div>
+      <h2>How to use this</h2>
+    </div>
+    <div class="beat-body">
+      <p>
+        Ten beats, roughly 6&ndash;7 minutes of talking
+        plus however long the app actually takes. Expect six minutes end to end.
+      </p>
+      <p>
+        The <strong>amber blocks</strong> are the 8 real waits &mdash; a
+        search running, a draft being written. Those are not dead air, they are
+        where the reasoning goes. If a wait ends early, stop talking and move on;
+        if it runs long, the next amber line is there to keep going.
+      </p>
+
+      <div class="note">
+        <span class="label">One take, so decide this now</span>
+        <p>
+          If you fluff a line, do not stop &mdash; pause for two seconds and say
+          it again. A clean pause is one cut in the edit. Starting over costs you
+          the whole run and a fresh set of search credits.
+        </p>
+      </div>
+
+      <div class="note">
+        <span class="label">The one number you say out loud</span>
+        <p>
+          Beat 5 says <strong>&ldquo;41 results, and 27 were eligible&rdquo;</strong>.
+          That was the last run. Yours will differ &mdash; read what is actually
+          on your screen and say those numbers instead. It is the only place the
+          screen can contradict you.
+        </p>
+      </div>
+
+      <div class="note">
+        <span class="label">Before you hit record</span>
+        <p>
+          Persona set up and selected. Search budget checked &mdash; a company
+          search plus one full research run is roughly 15 to 25 searches, and you
+          have 697 left this month. Every unrelated tab and notification closed.
+          Your <code>.env</code> nowhere near the screen. And do a dry run of the
+          company search the day before, so you know it returns several people
+          rather than one.
+        </p>
+      </div>
+    </div>
+  </section>
+
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">0:00</div>
+        <h2>1. Log in, and the problem</h2>
+        <p class="runs">85 words &middot; about 34s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step">
+          <div class="do">Start on the login screen. Type the credentials.</div>
+          <div class="line">I was given a document with three problem statements. I picked the third one &mdash; GTM outreach.</div>
+        </div>
+        <div class="step">
+          <div class="do">Land on the leads screen. Let it sit.</div>
+          <div class="line">I picked it because doing the research on one prospect properly takes about forty minutes. Nobody has that for every name. So people hand it to an AI tool, and two things go wrong &mdash; the message comes out robotic, and the tool never opens the page the information came from. I built two things for those two problems, and I want to start with the second one.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">0:34</div>
+        <h2>2. The self-learning persona</h2>
+        <p class="runs">124 words &middot; about 50s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step">
+          <div class="do">Open the persona screen. Show the brief you wrote.</div>
+          <div class="line">This is the persona. You write this once, on day one &mdash; who you are, what you sell, how you write. And from the very first message it drafts, it is already writing in your voice. You start at one, not at zero.</div>
+        </div>
+        <div class="step">
+          <div class="do">Scroll the persona brief.</div>
+          <div class="line">That solves the robotic half straight away. Every tool like this writes the same polite, competent, obviously-generated email, and you end up rewriting all of it anyway.</div>
+        </div>
+        <div class="step">
+          <div class="do">Point at the rules list &mdash; empty or with a rule in it.</div>
+          <div class="line">But this is the part I actually care about. It watches what you change. When you edit a draft before sending, it looks at what you edited, and once it sees the same change enough times, it writes the rule down and starts applying it. I will show you that happening at the end.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">1:24</div>
+        <h2>3. The two ways to start</h2>
+        <p class="runs">59 words &middot; about 24s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step">
+          <div class="do">Back to leads. Hover Add lead, then the company search box.</div>
+          <div class="line">Right &mdash; so, two ways to start, and which one you use depends on one thing. Whether you already have the names. If you do, you add them as a lead. If you do not, you give it a company and it finds the people for you.</div>
+        </div>
+        <div class="step">
+          <div class="do">Type the company name into the search. Do not run it yet.</div>
+          <div class="line">Let me do the second one, because that is the harder half.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">1:48</div>
+        <h2>4. Company to people</h2>
+        <p class="runs">62 words &middot; about 25s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step wait">
+          <div class="do">Run the company search.<span class="w">while it runs</span></div>
+          <div class="line">So it goes and works out who actually works there.</div>
+        </div>
+        <div class="step">
+          <div class="do">Results land &mdash; the people it found.</div>
+          <div class="line">It came back with the founders, the CEO, and the sales people.</div>
+        </div>
+        <div class="step">
+          <div class="do">Click to add one of them as a lead.</div>
+          <div class="line">I can add any of them straight in as a lead. And that lead is now treated exactly like one I typed in myself &mdash; same research, same checks. There is no weaker path for a name the machine found.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">2:13</div>
+        <h2>5. The research — LinkedIn, X and the web</h2>
+        <p class="runs">167 words &middot; about 67s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step wait">
+          <div class="do">Start the research on that lead. Let the stages appear.<span class="w">while it runs</span></div>
+          <div class="line">Now it researches him. And this is the other half of what I built.</div>
+        </div>
+        <div class="step wait">
+          <div class="do">Keep talking while the stages run.<span class="w">while it runs</span></div>
+          <div class="line">Most tools stop at the open web. The problem is the open web is mostly company homepages, press releases and directory pages &mdash; it tells you about the company, not about the person.</div>
+        </div>
+        <div class="step wait">
+          <div class="do">Stages continuing.<span class="w">while it runs</span></div>
+          <div class="line">This does the web as well, but it also goes to LinkedIn and to X. So it is all three &mdash; his LinkedIn profile and posts, what he puts on X, and the web on top of that. LinkedIn and X are where somebody actually says something in their own words, and that is the only thing worth opening an email with.</div>
+        </div>
+        <div class="step wait">
+          <div class="do">Still waiting? Keep going.<span class="w">while it runs</span></div>
+          <div class="line">And underneath all of it there is one rule. Every fact it pulls has to carry the exact words from the page it came from, and those words get checked back against that page before anything is written. No model is ever asked whether a fact is true &mdash; one that made it up will happily say yes.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">3:20</div>
+        <h2>6. The results, and the receipts</h2>
+        <p class="runs">99 words &middot; about 40s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step">
+          <div class="do">The run finishes. Point at the counts.</div>
+          <div class="line">It came back with 41 results, and 27 of those were eligible. Eligible means it fits the persona. The rest are true, just not useful to you &mdash; two different questions, answered separately.</div>
+        </div>
+        <div class="step">
+          <div class="do">Scroll the findings column.</div>
+          <div class="line">And it shows its working. What it searched, how long it took, and the source every single piece came from.</div>
+        </div>
+        <div class="step">
+          <div class="do">Stop on a dropped row.</div>
+          <div class="line">It shows what it threw away too, not just what it kept. A filter you cannot see is the same as a filter that is not working.</div>
+        </div>
+        <div class="step">
+          <div class="do">Click a source link. Land on the real page. Let it sit.</div>
+          <div class="line">And I can open any of them. That is the real page, and that is the line it used.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">4:00</div>
+        <h2>7. Hooks</h2>
+        <p class="runs">59 words &middot; about 24s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step">
+          <div class="do">Back in the app. Point at the suggested hooks.</div>
+          <div class="line">It suggests which hooks are worth opening with, and picks one by default. It ranks those on buying intent, not on how impressive they sound &mdash; a hiring signal beats an award, because one is evidence of a problem.</div>
+        </div>
+        <div class="step">
+          <div class="do">Change the selected hook to a different one.</div>
+          <div class="line">You can always overrule it. And it watches which ones you pick, so it starts choosing the way you would.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">4:24</div>
+        <h2>8. The draft</h2>
+        <p class="runs">44 words &middot; about 18s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step wait">
+          <div class="do">Click draft.<span class="w">while it runs</span></div>
+          <div class="line">So let me draft the mail.</div>
+        </div>
+        <div class="step">
+          <div class="do">The draft lands. Read it, or let it sit while you talk.</div>
+          <div class="line">And there is the persona doing its job. That does not sound like a language model, because it is not writing from a blank prompt &mdash; it is writing from the brief I set up at the start.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">4:42</div>
+        <h2>9. The chat agent</h2>
+        <p class="runs">49 words &middot; about 20s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step wait">
+          <div class="do">Open the chat panel. Type one real instruction.<span class="w">while it runs</span></div>
+          <div class="line">There is a chat here, and the whole thing is agentic. I can ask it to go research something new, or change what it just wrote.</div>
+        </div>
+        <div class="step">
+          <div class="do">It acts. Point at what changed.</div>
+          <div class="line">It has tools rather than a text box, which matters &mdash; it can only claim it did something if it actually did it.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">5:02</div>
+        <h2>10. The email address</h2>
+        <p class="runs">40 words &middot; about 16s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step wait">
+          <div class="do">Run the address lookup.<span class="w">while it runs</span></div>
+          <div class="line">It will also find his email address and verify it before you send.</div>
+        </div>
+        <div class="step">
+          <div class="do">The verified result appears. Show the send control, do not click.</div>
+          <div class="line">A guessed address that bounces costs you the whole domain, so it would rather tell you it is unsure. Once it checks out, you send from here.</div>
+        </div>
+      </div>
+    </section>
+    <section class="beat">
+      <div class="beat-head">
+        <div class="tc">5:18</div>
+        <h2>11. The persona learning, closing the loop</h2>
+        <p class="runs">121 words &middot; about 48s of talking</p>
+      </div>
+      <div class="beat-body">
+        <div class="step">
+          <div class="do">Edit something in the draft. Save.</div>
+          <div class="line">And now back to where I started. I am going to change something in this message.</div>
+        </div>
+        <div class="step">
+          <div class="do">The learning note appears. Point at it.</div>
+          <div class="line">It noticed. It says it kept my rewrite, and that it is holding it as evidence until a pattern shows up across edits.</div>
+        </div>
+        <div class="step">
+          <div class="do">Open the Learn screen. Scroll the rules.</div>
+          <div class="line">It waits for three consistent changes before it writes a rule down. Three, because one edit is just a mood &mdash; you were tired, or that one prospect was different. Two could be chance. Three is a habit, and a habit is worth learning.</div>
+        </div>
+        <div class="step">
+          <div class="do">Rest on the rule list.</div>
+          <div class="line">Every repeat makes a rule stronger, and every message you send unedited makes it weaker, so it keeps having to earn its place. You never train it. You just keep editing, and it stops needing to be edited.</div>
+        </div>
+      </div>
+    </section>
+
+  <section class="beat">
+    <div class="beat-head">
+      <div class="tc">IF</div>
+      <h2>If something breaks while recording</h2>
+    </div>
+    <div class="beat-body">
+      <p>
+        Say what happened and read the message off the screen. A tool that
+        reports its own failure clearly is the point you have been making for six
+        minutes. Do not apologise for it &mdash; use it, then carry on.
+      </p>
+      <p>
+        The one thing worth stopping for is a run that fails outright before beat
+        5, because everything after it depends on having a finished lead. Anything
+        later, keep going and fix it in the edit.
+      </p>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span><a href="index.html">&larr; Pitch materials</a></span>
+    <span>&middot;</span>
+    <span>909 words &middot; ~6:04 of talking</span>
+    <span>&middot;</span>
+    <span>Dossier</span>
+  </div>
+
+</div>
+</body>
+</html>
